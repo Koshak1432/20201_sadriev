@@ -10,16 +10,16 @@ template<class T>
 class Array
 {
 public:
-	explicit Array(std::size_t size = 1);
+	explicit Array(size_t size = 1);
 	Array(const Array<T> &orig);
 	~Array();
 
-	T *resize(std::size_t new_capacity);
-	T get_by_idx (std::size_t idx) const;
+	T *resize(size_t new_capacity);
+	T get_by_idx (size_t idx) const;
 	std::size_t get_size() const;
 	void push_back(T elem);
-	void erase(std::size_t idx);
-
+	void erase(size_t idx);
+	bool insert(size_t idx, const T &value);
 	Array<T> &operator =(const Array<T> &orig);
 	Array<T> &operator [](const size_t idx);
 	const Array<T> &operator [](const size_t idx) const;
@@ -29,6 +29,7 @@ private:
 	T *data_ = nullptr;
 	std::size_t load_ = 0;
 	std::size_t capacity_ = 0;
+	void make_shift_right(size_t idx);
 };
 
 template<class T>
@@ -81,7 +82,7 @@ T Array<T>::get_by_idx(std::size_t idx) const
 template<class T>
 std::size_t Array<T>::get_size() const
 {
-	return capacity_;
+	return load_;
 }
 
 template<class T>
@@ -99,14 +100,14 @@ void Array<T>::erase(std::size_t idx)
 {
 	assert(idx < capacity_);
 	--load_;
-	for (std::size_t i = 0; i < load_; ++i)
+	for (std::size_t i = idx; i < load_; ++i)
 	{
 		data_[i] = data_[i + 1];
 	}
 }
 
 template<class T>
-Array<T> &Array<T>::operator=(const Array<T> &orig)
+Array<T> &Array<T>::operator =(const Array<T> &orig)
 {
 	if (&orig != this)  //checking for self-assignment
 	{
@@ -135,6 +136,28 @@ template<class T>
 const Array<T> &Array<T>::operator [](const size_t idx) const
 {
 	return data_[idx];
+}
+
+template<class T>
+bool Array<T>::insert(size_t idx, const T &value)
+{
+	if (++load_ == capacity_)
+	{
+		resize(capacity_ * 2);
+	}
+	make_shift_right(idx);
+	data_[idx] = value;
+	return true;
+}
+
+template<class T>
+void Array<T>::make_shift_right(size_t idx) //[idx + 1] = [idx], not [idx] = [idx - 1]
+{
+	assert(idx >= 0 && idx < capacity_);
+	for (size_t i = load_ - 1; i > idx; --i)
+	{
+		data_[i] = data_[i - 1];
+	}
 }
 
 void print_arr(const Array<int> &arr)
@@ -214,33 +237,8 @@ private:
 
 	size_t bin_search(const Key &key);
 
-	void make_shift_left(size_t idx);
-	void make_shift_right(size_t idx);
 	void resize(size_t new_size);
 };
-
-template<class Key, class Value>
-void FlatMap<Key, Value>::make_shift_left(size_t idx)
-{
-	assert(idx >= 0);
-	for (size_t i = idx; i < load_ - 1; ++i)
-	{
-		key_arr_[i] = key_arr_[i + 1];
-		val_arr_[i] = val_arr_[i + 1];
-	}
-}
-
-template<class Key, class Value>
-void FlatMap<Key, Value>::make_shift_right(size_t idx)
-					//[idx + 1] = [idx], not [idx] = [idx - 1]
-{
-	assert(idx >= 0);
-	for (size_t i = load_ - 1; i > idx; --i)
-	{
-		key_arr_[i] = key_arr_[i - 1];
-		val_arr_[i] = val_arr_[i - 1];
-	}
-}
 
 template<class Key, class Value>
 bool FlatMap<Key, Value>::empty() const
@@ -251,7 +249,7 @@ bool FlatMap<Key, Value>::empty() const
 template<class Key, class Value>
 size_t FlatMap<Key, Value>::size() const
 {
-	return size_;
+	return load_;
 }
 
 template<class Key, class Value>
@@ -291,15 +289,15 @@ FlatMap<Key, Value>::FlatMap(size_t size) : size_{size}
 template<class Key, class Value>
 FlatMap<Key, Value>::~FlatMap()
 {
-	delete[] key_arr_;
-	delete[] val_arr_;
+	delete key_arr_;
+	delete val_arr_;
 }
 
 template<class Key, class Value>
 FlatMap<Key, Value>::FlatMap(const FlatMap<Key, Value> &other) :size_{other.size_}
 {
-	key_arr_ = new Key[other.size_];
-	val_arr_ = new Value[other.size_];
+	key_arr_ = new Array<Key>(other.size_);
+	val_arr_ = new Array<Value>(other.size_);
 	for (size_t i = 0; i < other.size; ++i)
 	{
 		key_arr_[i] = other.key_arr_[i];
@@ -308,18 +306,18 @@ FlatMap<Key, Value>::FlatMap(const FlatMap<Key, Value> &other) :size_{other.size
 }
 
 template<class Key, class Value>
-FlatMap<Key, Value> &FlatMap<Key, Value>::operator=(const FlatMap<Key, Value> &other)
+FlatMap<Key, Value> &FlatMap<Key, Value>::operator =(const FlatMap<Key, Value> &other)
 {
 	if (&other == this)
 	{
 		return *this;
 	}
 
-	delete[] key_arr_;
-	delete[]val_arr_;
+	delete key_arr_;
+	delete val_arr_;
 	size_ = other.size_;
-	key_arr_ = new Key[other.size_];
-	val_arr_ = new Value[other.size_];
+	key_arr_ = new Array<Key>(other.size_);
+	val_arr_ = new Array<Value>(other.size_);
 
 	for (size_t i = 0; i < other.size_; ++i)
 	{
@@ -351,10 +349,19 @@ bool FlatMap<Key, Value>::erase(const Key &key)
 	size_t idx = bin_search(key);
 	if (key == key_arr_[idx])
 	{
-		make_shift_left(idx);
+		key_arr_->erase(idx);
+		val_arr_->erase(idx);
 		return true;
 	}
 	return false;
+}
+
+template<class Key, class Value>
+void FlatMap<Key, Value>::resize(size_t new_size)
+{
+	key_arr_ = key_arr_->resize(new_size);
+	val_arr_ = val_arr_->resize(new_size);
+	size_ = new_size;
 }
 
 template<class Key, class Value>
@@ -365,27 +372,13 @@ bool FlatMap<Key, Value>::insert(const Key &key, const Value &value)
 		resize(size_ * 2);
 	}
 	size_t idx = bin_search(key);
-	make_shift_right(idx);
-	key_arr_[idx] = key;
-	val_arr_[idx] = value;
-	return true;
-}
-
-template<class Key, class Value>
-void FlatMap<Key, Value>::resize(size_t new_size)
-{
-	Array<Key> *tmp_key = new Key[new_size];
-	Array<Value> *tmp_val = new Value[new_size];
-	for (size_t i = 0; i < size_; ++i)
+	if (key_arr_[idx] == key)
 	{
-		tmp_key[i] = key_arr_[i];
-		tmp_val[i] = val_arr_[i];
+		return false;
 	}
-	size_ = new_size;
-	delete[] key_arr_;
-	delete[] val_arr_;
-	key_arr_ = tmp_key;
-	val_arr_ = tmp_val;
+	key_arr_->insert(idx, key);
+	val_arr_->insert(idx, value);
+	return true;
 }
 
 int main()
