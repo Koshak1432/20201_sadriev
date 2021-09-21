@@ -58,7 +58,7 @@ Array<T>::~Array<T>()
 template<class T>
 void Array<T>::resize(size_t new_capacity)
 {
-	cout << "RESIZE!" << endl;
+	cout << "RESIZE with type " << typeid(T).name() << endl;
 
 	T *temp = new T[new_capacity];
 	for (size_t i = 0; i < capacity_; ++i)
@@ -128,7 +128,7 @@ T &Array<T>::operator [](size_t idx)
 template<class T>
 const T &Array<T>::operator [](size_t idx) const
 {
-	assert(idx < load_ && idx >= 0);
+	assert(idx < capacity_ && idx >= 0);
 	return data_[idx];
 }
 
@@ -229,7 +229,7 @@ public:
 		cout << "___________________________________" << endl;
 		for (size_t i = 0; i < load_; ++i)
 		{
-			cout << "key " << key_arr_[i] << " | " << "value " << val_arr_[i] << endl;
+			cout << "idx " << i <<  "| key " << key_arr_[i] << " | " << "value " << val_arr_[i] << endl;
 		}
 		cout << "___________________________________" << endl;
 	}
@@ -240,7 +240,7 @@ private:
 	size_t size_ = 0;
 	size_t load_ = 0;
 
-	size_t bin_search(const Key &key);
+	size_t bin_search(const Key &key) const;
 	void resize(size_t new_size);
 };
 
@@ -257,7 +257,7 @@ size_t FlatMap<Key, Value>::size() const
 }
 
 template<class Key, class Value>
-size_t FlatMap<Key, Value>::bin_search(const Key &key)
+size_t FlatMap<Key, Value>::bin_search(const Key &key) const
 {
 	size_t left = 0;
 	size_t right = load_ - 1;
@@ -441,13 +441,18 @@ int main()
 	std::string str4 = "John";
 	std::string str5 = "Keka";
 	std::string str6 = "Nipsey";
+	std::string str7 = "Yo";
 	FlatMap<std::string, int> my_map(5);
 	my_map.insert(str1, 1);
 	my_map.insert(str2, 2);
 	my_map.insert(str3, 3);
 	my_map.insert(str4, 4);
+	my_map.print_flatmap();
 	my_map.insert(str5, 5);
 	my_map.insert(str6, 6);
 	my_map.print_flatmap();
+	cout << my_map.contains(str5) << endl;
+	cout << my_map.contains(str7) << endl;
+
 	return 0;
 }
