@@ -15,68 +15,59 @@ public:
 	~Array();
 
 	T *resize(size_t new_capacity);
-	T get_by_idx (size_t idx) const;
 	std::size_t get_size() const;
 	void push_back(T elem);
 	void erase(size_t idx);
 	bool insert(size_t idx, const T &value);
 	Array<T> &operator =(const Array<T> &orig);
-	Array<T> &operator [](const size_t idx);
-	const Array<T> &operator [](const size_t idx) const;
-
+	Array<T> &operator [](size_t idx);
+	const Array<T> &operator [](size_t idx) const;
 
 private:
 	T *data_ = nullptr;
-	std::size_t load_ = 0;
-	std::size_t capacity_ = 0;
+	std::size_t load_ = 0; //how many elements in it
+	std::size_t capacity_ = 0; //complete size
 	void make_shift_right(size_t idx);
 };
 
 template<class T>
-Array<T>::Array(std::size_t size) : capacity_ {size}
+Array<T>::Array(size_t size) : capacity_ {size}
 {
 	data_ = new T[capacity_];
-	std::cout << "default constructor" << std::endl;
+	cout << "default constructor" << endl;
 }
 
 template<class T>
 Array<T>::Array(const Array<T> &orig) : load_ {orig.load_}, capacity_ {orig.capacity_}
 {
 	data_ = new T[orig.capacity_];
-	for (std::size_t i = 0; i < orig.load_; ++i)
+	for (size_t i = 0; i < orig.load_; ++i)
 	{
 		data_[i] = orig.data_[i];
 	}
-	std::cout << "copy constructor!" << std::endl;
+	cout << "copy constructor!" << endl;
 }
 
 template<class T>
 Array<T>::~Array<T>()
 {
-	std::cout << "destructor" << std::endl;
+	cout << "destructor" << endl;
 	delete[] data_;
 }
 
 template<class T>
-T *Array<T>::resize(std::size_t new_capacity)
+T *Array<T>::resize(size_t new_capacity)
 {
-	std::cout << "RESIZE!" << std::endl;
+	cout << "RESIZE!" << endl;
 
 	T *temp = new T[new_capacity];
-	for (std::size_t i = 0; i < capacity_; ++i)
+	for (size_t i = 0; i < capacity_; ++i)
 	{
 		temp[i] = data_[i];
 	}
 	capacity_ = new_capacity;
 	delete[] data_;
 	return temp;
-}
-
-template<class T>
-T Array<T>::get_by_idx(std::size_t idx) const
-{
-	assert(idx < capacity_);
-	return data_[idx];
 }
 
 template<class T>
@@ -96,11 +87,11 @@ void Array<T>::push_back(T elem)
 }
 
 template<class T>
-void Array<T>::erase(std::size_t idx)
+void Array<T>::erase(size_t idx)
 {
 	assert(idx < capacity_);
 	--load_;
-	for (std::size_t i = idx; i < load_; ++i)
+	for (size_t i = idx; i < load_; ++i)
 	{
 		data_[i] = data_[i + 1];
 	}
@@ -113,28 +104,31 @@ Array<T> &Array<T>::operator =(const Array<T> &orig)
 	{
 		delete[] data_;
 		load_ = orig.load_;
+		capacity_ = orig.capacity_;
 		data_ = new T[orig.capacity_];
 
-		for (std::size_t i = 0; i < orig.load_; ++i)
+		for (size_t i = 0; i < orig.load_; ++i)
 		{
 			data_[i] = orig.data_[i];
 		}
 
-		std::cout << "operator =" << std::endl;
+		cout << "operator =" << endl;
 	}
 
 	return *this;
 }
 
 template<class T>
-Array<T> &Array<T>::operator [](const size_t idx)
+Array<T> &Array<T>::operator [](size_t idx)
 {
+	assert(idx < load_ && idx >= 0);
 	return data_[idx];
 }
 
 template<class T>
-const Array<T> &Array<T>::operator [](const size_t idx) const
+const Array<T> &Array<T>::operator [](size_t idx) const
 {
+	assert(idx < load_ && idx >= 0);
 	return data_[idx];
 }
 
@@ -160,14 +154,14 @@ void Array<T>::make_shift_right(size_t idx) //[idx + 1] = [idx], not [idx] = [id
 	}
 }
 
-void print_arr(const Array<int> &arr)
-{
-	for (std::size_t i = 0; i < arr.get_size(); ++i)
-	{
-		std::cout << arr.get_by_idx(i) << "\t";
-	}
-	std::cout << std::endl;
-}
+//void print_arr(const Array<int> &arr)
+//{
+//	for (size_t i = 0; i < arr.get_size(); ++i)
+//	{
+//		cout << arr.get_by_idx(i) << "\t";
+//	}
+//	cout << endl;
+//}
 
 
 template<class Key, class Value>
@@ -182,7 +176,7 @@ public:
 
 	void swap(FlatMap<Key, Value> &other);
 
-	FlatMap<Key, Value> &operator=(const FlatMap<Key, Value> &other);
+	FlatMap<Key, Value> &operator =(const FlatMap<Key, Value> &other);
 	//FlatMap<Key, Value> &&operator=(FlatMap<Key, Value> &&other);
 
 	void clear();
@@ -190,7 +184,7 @@ public:
 	bool insert(const Key &key, const Value &value);
 	bool contains(const Key &key) const;
 
-	Value &operator[](const Key &key);
+	Value &operator [](const Key &key);
 
 	Value &at(const Key &key);
 	const Value &at(const Key &key) const;
@@ -236,7 +230,6 @@ private:
 	size_t load_ = 0;
 
 	size_t bin_search(const Key &key);
-
 	void resize(size_t new_size);
 };
 
@@ -308,21 +301,12 @@ FlatMap<Key, Value>::FlatMap(const FlatMap<Key, Value> &other) :size_{other.size
 template<class Key, class Value>
 FlatMap<Key, Value> &FlatMap<Key, Value>::operator =(const FlatMap<Key, Value> &other)
 {
-	if (&other == this)
+	if (&other != this)
 	{
-		return *this;
-	}
-
-	delete key_arr_;
-	delete val_arr_;
-	size_ = other.size_;
-	key_arr_ = new Array<Key>(other.size_);
-	val_arr_ = new Array<Value>(other.size_);
-
-	for (size_t i = 0; i < other.size_; ++i)
-	{
-		key_arr_[i] = other.key_arr_[i];
-		val_arr_[i] = other.val_arr_[i];
+		key_arr_ = other.key_arr_;
+		val_arr_ = other.val_arr_;
+		size_ = other.size_;
+		load_ = other.load_;
 	}
 	return *this;
 }
@@ -379,6 +363,59 @@ bool FlatMap<Key, Value>::insert(const Key &key, const Value &value)
 	key_arr_->insert(idx, key);
 	val_arr_->insert(idx, value);
 	return true;
+}
+
+template<class Key, class Value>
+Value &FlatMap<Key, Value>::at(const Key &key)
+{
+	size_t idx = bin_search(key);
+	if (idx < 0 || idx > load_)
+	{
+		//XANA
+		//throw an exception
+	}
+	return val_arr_[idx];
+}
+
+template<class Key, class Value>
+const Value &FlatMap<Key, Value>::at(const Key &key) const
+{
+	size_t idx = bin_search(key);
+	if (idx < 0 || idx > load_)
+	{
+		//XANA
+		//throw an exception
+	}
+	return val_arr_[idx];
+}
+
+template<class Key, class Value>
+Value &FlatMap<Key, Value>::operator [](const Key &key)
+{
+	size_t idx = bin_search(key);
+	assert(idx < load_ && idx >= 0);
+	if (key != key_arr_[idx])
+	{
+		insert(key, Value());
+	}
+	return val_arr_[idx];
+}
+
+template<class Key, class Value>
+void FlatMap<Key, Value>::swap(FlatMap<Key, Value> &other)
+{
+	Array<Key> *tmp_key = key_arr_;
+	Array<Value> *tmp_val = val_arr_;
+	size_t tmp_size = size_;
+	size_t tmp_load = load_;
+	key_arr_ = other.key_arr_;
+	val_arr_ = other.val_arr_;
+	size_ = other.size_;
+	load_ = other.load_;
+	other.key_arr_ = tmp_key;
+	other.val_arr_ = tmp_val;
+	other.size_ = tmp_size;
+	other.load_ = tmp_load;
 }
 
 int main()
