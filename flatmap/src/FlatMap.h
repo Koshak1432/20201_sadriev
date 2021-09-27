@@ -49,18 +49,7 @@ public:
 	}
 	friend bool operator !=(const FlatMap<Key, Value> &first, const FlatMap<Key, Value> &second)
 	{
-		if (first.load_ == second.load_)
-		{
-			return true;
-		}
-		for (size_t i = 0; i < first.load_; ++i)
-		{
-			if (first.key_arr_[i] == second.key_arr_[i] || first.val_arr_[i] == second.val_arr_[i])
-			{
-				return true;
-			}
-		}
-		return false;
+		return !operator ==(first, second);
 	}
 
 	void print_flatmap();
@@ -90,38 +79,26 @@ size_t FlatMap<Key, Value>::size() const
 template<class Key, class Value>
 size_t FlatMap<Key, Value>::bin_search(const Key &key) const
 {
-	size_t left = 0;
-	size_t right = load_ - 1;
-	if (1 == load_)
+	size_t count = load_ - 1;
+	size_t first = 0;
+	size_t idx = 0;
+	size_t step = 0;
+	while (count > 0)
 	{
-		return 0;
-	}
-	while (left <= right)
-	{
-		size_t mid = right / 2 + left / 2;
-		if (key_arr_[mid] == key)
+		idx = first;
+		step = count / 2;
+		idx += step;
+		if (key_arr_[idx] < key)
 		{
-			return mid;
-		}
-		if (left == right)
-		{
-			return left + 1;
-		}
-		if (key < key_arr_[mid])
-		{
-			if (0 != mid)
-			{
-				right = mid - 1;
-				continue;
-			}
-			right = mid;
+			first = ++idx;
+			count -= step + 1;
 		}
 		else
 		{
-			left = mid + 1;
+			count = step;
 		}
 	}
-	return load_ - 1;
+	return first;
 }
 
 template<class Key, class Value>
@@ -155,8 +132,9 @@ FlatMap<Key, Value> &FlatMap<Key, Value>::operator =(const FlatMap<Key, Value> &
 }
 
 template<class Key, class Value>
-void FlatMap<Key, Value>::clear()
+void FlatMap<Key, Value>::clear() //erase for every key
 {
+	// std::fill
 	memset(&key_arr_, 0, sizeof(Key) * load_); //???????? todo
 	memset(&val_arr_, 0, sizeof(Value) * load_);
 	size_ = 0;
@@ -270,7 +248,7 @@ void FlatMap<Key, Value>::print_flatmap()
 	cout << "___________________________________" << endl;
 	for (size_t i = 0; i < load_; ++i)
 	{
-		cout << "idx " << i <<  "| key " << key_arr_[i] << " | " << "value " << val_arr_[i] << endl;
+		cout << "idx " << i <<  " | key " << key_arr_[i] << " | value " << val_arr_[i] << endl;
 	}
 	cout << "___________________________________" << endl;
 }

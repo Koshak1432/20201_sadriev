@@ -60,7 +60,7 @@ void Array<T>::resize(size_t new_capacity)
 	cout << "RESIZE with type " << typeid(T).name() << endl;
 
 	T *temp = new T[new_capacity];
-	for (size_t i = 0; i < capacity_; ++i)
+	for (size_t i = 0; i < capacity_ - 1; ++i)
 	{
 		temp[i] = data_[i];
 	}
