@@ -89,11 +89,11 @@ template<class T>
 void Array<T>::erase(size_t idx)
 {
 	assert(idx < capacity_);
-	--load_;
 	for (size_t i = idx; i < load_; ++i)
 	{
 		data_[i] = data_[i + 1];
 	}
+	--load_;
 }
 
 template<class T>

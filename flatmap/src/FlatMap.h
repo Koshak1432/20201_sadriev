@@ -3,6 +3,7 @@
 #include "Array.h"
 #include <cstring>
 #include <iostream>
+#include <stdexcept>
 
 template<class Key, class Value>
 class FlatMap
@@ -79,6 +80,10 @@ size_t FlatMap<Key, Value>::size() const
 template<class Key, class Value>
 size_t FlatMap<Key, Value>::bin_search(const Key &key) const
 {
+	if (0 == load_)
+	{
+		return 0;
+	}
 	size_t count = load_ - 1;
 	size_t first = 0;
 	size_t idx = 0;
@@ -134,10 +139,11 @@ FlatMap<Key, Value> &FlatMap<Key, Value>::operator =(const FlatMap<Key, Value> &
 template<class Key, class Value>
 void FlatMap<Key, Value>::clear() //erase for every key
 {
-	// std::fill
-	memset(&key_arr_, 0, sizeof(Key) * load_); //???????? todo
-	memset(&val_arr_, 0, sizeof(Value) * load_);
-	size_ = 0;
+	for (long long i = load_ - 1; i >= 0; --i)
+	{
+		key_arr_.erase(i);
+		val_arr_.erase(i);
+	}
 	load_ = 0;
 }
 
@@ -164,7 +170,6 @@ bool FlatMap<Key, Value>::erase(const Key &key)
 template<class Key, class Value>
 void FlatMap<Key, Value>::resize(size_t new_size)
 {
-	cout << "RESIZE FROM FLATMAP" << endl;
 	key_arr_.resize(new_size);
 	val_arr_.resize(new_size);
 	size_ = new_size;
@@ -183,7 +188,6 @@ bool FlatMap<Key, Value>::insert(const Key &key, const Value &value)
 		cout << key << " already in the container" << endl;
 		return false;
 	}
-	cout << "insert in flatmap at idx == " << idx << endl;
 	key_arr_.insert(idx, key);
 	val_arr_.insert(idx, value);
 	return true;
@@ -195,8 +199,7 @@ Value &FlatMap<Key, Value>::at(const Key &key)
 	size_t idx = bin_search(key);
 	if (idx < 0 || idx > load_)
 	{
-		//XANA
-		//throw an exception
+		throw std::out_of_range("wrong idx");
 	}
 	return val_arr_[idx];
 }
@@ -207,8 +210,7 @@ const Value &FlatMap<Key, Value>::at(const Key &key) const
 	size_t idx = bin_search(key);
 	if (idx < 0 || idx > load_)
 	{
-		//XANA
-		//throw an exception
+		throw std::out_of_range("wrong idx");
 	}
 	return val_arr_[idx];
 }
@@ -230,16 +232,12 @@ void FlatMap<Key, Value>::swap(FlatMap<Key, Value> &other)
 {
 	Array<Key> tmp_key = key_arr_;
 	Array<Value> tmp_val = val_arr_;
-	size_t tmp_size = size_;
-	size_t tmp_load = load_;
 	key_arr_ = other.key_arr_;
 	val_arr_ = other.val_arr_;
-	size_ = other.size_;
-	load_ = other.load_;
 	other.key_arr_ = tmp_key;
 	other.val_arr_ = tmp_val;
-	other.size_ = tmp_size;
-	other.load_ = tmp_load;
+	std::swap(size_, other.size_);
+	std::swap(load_, other.load_);
 }
 
 template<class Key, class Value>
