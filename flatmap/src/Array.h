@@ -21,6 +21,10 @@ public:
 	Array<T> &operator =(const Array<T> &orig);
 	T &operator [](size_t idx);
 	const T &operator [](size_t idx) const;
+	T* begin();
+	T* end();
+	const T* begin() const;
+	const T* end() const;
 
 private:
 	T *data_ = nullptr;
@@ -152,6 +156,30 @@ void Array<T>::make_shift_right(size_t idx) //[idx + 1] = [idx], not [idx] = [id
 	{
 		data_[i] = data_[i - 1];
 	}
+}
+
+template<class T>
+T *Array<T>::begin()
+{
+	return data_;
+}
+
+template<class T>
+T *Array<T>::end()
+{
+	return data_ + load_;
+}
+
+template<class T>
+const T *Array<T>::begin() const
+{
+	return data_;
+}
+
+template<class T>
+const T *Array<T>::end() const
+{
+	return data_ + load_;
 }
 
 #endif //FLATMAP_ARRAY_H

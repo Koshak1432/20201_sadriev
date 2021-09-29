@@ -18,7 +18,7 @@ public:
 	void swap(FlatMap<Key, Value> &other);
 
 	FlatMap<Key, Value> &operator =(const FlatMap<Key, Value> &other);
-	//FlatMap<Key, Value> &&operator=(FlatMap<Key, Value> &&other);
+	//FlatMap<Key, Value> &operator =(FlatMap<Key, Value> &&other);
 
 	void clear();
 	bool erase(const Key &key);
@@ -30,8 +30,8 @@ public:
 	Value &at(const Key &key);
 	const Value &at(const Key &key) const;
 
-	size_t size() const; //get size of the container
-	bool empty() const; //is container empty
+	size_t size() const; //get number of elements in the container
+	bool empty() const;
 
 	friend bool operator ==(const FlatMap<Key, Value> &first, const FlatMap<Key, Value> &second)
 	{
@@ -112,15 +112,11 @@ FlatMap<Key, Value>::FlatMap(size_t size) : key_arr_(size), val_arr_(size), size
 }
 
 template<class Key, class Value>
-FlatMap<Key, Value>::FlatMap(const FlatMap<Key, Value> &other) :size_{other.size_}
+FlatMap<Key, Value>::FlatMap(const FlatMap<Key, Value> &other) : key_arr_{other.size_}, val_arr_{other.size_}, size_{other.size_}
 {
-	key_arr_ = Array<Key>(other.size_);
-	val_arr_ = Array<Value>(other.size_);
-	for (size_t i = 0; i < other.size; ++i)
-	{
-		key_arr_[i] = other.key_arr_[i];
-		val_arr_[i] = other.val_arr_[i];
-	}
+	load_ = other.load_;
+	std::copy(other.key_arr_.begin(), other.key_arr_.end(), key_arr_.begin());
+	std::copy(other.val_arr_.begin(), other.val_arr_.end(), val_arr_.begin());
 }
 
 template<class Key, class Value>
@@ -186,6 +182,7 @@ bool FlatMap<Key, Value>::insert(const Key &key, const Value &value)
 	if (key_arr_[idx] == key)
 	{
 		cout << key << " already in the container" << endl;
+		--load_;
 		return false;
 	}
 	key_arr_.insert(idx, key);
