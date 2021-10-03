@@ -9,41 +9,41 @@ template<class T>
 class Array
 {
 public:
-	explicit Array(size_t size = 1);
-	Array(const Array<T> &orig);
-	Array(Array<T> &&other) noexcept;
+	explicit Array(size_t size = 1); // takes array size as parameter
+	Array(const Array<T> &other); // copy ctor
+	Array(Array<T> &&other) noexcept; //move ctor
 	~Array();
 
-	void resize(size_t new_capacity);
-	std::size_t get_size() const;
+	void resize(size_t new_capacity); //makes an array with new_capacity and copies elements from the old one
+	std::size_t get_size() const noexcept; //gets a size of an array
 	void push_back(T elem);
-	void erase(size_t idx);
-	bool insert(size_t idx, const T &value);
-	Array<T> &operator =(const Array<T> &orig);
-	Array<T> &operator =(Array<T> &&other) noexcept;
-	T &operator [](size_t idx);
+	void erase(size_t idx) noexcept;
+	void insert(size_t idx, const T &value);
+	Array<T> &operator =(const Array<T> &other); //assigns the fields of the left array to the fields of the other array
+	Array<T> &operator =(Array<T> &&other) noexcept; //move assignment operator
+	T &operator [](size_t idx) noexcept; //returns the element by the idx
 	const T &operator [](size_t idx) const;
 
 private:
 	T *data_ = nullptr;
-	size_t size_ = 0; //how many elements in array
-	size_t capacity_ = 0; //complete size
+	size_t capacity_ = 0;
+	size_t size_ = 0; //how many elements in the array
 	void make_shift_right(size_t idx);
 };
 
 template<class T>
-Array<T>::Array(size_t size) : capacity_ {size}
+Array<T>::Array(size_t size) : capacity_ (size)
 {
 	data_ = new T[capacity_];
 }
 
 template<class T>
-Array<T>::Array(const Array<T> &orig) : size_ {orig.size_}, capacity_ {orig.capacity_}
+Array<T>::Array(const Array<T> &other) : capacity_ (other.capacity_), size_ (other.size_)
 {
-	data_ = new T[orig.capacity_];
-	for (size_t i = 0; i < orig.size_; ++i)
+	data_ = new T[other.capacity_];
+	for (size_t i = 0; i < other.size_; ++i)
 	{
-		data_[i] = orig.data_[i];
+		data_[i] = other.data_[i];
 	}
 }
 
@@ -67,7 +67,7 @@ void Array<T>::resize(size_t new_capacity)
 }
 
 template<class T>
-std::size_t Array<T>::get_size() const
+std::size_t Array<T>::get_size() const noexcept
 {
 	return size_;
 }
@@ -83,7 +83,7 @@ void Array<T>::push_back(T elem)
 }
 
 template<class T>
-void Array<T>::erase(size_t idx)
+void Array<T>::erase(size_t idx) noexcept
 {
 	assert(idx < capacity_);
 	for (size_t i = idx; i < size_; ++i)
@@ -94,18 +94,18 @@ void Array<T>::erase(size_t idx)
 }
 
 template<class T>
-Array<T> &Array<T>::operator =(const Array<T> &orig)
+Array<T> &Array<T>::operator =(const Array<T> &other)
 {
-	if (&orig != this)  //checking for self-assignment
+	if (&other != this)  //checking for self-assignment
 	{
 		delete[] data_;
-		size_ = orig.size_;
-		capacity_ = orig.capacity_;
-		data_ = new T[orig.capacity_];
+		size_ = other.size_;
+		capacity_ = other.capacity_;
+		data_ = new T[other.capacity_];
 
-		for (size_t i = 0; i < orig.size_; ++i)
+		for (size_t i = 0; i < other.size_; ++i)
 		{
-			data_[i] = orig.data_[i];
+			data_[i] = other.data_[i];
 		}
 	}
 
@@ -113,7 +113,7 @@ Array<T> &Array<T>::operator =(const Array<T> &orig)
 }
 
 template<class T>
-T &Array<T>::operator [](size_t idx)
+T &Array<T>::operator [](size_t idx) noexcept
 {
 	assert(idx < capacity_ && idx >= 0);
 	return data_[idx];
@@ -127,7 +127,7 @@ const T &Array<T>::operator [](size_t idx) const
 }
 
 template<class T>
-bool Array<T>::insert(size_t idx, const T &value)
+void Array<T>::insert(size_t idx, const T &value)
 {
 	if (++size_ == capacity_)
 	{
@@ -135,7 +135,6 @@ bool Array<T>::insert(size_t idx, const T &value)
 	}
 	make_shift_right(idx);
 	data_[idx] = value;
-	return true;
 }
 
 template<class T>
