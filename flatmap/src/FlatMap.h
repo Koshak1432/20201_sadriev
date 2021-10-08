@@ -12,7 +12,7 @@ template<class Key, class Value>
 class FlatMap
 {
 public:
-	explicit FlatMap(size_t size = 1); //takes flatmap size as parameter
+	explicit FlatMap(std::size_t size = 1); //takes flatmap size as parameter
 	FlatMap(const FlatMap<Key, Value> &other); //copy constructor
 	FlatMap(FlatMap<Key, Value> &&other) noexcept; //move constructor
 	~FlatMap() = default;
@@ -33,7 +33,7 @@ public:
 	Value &at(const Key &key); // returns a reference to the Value by the key, throw out_of_range if a ftalmap doesn't contain an element with such key
 	const Value &at(const Key &key) const;
 
-	size_t size() const noexcept; //gets the number of elements in a flatmap
+	std::size_t size() const noexcept; //gets the number of elements in a flatmap
 	bool empty() const noexcept; //returns true if the flatmap is empty
 
 	//returns true if the fields of the first flatmap are equal to the fields of the other
@@ -43,7 +43,7 @@ public:
 		{
 			return false;
 		}
-		for (size_t i = 0; i < first.key_arr_.get_size(); ++i)
+		for (std::size_t i = 0; i < first.key_arr_.get_size(); ++i)
 		{
 			if (first.key_arr_[i] != second.key_arr_[i] || first.val_arr_[i] != second.val_arr_[i])
 			{
@@ -63,7 +63,7 @@ public:
 private:
 	Array<Key> key_arr_; //keys array
 	Array<Value> val_arr_; //values array
-	size_t bin_search(const Key &key) const; //lover_bound method
+	std::size_t bin_search(const Key &key) const; //lover_bound method
 };
 
 template<class Key, class Value>
@@ -73,22 +73,22 @@ bool FlatMap<Key, Value>::empty() const noexcept
 }
 
 template<class Key, class Value>
-size_t FlatMap<Key, Value>::size() const noexcept
+std::size_t FlatMap<Key, Value>::size() const noexcept
 {
 	return key_arr_.get_size();
 }
 
 template<class Key, class Value>
-size_t FlatMap<Key, Value>::bin_search(const Key &key) const
+std::size_t FlatMap<Key, Value>::bin_search(const Key &key) const
 {
 	if (0 == key_arr_.get_size())
 	{
 		return 0;
 	}
-	size_t count = key_arr_.get_size() - 1;
-	size_t first = 0;
-	size_t idx = 0;
-	size_t step = 0;
+	std::size_t count = key_arr_.get_size() - 1;
+	std::size_t first = 0;
+	std::size_t idx = 0;
+	std::size_t step = 0;
 	while (count > 0)
 	{
 		idx = first;
@@ -108,7 +108,7 @@ size_t FlatMap<Key, Value>::bin_search(const Key &key) const
 }
 
 template<class Key, class Value>
-FlatMap<Key, Value>::FlatMap(size_t size) : key_arr_(size), val_arr_(size)
+FlatMap<Key, Value>::FlatMap(std::size_t size) : key_arr_(size), val_arr_(size)
 {
 }
 
@@ -158,14 +158,14 @@ void FlatMap<Key, Value>::clear() noexcept
 template<class Key, class Value>
 bool FlatMap<Key, Value>::contains(const Key &key) const noexcept
 {
-	size_t idx = bin_search(key);
+	std::size_t idx = bin_search(key);
 	return key == key_arr_[idx];
 }
 
 template<class Key, class Value>
 bool FlatMap<Key, Value>::erase(const Key &key) noexcept
 {
-	size_t idx = bin_search(key);
+	std::size_t idx = bin_search(key);
 	if (key == key_arr_[idx])
 	{
 		key_arr_.erase(idx);
@@ -178,7 +178,7 @@ bool FlatMap<Key, Value>::erase(const Key &key) noexcept
 template<class Key, class Value>
 bool FlatMap<Key, Value>::insert(const Key &key, const Value &value)
 {
-	size_t idx = bin_search(key);
+	std::size_t idx = bin_search(key);
 	if (key_arr_[idx] == key)
 	{
 		return false;
@@ -191,7 +191,7 @@ bool FlatMap<Key, Value>::insert(const Key &key, const Value &value)
 template<class Key, class Value>
 Value &FlatMap<Key, Value>::at(const Key &key)
 {
-	size_t idx = bin_search(key);
+	std::size_t idx = bin_search(key);
 	if (key != key_arr_[idx])
 	{
 		throw std::out_of_range("there is no such key in the flatmap");
@@ -202,7 +202,7 @@ Value &FlatMap<Key, Value>::at(const Key &key)
 template<class Key, class Value>
 const Value &FlatMap<Key, Value>::at(const Key &key) const
 {
-	size_t idx = bin_search(key);
+	std::size_t idx = bin_search(key);
 	if (key != key_arr_[idx])
 	{
 		throw std::out_of_range("there is no such key in the flatmap");
@@ -213,7 +213,7 @@ const Value &FlatMap<Key, Value>::at(const Key &key) const
 template<class Key, class Value>
 Value &FlatMap<Key, Value>::operator [](const Key &key) noexcept
 {
-	size_t idx = bin_search(key);
+	std::size_t idx = bin_search(key);
 	assert(idx < key_arr_.get_size() && idx >= 0);
 	if (key != key_arr_[idx])
 	{
@@ -238,7 +238,7 @@ void FlatMap<Key, Value>::swap(FlatMap<Key, Value> &other)
 //void FlatMap<Key, Value>::print_flatmap()
 //{
 //	cout << "___________________________________" << endl;
-//	for (size_t i = 0; i < key_arr_.get_size(); ++i)
+//	for (std::size_t i = 0; i < key_arr_.get_size(); ++i)
 //	{
 //		cout << "idx " << i <<  " | key " << key_arr_[i] << " | value " << val_arr_[i] << endl;
 //	}
