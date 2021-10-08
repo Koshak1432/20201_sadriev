@@ -37,10 +37,7 @@ template<class T>
 Array<T>::Array(const Array<T> &other) : capacity_ (other.capacity_), size_ (other.size_)
 {
 	data_ = new T[other.capacity_];
-	for (std::size_t i = 0; i < other.size_; ++i)
-	{
-		data_[i] = other.data_[i];
-	}
+	std::copy(other.data_, other.data_ + other.size_, data_);
 }
 
 template<class T>
@@ -53,10 +50,7 @@ template<class T>
 void Array<T>::resize(std::size_t new_capacity)
 {
 	T *temp = new T[new_capacity];
-	for (std::size_t i = 0; i < capacity_ - 1; ++i)
-	{
-		temp[i] = data_[i];
-	}
+	std::copy(data_, data_ + capacity_ - 1, temp);
 	capacity_ = new_capacity;
 	delete[] data_;
 	data_ = temp;
@@ -99,10 +93,7 @@ Array<T> &Array<T>::operator =(const Array<T> &other)
 		capacity_ = other.capacity_;
 		data_ = new T[other.capacity_];
 
-		for (std::size_t i = 0; i < other.size_; ++i)
-		{
-			data_[i] = other.data_[i];
-		}
+		std::copy(other.data_, other.data_ + other.size_, data_);
 	}
 
 	return *this;
