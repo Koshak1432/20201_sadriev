@@ -132,11 +132,11 @@ TEST(FlatTest, at)
 	my_map.insert(str1, 1);
 	my_map.insert(str2, 2);
 	EXPECT_EQ(my_map.at(str1), 1);
-	EXPECT_THROW(my_map.at(str3), std::domain_error);
+	EXPECT_THROW(my_map.at(str3), std::out_of_range);
 
 	const auto &r_map = my_map;
 	EXPECT_EQ(r_map.at(str1), 1);
-	EXPECT_THROW(r_map.at(str3), std::domain_error);
+	EXPECT_THROW(r_map.at(str3), std::out_of_range);
 }
 
 TEST(FlatTest, opBrackets)

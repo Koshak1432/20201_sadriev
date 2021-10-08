@@ -30,7 +30,7 @@ public:
 	Value &operator [](const Key &key) noexcept; //returns a reference to the Value by the key, inserts an element with default value
 												// if a flatmap doesn't contain such an element
 
-	Value &at(const Key &key); // returns a reference to the Value by the key, throw domain_error if a ftalmap doesn't contain an element with such key
+	Value &at(const Key &key); // returns a reference to the Value by the key, throw out_of_range if a ftalmap doesn't contain an element with such key
 	const Value &at(const Key &key) const;
 
 	size_t size() const noexcept; //gets the number of elements in a flatmap
@@ -194,7 +194,7 @@ Value &FlatMap<Key, Value>::at(const Key &key)
 	size_t idx = bin_search(key);
 	if (key != key_arr_[idx])
 	{
-		throw std::domain_error("there is no such key in the flatmap");
+		throw std::out_of_range("there is no such key in the flatmap");
 	}
 	return val_arr_[idx];
 }
@@ -205,7 +205,7 @@ const Value &FlatMap<Key, Value>::at(const Key &key) const
 	size_t idx = bin_search(key);
 	if (key != key_arr_[idx])
 	{
-		throw std::domain_error("there is no such key in the flatmap");
+		throw std::out_of_range("there is no such key in the flatmap");
 	}
 	return val_arr_[idx];
 }
