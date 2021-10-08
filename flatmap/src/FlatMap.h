@@ -1,10 +1,8 @@
 #ifndef FLATMAP_FLATMAP_H
 #define FLATMAP_FLATMAP_H
 #include "Array.h"
-#include <cstring>
 #include <iostream>
 #include <stdexcept>
-#include <utility>
 
 //the associative <Key, Value> pair container
 //size is equal to the size of the array field
@@ -52,6 +50,7 @@ public:
 		}
 		return true;
 	}
+
 	//returns true if the fields of the first flatmap aren't equal to the fields of the other
 	friend bool operator !=(const FlatMap<Key, Value> &first, const FlatMap<Key, Value> &second) noexcept
 	{
