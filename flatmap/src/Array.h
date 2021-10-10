@@ -13,8 +13,13 @@ public:
 	void resize(std::size_t new_capacity); //makes an array with new_capacity and copies elements from the old one
 	std::size_t get_size() const noexcept; //gets a size of an array
 	void push_back(T elem);
+
 	void erase(std::size_t idx) noexcept;
+
 	void insert(std::size_t idx, const T &value);
+
+	void clear() noexcept;
+
 	Array<T> &operator =(const Array<T> &other); //assigns the fields of the left array to the fields of the other array
 	Array<T> &operator =(Array<T> &&other) noexcept; //move assignment operator
 	T &operator [](std::size_t idx) noexcept; //returns the element by the idx
@@ -28,13 +33,13 @@ private:
 };
 
 template<class T>
-Array<T>::Array(std::size_t size) : capacity_ (size)
+Array<T>::Array(std::size_t size) : capacity_(size)
 {
 	data_ = new T[capacity_];
 }
 
 template<class T>
-Array<T>::Array(const Array<T> &other) : capacity_ (other.capacity_), size_ (other.size_)
+Array<T>::Array(const Array<T> &other) : capacity_(other.capacity_), size_(other.size_)
 {
 	data_ = new T[other.capacity_];
 	std::copy(other.data_, other.data_ + other.size_, data_);
@@ -43,7 +48,7 @@ Array<T>::Array(const Array<T> &other) : capacity_ (other.capacity_), size_ (oth
 template<class T>
 Array<T>::~Array<T>()
 {
-	delete[] data_;
+	clear();
 }
 
 template<class T>
@@ -65,11 +70,16 @@ std::size_t Array<T>::get_size() const noexcept
 template<class T>
 void Array<T>::push_back(T elem)
 {
-	if (size_ == capacity_)
+	if (0 == capacity_)
 	{
-		data_ = resize(capacity_ * 2);
+		return;
 	}
-	data_[size_++] = elem;
+	std::size_t multiplier = 2;
+	if (++size_ == capacity_)
+	{
+		data_ = resize(capacity_ * multiplier);
+	}
+	data_[size_ - 1] = elem;
 }
 
 template<class T>
@@ -95,7 +105,6 @@ Array<T> &Array<T>::operator =(const Array<T> &other)
 
 		std::copy(other.data_, other.data_ + other.size_, data_);
 	}
-
 	return *this;
 }
 
@@ -116,9 +125,14 @@ const T &Array<T>::operator [](std::size_t idx) const
 template<class T>
 void Array<T>::insert(std::size_t idx, const T &value)
 {
-	if (++size_ == capacity_)
+	std::size_t multiplier = 2;
+	if (0 == capacity_)
 	{
-		resize(capacity_ * 2);
+		resize(multiplier * multiplier);
+	}
+	else if (++size_ == capacity_)
+	{
+		resize(capacity_ * multiplier);
 	}
 	make_shift_right(idx);
 	data_[idx] = value;
@@ -148,7 +162,7 @@ Array<T> &Array<T>::operator =(Array<T> &&other) noexcept
 {
 	if (&other != this)
 	{
-		delete []data_;
+		delete[] data_;
 		data_ = other.data_;
 		capacity_ = other.capacity_;
 		size_ = other.size_;
@@ -157,6 +171,14 @@ Array<T> &Array<T>::operator =(Array<T> &&other) noexcept
 		other.capacity_ = 0;
 	}
 	return *this;
+}
+
+template<class T>
+void Array<T>::clear() noexcept
+{
+	delete[] data_;
+	data_ = nullptr;
+	size_ = capacity_ = 0;
 }
 
 #endif //FLATMAP_ARRAY_H

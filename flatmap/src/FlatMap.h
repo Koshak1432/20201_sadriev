@@ -147,17 +147,18 @@ FlatMap<Key, Value> &FlatMap<Key, Value>::operator =(FlatMap<Key, Value> &&other
 template<class Key, class Value>
 void FlatMap<Key, Value>::clear() noexcept
 {
-	for (long long i = key_arr_.get_size() - 1; i >= 0; --i)
-	{
-		key_arr_.erase(i);
-		val_arr_.erase(i);
-	}
+	key_arr_.clear();
+	val_arr_.clear();
 }
 
 template<class Key, class Value>
 bool FlatMap<Key, Value>::contains(const Key &key) const noexcept
 {
 	std::size_t idx = bin_search(key);
+	if (idx == key_arr_.get_size())
+	{
+		return false;
+	}
 	return key == key_arr_[idx];
 }
 
