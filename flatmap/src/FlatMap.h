@@ -179,9 +179,12 @@ template<class Key, class Value>
 bool FlatMap<Key, Value>::insert(const Key &key, const Value &value)
 {
 	std::size_t idx = bin_search(key);
-	if (key_arr_[idx] == key)
+	if (idx != key_arr_.get_size())
 	{
-		return false;
+		if (key_arr_[idx] == key)
+		{
+			return false;
+		}
 	}
 	key_arr_.insert(idx, key);
 	val_arr_.insert(idx, value);
