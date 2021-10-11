@@ -25,6 +25,10 @@ TEST(FlatTest, ClearTest)
 	EXPECT_FALSE(my_map.contains(str1));
 	EXPECT_FALSE(my_map.contains(str2));
 	EXPECT_TRUE(my_map.empty());
+	EXPECT_FALSE(my_map.erase(str1));
+	EXPECT_TRUE(my_map.insert(str1, 1));
+	EXPECT_TRUE(my_map.insert (str2, 2));
+	EXPECT_EQ(my_map.size(), 2);
 }
 
 TEST(FlatTest, ResizeTest)

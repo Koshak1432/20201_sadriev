@@ -12,12 +12,12 @@ public:
 
 	void resize(std::size_t new_capacity); //makes an array with new_capacity and copies elements from the old one
 	std::size_t get_size() const noexcept; //gets a size of an array
+	bool empty() const noexcept;
 	void push_back(T elem);
 
+
 	void erase(std::size_t idx) noexcept;
-
 	void insert(std::size_t idx, const T &value);
-
 	void clear() noexcept;
 
 	Array<T> &operator =(const Array<T> &other); //assigns the fields of the left array to the fields of the other array
@@ -55,7 +55,11 @@ template<class T>
 void Array<T>::resize(std::size_t new_capacity)
 {
 	T *temp = new T[new_capacity];
-	std::copy(data_, data_ + capacity_ - 1, temp);
+	if (!empty())
+	{
+		std::copy(data_, data_ + capacity_ - 1, temp);
+	}
+
 	capacity_ = new_capacity;
 	delete[] data_;
 	data_ = temp;
@@ -130,7 +134,7 @@ void Array<T>::insert(std::size_t idx, const T &value)
 	{
 		resize(multiplier * multiplier);
 	}
-	else if (++size_ == capacity_)
+	if (++size_ == capacity_)
 	{
 		resize(capacity_ * multiplier);
 	}
@@ -179,6 +183,12 @@ void Array<T>::clear() noexcept
 	delete[] data_;
 	data_ = nullptr;
 	size_ = capacity_ = 0;
+}
+
+template<class T>
+bool Array<T>::empty() const noexcept
+{
+	return size_ == 0;
 }
 
 #endif //FLATMAP_ARRAY_H

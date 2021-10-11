@@ -68,7 +68,7 @@ private:
 template<class Key, class Value>
 bool FlatMap<Key, Value>::empty() const noexcept
 {
-	return key_arr_.get_size() == 0;
+	return key_arr_.empty();
 }
 
 template<class Key, class Value>
@@ -165,6 +165,10 @@ bool FlatMap<Key, Value>::contains(const Key &key) const noexcept
 template<class Key, class Value>
 bool FlatMap<Key, Value>::erase(const Key &key) noexcept
 {
+	if (key_arr_.empty())
+	{
+		return false;
+	}
 	std::size_t idx = bin_search(key);
 	if (key == key_arr_[idx])
 	{
@@ -179,7 +183,7 @@ template<class Key, class Value>
 bool FlatMap<Key, Value>::insert(const Key &key, const Value &value)
 {
 	std::size_t idx = bin_search(key);
-	if (idx != key_arr_.get_size())
+	if (!key_arr_.empty())
 	{
 		if (key_arr_[idx] == key)
 		{
@@ -195,22 +199,28 @@ template<class Key, class Value>
 Value &FlatMap<Key, Value>::at(const Key &key)
 {
 	std::size_t idx = bin_search(key);
-	if (key != key_arr_[idx])
+	if (!key_arr_.empty())
 	{
-		throw std::out_of_range("there is no such key in the flatmap");
+		if (key == key_arr_[idx])
+		{
+			return val_arr_[idx];
+		}
 	}
-	return val_arr_[idx];
+	throw std::out_of_range("there is no such key in the flatmap");
 }
 
 template<class Key, class Value>
 const Value &FlatMap<Key, Value>::at(const Key &key) const
 {
 	std::size_t idx = bin_search(key);
-	if (key != key_arr_[idx])
+	if (!key_arr_.empty())
 	{
-		throw std::out_of_range("there is no such key in the flatmap");
+		if (key == key_arr_[idx])
+		{
+			return val_arr_[idx];
+		}
 	}
-	return val_arr_[idx];
+	throw std::out_of_range("there is no such key in the flatmap");
 }
 
 template<class Key, class Value>
