@@ -1,31 +1,10 @@
-#include <iostream>
-#include <vector>
+#include "console_interface.h"
 
 enum class Choice
 {
 	DEFECT = 0,
 	COOPERATE,
 };
-
-namespace CL_interface
-{
-	constexpr std::size_t DEFAULT_STEPS = 10;
-	enum class Mode
-	{
-		DETAILED = 0,
-		FAST,
-		TOURNAMENT,
-	};
-
-	struct CLI
-	{
-		std::vector<std::string> strategies {"","",""};
-		std::size_t steps = DEFAULT_STEPS;
-		Mode mode_ = Mode::DETAILED;
-		std::string config_dir;
-		std::string matrix_file;
-	};
-}
 
 class Strategy
 {
@@ -53,10 +32,10 @@ Choice Always_defect::make_choice()
 	return Choice::DEFECT;
 }
 
-int main(int argc, char * argv[])
+int main(int argc, char **argv)
 {
 	CL_interface::CLI CL_arguments;
-	//read CL(CL_interface::CLI &out);
+	read(argc, argv, CL_arguments);
 
 	return 0;
 }
