@@ -1,39 +1,30 @@
 #include "console_interface.h"
+#include "factory.h"
+#include <functional>
+#include <vector>
+#include <memory>
+#include "strategy.h"
 
-enum class Choice
+
+Factory<Strategy, std::string, std::function<Strategy *()>> factory;
+
+void play_all(std::vector<std::unique_ptr<Strategy>> &strategies)
 {
-	DEFECT = 0,
-	COOPERATE,
-};
-
-class Strategy
-{
-public:
-	Strategy();
-	~Strategy();
-
-	virtual Choice make_choice();
-	virtual void show_choice();
-};
-
-class Always_defect : public Strategy
-{
-public:
-	Always_defect();
-	~Always_defect();
-
-	Choice make_choice() override;
-	void show_choice() override;
-
-};
-
-Choice Always_defect::make_choice()
-{
-	return Choice::DEFECT;
+	for (auto &strategy : strategies)
+	{
+		strategy->show_choice();
+	}
 }
 
 int main(int argc, char **argv)
 {
+	if (argc < 4)
+	{
+		std::cerr << "gimme 3 strategies" << std::endl;
+		return -1;
+	}
+	std::vector<std::unique_ptr<Strategy>> strategies;
+
 	CL_interface::CLI CL_arguments;
 	read(argc, argv, CL_arguments);
 
