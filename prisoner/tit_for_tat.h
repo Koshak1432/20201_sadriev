@@ -3,4 +3,14 @@
 
 #include "strategy.h"
 
+class Tit_for_tat : public Strategy
+{
+public:
+	Choice make_choice() override;
+	void show_choice() override;
+
+private:
+	Choice choice = Choice::COOPERATE;
+};
+
 #endif //PRISONER_TIT_FOR_TAT_H

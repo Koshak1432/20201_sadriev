@@ -23,17 +23,17 @@ void read(int argc, char **argv, CL_interface::CLI &out)
 			{
 				if ("detailed" == after)
 				{
-					out.mode_ = CL_interface::Mode::DETAILED;
+					out.mode = CL_interface::Mode::DETAILED;
 					continue;
 				}
 				if ("fast" == after)
 				{
-					out.mode_ = CL_interface::Mode::FAST;
+					out.mode = CL_interface::Mode::FAST;
 					continue;
 				}
 				else if ("tournament" == after)
 				{
-					out.mode_ = CL_interface::Mode::TOURNAMENT;
+					out.mode = CL_interface::Mode::TOURNAMENT;
 					continue;
 				}
 				else

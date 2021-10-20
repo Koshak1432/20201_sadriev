@@ -10,3 +10,13 @@ namespace
 
 	bool b = Factory<Strategy, std::string, std::function<Strategy *()>>::get_instance()->register_creator("cooperate", create);
 }
+
+Choice Cooperate::make_choice()
+{
+	return choice;
+}
+
+void Cooperate::show_choice()
+{
+	std::cout << "show cooperate" << std::endl;
+}

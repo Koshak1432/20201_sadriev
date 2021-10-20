@@ -1,6 +1,8 @@
 #ifndef PRISONER_STRATEGY_H
 #define PRISONER_STRATEGY_H
 
+#include <iostream>
+
 enum class Choice
 {
 	DEFECT = 0,
@@ -10,11 +12,13 @@ enum class Choice
 class Strategy
 {
 public:
-	Strategy();
-	~Strategy();
+	virtual Choice make_choice() = 0;
+	virtual void show_choice() = 0;
 
-	virtual Choice make_choice();
-	virtual void show_choice();
+	virtual ~Strategy()
+	{
+		std::cout << "strategy dtor" << std::endl;
+	}
 };
 
 #endif //PRISONER_STRATEGY_H

@@ -17,7 +17,7 @@ namespace CL_interface
 	{
 		std::vector<std::string> strategies {"","",""};
 		std::size_t steps = DEFAULT_STEPS;
-		Mode mode_ = Mode::DETAILED;
+		Mode mode = Mode::DETAILED;
 		std::string config_dir;
 		std::string matrix_file;
 	};
