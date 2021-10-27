@@ -25,7 +25,7 @@ Choice Tit_for_tat::make_choice()
 	}
 }
 
-void Tit_for_tat::show_choice()
+void Tit_for_tat::get_choice()
 {
 	std::cout << ((choice == Choice::DEFECT) ? "show defect" : "show cooperate") << std::endl;
 }

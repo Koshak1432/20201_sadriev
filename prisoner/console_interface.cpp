@@ -1,7 +1,8 @@
 #include "console_interface.h"
 #include <string>
 
-void read(int argc, char **argv, CL_interface::CLI &out)
+
+void CL_interface::CLI::parse_args(int argc, char **argv)
 {
 	std::size_t pos = 0;
 	std::string_view before;
@@ -23,17 +24,17 @@ void read(int argc, char **argv, CL_interface::CLI &out)
 			{
 				if ("detailed" == after)
 				{
-					out.mode = CL_interface::Mode::DETAILED;
+					mode = Mode::DETAILED;
 					continue;
 				}
 				if ("fast" == after)
 				{
-					out.mode = CL_interface::Mode::FAST;
+					mode = Mode::FAST;
 					continue;
 				}
 				else if ("tournament" == after)
 				{
-					out.mode = CL_interface::Mode::TOURNAMENT;
+					mode = Mode::TOURNAMENT;
 					continue;
 				}
 				else
@@ -43,21 +44,32 @@ void read(int argc, char **argv, CL_interface::CLI &out)
 			}
 			else if ("steps" == before)
 			{
-				out.steps = std::stoul(after);
+				steps = std::stoul(after);
 			}
 			else if ("configs" == before)
 			{
-				out.config_dir = after;
+				config_dir = after;
 			}
 			else if ("matrix" == before)
 			{
-				out.matrix_file = after;
+				matrix_file = after;
 			}
 			else throw std::invalid_argument("invalid argument in long option");
 		}
 		else
 		{
-			out.strategies.push_back(after);
+			strategies.push_back(after);
 		}
 	}
+}
+
+bool CL_interface::CLI::read_msg()
+{
+	std::string str;
+	std::cin >> str;
+	if ("quit" == str)
+	{
+		return false;
+	}
+	return true;
 }

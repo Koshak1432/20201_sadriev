@@ -8,13 +8,6 @@
 
 Factory<Strategy, std::string, std::function<Strategy *()>> factory;
 
-void play_all(std::vector<std::unique_ptr<Strategy>> &strategies)
-{
-	for (auto &strategy : strategies)
-	{
-		strategy->show_choice();
-	}
-}
 
 int main(int argc, char **argv)
 {

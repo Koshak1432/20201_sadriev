@@ -20,9 +20,11 @@ namespace CL_interface
 		Mode mode = Mode::DETAILED;
 		std::string config_dir;
 		std::string matrix_file;
+
+		void parse_args(int argc, char **argv);
+		bool read_msg();
+
 	};
 }
-
-void read(int argc, char **argv, CL_interface::CLI &out);
 
 #endif //PRISONER_CONSOLE_INTERFACE_H

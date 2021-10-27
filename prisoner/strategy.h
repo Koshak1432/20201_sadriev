@@ -13,7 +13,7 @@ class Strategy
 {
 public:
 	virtual Choice make_choice() = 0;
-	virtual void show_choice() = 0;
+	virtual void get_choice() = 0;
 
 	virtual ~Strategy()
 	{

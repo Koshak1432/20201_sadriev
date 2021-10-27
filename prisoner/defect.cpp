@@ -19,7 +19,7 @@ Choice Defect::make_choice()
 	return choice;
 }
 
-void Defect::show_choice()
+void Defect::get_choice()
 {
 	std::cout << "show defect" << std::endl;
 }
