@@ -1,9 +1,9 @@
-#ifndef PRISONER_COOPERATE_H
-#define PRISONER_COOPERATE_H
+#ifndef PRISONER_CHANGE_H
+#define PRISONER_CHANGE_H
 
 #include "strategy.h"
 
-class Cooperate : public Strategy
+class Change : public Strategy
 {
 public:
 	Choice make_choice() override;
@@ -13,4 +13,4 @@ private:
 	Choice choice = Choice::COOPERATE;
 };
 
-#endif //PRISONER_COOPERATE_H
+#endif //PRISONER_CHANGE_H

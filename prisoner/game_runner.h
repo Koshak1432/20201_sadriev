@@ -14,17 +14,17 @@ public:
 
 class Detailed_runner : public Runner
 {
-
+	void run(CL_interface::CLI &ui) override;
 };
 
 class Fast_runner :public Runner
 {
-
+	void run(CL_interface::CLI &ui) override;
 };
 
 class Tournament_runner :public Runner
 {
-
+	void run(CL_interface::CLI &ui) override;
 };
 
 #endif //PRISONER_GAME_RUNNER_H

@@ -5,15 +5,15 @@
 
 enum class Choice
 {
-	DEFECT = 0,
-	COOPERATE,
+	COOPERATE = 0,
+	DEFECT = 1,
 };
 
 class Strategy
 {
 public:
 	virtual Choice make_choice() = 0;
-	virtual void get_choice() = 0;
+	virtual Choice get_choice() = 0;
 
 	virtual ~Strategy()
 	{

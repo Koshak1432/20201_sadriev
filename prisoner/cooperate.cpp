@@ -16,7 +16,7 @@ Choice Cooperate::make_choice()
 	return choice;
 }
 
-void Cooperate::get_choice()
-{
-	std::cout << "show cooperate" << std::endl;
-}
+//Choice Cooperate::get_choice()
+//{
+//	std::cout << "show cooperate" << std::endl;
+//}
