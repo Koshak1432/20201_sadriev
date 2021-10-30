@@ -4,27 +4,40 @@
 #include "factory.h"
 #include "strategy.h"
 #include "console_interface.h"
+#include "game.h"
 
 class Runner
 {
 public:
 	virtual ~Runner() = default;
-	virtual void run(CL_interface::CLI &ui) = 0;
+	virtual void run(CLI &ui) = 0;
 };
 
 class Detailed_runner : public Runner
 {
-	void run(CL_interface::CLI &ui) override;
+public:
+	void run(CLI &ui) override;
+
+private:
+	Game game;
 };
 
 class Fast_runner :public Runner
 {
-	void run(CL_interface::CLI &ui) override;
+public:
+	void run(CLI &ui) override;
+
+private:
+	Game game;
 };
 
 class Tournament_runner :public Runner
 {
-	void run(CL_interface::CLI &ui) override;
+public:
+	void run(CLI &ui) override;
+
+private:
+	Game game;
 };
 
 #endif //PRISONER_GAME_RUNNER_H

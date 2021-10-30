@@ -12,7 +12,7 @@ enum class Choice
 class Strategy
 {
 public:
-	virtual Choice make_choice() = 0;
+	virtual void make_choice() = 0;
 	virtual Choice get_choice() = 0;
 
 	virtual ~Strategy()

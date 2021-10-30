@@ -2,7 +2,7 @@
 #include <string>
 
 
-void CL_interface::CLI::parse_args(int argc, char **argv)
+void CLI::parse_args(int argc, char **argv)
 {
 	std::size_t pos = 0;
 	std::string_view before;
@@ -24,7 +24,7 @@ void CL_interface::CLI::parse_args(int argc, char **argv)
 			{
 				if ("detailed" == after)
 				{
-					mode = Mode::DETAILED;
+					args::mode = Mode::DETAILED;
 					continue;
 				}
 				if ("fast" == after)
@@ -63,7 +63,7 @@ void CL_interface::CLI::parse_args(int argc, char **argv)
 	}
 }
 
-bool CL_interface::CLI::read_msg()
+bool CLI::read_msg()
 {
 	std::string str;
 	std::cin >> str;
@@ -73,3 +73,4 @@ bool CL_interface::CLI::read_msg()
 	}
 	return true;
 }
+

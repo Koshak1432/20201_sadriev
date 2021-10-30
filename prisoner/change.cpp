@@ -11,21 +11,19 @@ namespace
 	bool b = Factory<Strategy, std::string, std::function<Strategy *()>>::get_instance()->register_creator("change", create);
 }
 
-Choice Change::make_choice()
+void Change::make_choice()
 {
 	if (choice == Choice::COOPERATE)
 	{
 		choice = Choice::DEFECT;
-		return Choice::COOPERATE;
 	}
 	else
 	{
 		choice = Choice::COOPERATE;
-		return Choice::DEFECT;
 	}
 }
 
-//Choice Tit_for_tat::get_choice()
-//{
-//	std::cout << ((choice == Choice::DEFECT) ? "get defect" : "get cooperate") << std::endl;
-//}
+Choice Change::get_choice()
+{
+	return choice;
+}

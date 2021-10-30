@@ -3,28 +3,35 @@
 #include <iostream>
 #include <vector>
 
-namespace CL_interface
+constexpr std::size_t DEFAULT_STEPS = 10;
+enum class Mode
 {
-	constexpr std::size_t DEFAULT_STEPS = 10;
-	enum class Mode
-	{
-		DETAILED = 0,
-		FAST,
-		TOURNAMENT,
-	};
+	DETAILED = 0,
+	FAST,
+	TOURNAMENT,
+};
 
-	struct CLI
+class CLI
+{
+public:
+	CLI();
+	~CLI() = default;
+
+	struct args
 	{
-		std::vector<std::string> strategies {"","",""};
+		args() = default;
+		std::vector<std::string> strategies;
 		std::size_t steps = DEFAULT_STEPS;
 		Mode mode = Mode::DETAILED;
 		std::string config_dir;
 		std::string matrix_file;
-
-		void parse_args(int argc, char **argv);
-		bool read_msg();
-
 	};
-}
+
+	void parse_args(int argc, char **argv);
+	bool read_msg();
+
+private:
+
+};
 
 #endif //PRISONER_CONSOLE_INTERFACE_H

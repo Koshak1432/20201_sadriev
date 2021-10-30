@@ -6,8 +6,8 @@
 class Defect : public Strategy
 {
 public:
-	Choice make_choice() override;
-	//Choice get_choice() override;
+	void make_choice() override;
+	Choice get_choice() override;
 
 private:
 	Choice choice = Choice::DEFECT;
