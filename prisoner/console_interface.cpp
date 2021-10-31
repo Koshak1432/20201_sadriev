@@ -24,17 +24,17 @@ void CLI::parse_args(int argc, char **argv)
 			{
 				if ("detailed" == after)
 				{
-					args::mode = Mode::DETAILED;
+					args.mode = Mode::DETAILED;
 					continue;
 				}
 				if ("fast" == after)
 				{
-					mode = Mode::FAST;
+					args.mode = Mode::FAST;
 					continue;
 				}
 				else if ("tournament" == after)
 				{
-					mode = Mode::TOURNAMENT;
+					args.mode = Mode::TOURNAMENT;
 					continue;
 				}
 				else
@@ -44,21 +44,21 @@ void CLI::parse_args(int argc, char **argv)
 			}
 			else if ("steps" == before)
 			{
-				steps = std::stoul(after);
+				args.steps = std::stoul(after);
 			}
 			else if ("configs" == before)
 			{
-				config_dir = after;
+				args.config_dir = after;
 			}
 			else if ("matrix" == before)
 			{
-				matrix_file = after;
+				args.matrix_file = after;
 			}
 			else throw std::invalid_argument("invalid argument in long option");
 		}
 		else
 		{
-			strategies.push_back(after);
+			args.strategies.push_back(after);
 		}
 	}
 }

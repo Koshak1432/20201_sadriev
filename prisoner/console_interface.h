@@ -11,21 +11,22 @@ enum class Mode
 	TOURNAMENT,
 };
 
+struct Args
+{
+	std::vector<std::string> strategies;
+	std::size_t steps = DEFAULT_STEPS;
+	Mode mode = Mode::DETAILED;
+	std::string config_dir;
+	std::string matrix_file;
+};
+
+
 class CLI
 {
 public:
 	CLI();
 	~CLI() = default;
-
-	struct args
-	{
-		args() = default;
-		std::vector<std::string> strategies;
-		std::size_t steps = DEFAULT_STEPS;
-		Mode mode = Mode::DETAILED;
-		std::string config_dir;
-		std::string matrix_file;
-	};
+	Args args;
 
 	void parse_args(int argc, char **argv);
 	bool read_msg();

@@ -5,12 +5,12 @@
 
 namespace
 {
-	Strategy *create()
+	std::unique_ptr<Strategy> create()
 	{
-		return new Defect;
+		return std::unique_ptr<Strategy>(new Defect);
 	}
 
-	bool b = Factory<Strategy, std::string, std::function<Strategy *()>>::get_instance()->register_creator("defect", create);
+	bool b = Factory<Strategy, std::string, std::function<std::unique_ptr<Strategy>()>>::get_instance()->register_creator("defect", create);
 }
 
 void Defect::make_choice()

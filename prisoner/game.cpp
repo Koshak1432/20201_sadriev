@@ -20,6 +20,21 @@ std::vector<int> &Matrix::operator [](std::size_t idx)
 	return matrix_[idx];
 }
 
+Matrix::Matrix()
+{
+	matrix_ =
+	{
+		std::vector<int>{7, 7, 7},
+		std::vector<int>{3, 3, 9},
+		std::vector<int>{3, 9, 3},
+		std::vector<int>{9, 3, 3},
+		std::vector<int>{0, 5, 5},
+		std::vector<int>{5, 0, 5},
+		std::vector<int>{5, 5, 0},
+		std::vector<int>{1, 1, 1},
+	};
+}
+
 void Game::step(const std::vector<std::unique_ptr<Strategy>> &strategies)
 {
 	//ask for choices

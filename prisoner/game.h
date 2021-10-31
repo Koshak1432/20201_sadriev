@@ -13,6 +13,7 @@ constexpr std::size_t COLS = 3;
 class Matrix
 {
 public:
+	Matrix();
 	Matrix(std::size_t rows = ROWS, std::size_t cols = COLS);
 	~Matrix() = default;
 	std::vector<int> get_payoffs(const std::vector<Choice> &choices) const; //get 3 payoffs
@@ -37,7 +38,7 @@ struct Result
 class Game
 {
 public:
-	Game() = default;
+	Game();
 	void step(const std::vector<std::unique_ptr<Strategy>> &strategies);
 private:
 	Matrix matrix_;

@@ -20,6 +20,7 @@ public:
 
 private:
 	Game game;
+	std::vector<std::unique_ptr<Strategy>> strategies;
 };
 
 class Fast_runner :public Runner

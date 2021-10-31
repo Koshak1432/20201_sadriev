@@ -3,12 +3,12 @@
 
 namespace
 {
-	Strategy *create()
+	std::unique_ptr<Strategy> create()
 	{
-		return new Cooperate;
+		return std::unique_ptr<Strategy>(new Cooperate);
 	}
 
-	bool b = Factory<Strategy, std::string, std::function<Strategy *()>>::get_instance()->register_creator("cooperate", create);
+	bool b = Factory<Strategy, std::string, std::function<std::unique_ptr<Strategy>()>>::get_instance()->register_creator("cooperate", create);
 }
 
 void Cooperate::make_choice()
