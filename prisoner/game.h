@@ -14,17 +14,13 @@ class Matrix
 {
 public:
 	Matrix();
-	Matrix(std::size_t rows = ROWS, std::size_t cols = COLS);
+	explicit Matrix(std::size_t rows = ROWS, std::size_t cols = COLS);
 	~Matrix() = default;
 	std::vector<int> get_payoffs(const std::vector<Choice> &choices) const; //get 3 payoffs
-
-
 	std::vector<int> &operator[] (std::size_t idx);
 
 private:
 	std::vector<std::vector<int>> matrix_;
-
-	int choices_to_idx(const std::vector<Choice> &vec) const; //gets row in matrix
 };
 
 struct Result
@@ -35,13 +31,16 @@ struct Result
 	std::vector<int> scores_;
 };
 
+//matrix from runner, to runner from main
+//strategies from runner, to runner from cli by making from names
 class Game
 {
 public:
-	Game();
-	void step(const std::vector<std::unique_ptr<Strategy>> &strategies);
+	Game(const Matrix &matrix, std::vector<std::unique_ptr<Strategy>> strategies);
+	void step();
 private:
 	Matrix matrix_;
+	std::vector<std::unique_ptr<Strategy>> strategies_;
 	Result res_;
 };
 

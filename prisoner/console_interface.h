@@ -4,6 +4,7 @@
 #include <vector>
 
 constexpr std::size_t DEFAULT_STEPS = 10;
+
 enum class Mode
 {
 	DETAILED = 0,
@@ -20,17 +21,15 @@ struct Args
 	std::string matrix_file;
 };
 
+Args parse_args(int argc, char **argv);
 
 class CLI
 {
 public:
 	CLI();
 	~CLI() = default;
-	Args args;
 
-	void parse_args(int argc, char **argv);
 	bool read_msg();
-
 private:
 
 };

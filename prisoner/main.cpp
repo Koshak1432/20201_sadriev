@@ -17,8 +17,10 @@ int main(int argc, char **argv)
 	}
 	std::vector<std::unique_ptr<Strategy>> strategies;
 
-	CL_interface::CLI CL_arguments;
-	CL_arguments.parse_args(argc, argv);
+	CLI ui;
+	Args args = parse_args(argc, argv);
+
+
 
 	return 0;
 }

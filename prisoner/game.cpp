@@ -4,7 +4,7 @@ Matrix::Matrix(std::size_t rows, std::size_t cols) : matrix_(std::vector<std::ve
 {
 }
 
-int Matrix::choices_to_idx(const std::vector<Choice> &choices) const //choices to binary code
+static int choices_to_idx(const std::vector<Choice> &choices) //choices to binary code
 {
 	return static_cast<int>(choices[0]) * 4 + static_cast<int>(choices[1]) * 2 + static_cast<int>(choices[2]) * 1;
 }
@@ -35,17 +35,18 @@ Matrix::Matrix()
 	};
 }
 
-void Game::step(const std::vector<std::unique_ptr<Strategy>> &strategies)
+void Game::step()
 {
 	//ask for choices
-	for (std::size_t i = 0; i < strategies.size(); ++i)
+	for (std::size_t i = 0; i < strategies_.size(); ++i)
 	{
-		res_.choices_[i] = strategies[i]->get_choice();
+		strategies_[i]->make_choice();
+		res_.choices_[i] = strategies_[i]->get_choice();
 	}
 	//get payoffs
 	res_.payoffs_ = matrix_.get_payoffs(res_.choices_);
 	//add to scores
-	for (std::size_t i = 0; i < strategies.size(); ++i)
+	for (std::size_t i = 0; i < strategies_.size(); ++i)
 	{
 		res_.scores_[i] += res_.payoffs_[i]; //if strategies more than 3???? todo
 	}
@@ -53,6 +54,10 @@ void Game::step(const std::vector<std::unique_ptr<Strategy>> &strategies)
 	//add to history in each strategy todo
 }
 
-Result::Result(int cols) :choices_(cols), payoffs_(cols), scores_(cols)
+Game::Game(const Matrix &matrix, std::vector<std::unique_ptr<Strategy>> strategies) : matrix_(matrix), strategies_(std::move(strategies)), res_()
 {
+	assert(strategies.size() == 3);
 }
+
+Result::Result(int cols) :choices_(cols), payoffs_(cols), scores_(cols)
+{}

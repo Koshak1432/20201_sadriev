@@ -13,32 +13,38 @@ public:
 	virtual void run(CLI &ui) = 0;
 };
 
-class Detailed_runner : public Runner
-{
-public:
-	void run(CLI &ui) override;
-
-private:
-	Game game;
-	std::vector<std::unique_ptr<Strategy>> strategies;
-};
-
 class Fast_runner :public Runner
 {
 public:
+	Fast_runner(const Matrix &matrix, const std::vector<std::string> &names, std::size_t steps);
 	void run(CLI &ui) override;
 
 private:
 	Game game;
+	std::size_t steps_ = DEFAULT_STEPS;
 };
 
+class Detailed_runner : public Runner
+{
+public:
+	Detailed_runner(const Matrix &matrix, const std::vector<std::string> &names);
+	void run(CLI &ui) override;
+
+private:
+	Game game;
+	//steps not need
+};
+
+//consume -- by value, borrow -- by reference
 class Tournament_runner :public Runner
 {
 public:
+	Tournament_runner(const Matrix &matrix, std::vector<std::string> names, std::size_t steps);
 	void run(CLI &ui) override;
 
 private:
-	Game game;
+	std::vector<std::string> names_;
+	std::size_t steps_ = DEFAULT_STEPS;
 };
 
 #endif //PRISONER_GAME_RUNNER_H

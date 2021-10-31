@@ -2,8 +2,9 @@
 #include <string>
 
 
-void CLI::parse_args(int argc, char **argv)
+Args parse_args(int argc, char **argv)
 {
+	Args args;
 	std::size_t pos = 0;
 	std::string_view before;
 	std::string_view argument;
@@ -61,6 +62,7 @@ void CLI::parse_args(int argc, char **argv)
 			args.strategies.push_back(after);
 		}
 	}
+	return args;
 }
 
 bool CLI::read_msg()
