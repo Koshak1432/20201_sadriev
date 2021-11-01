@@ -18,17 +18,18 @@ public:
 	~Matrix() = default;
 	std::vector<int> get_payoffs(const std::vector<Choice> &choices) const; //get 3 payoffs
 	std::vector<int> &operator[] (std::size_t idx);
-
 private:
 	std::vector<std::vector<int>> matrix_;
 };
 
-struct Result
+struct Result //как принтить с именами, если имена уже выкинуты?????
 {
 	explicit Result(int cols = COLS);
 	std::vector<Choice> choices_;
 	std::vector<int> payoffs_;
 	std::vector<int> scores_;
+
+	void print();
 };
 
 //matrix from runner, to runner from main

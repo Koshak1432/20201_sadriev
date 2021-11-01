@@ -32,7 +32,6 @@ public:
 
 private:
 	Game game;
-	//steps not need
 };
 
 //consume -- by value, borrow -- by reference
