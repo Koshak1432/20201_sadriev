@@ -10,25 +10,35 @@ static std::vector<std::unique_ptr<Strategy>> make_strategies_from_names(const s
 	return strategies;
 }
 
-static std::size_t binom(std::size_t n, std::size_t k)
+static void add_to_global_scores(std::map<std::string, int> &total_scores, const std::vector<std::string> &names, const Result &result)
 {
-	if (n < k)
+	for (std::size_t i = 0; i < names.size(); ++i)
 	{
-		return 0;
+		auto it = total_scores.find(names[i]);
+		if (it == total_scores.end())
+		{
+			throw std::invalid_argument("invalid"); //impossible???
+		}
+		it->second += result.scores_[i];
 	}
-	if (1 == k)
+}
+
+static void print_after_game(const std::vector<std::string> &names, const Result &result) noexcept
+{
+	std::cout << std::string("FINAL SCORES") << std::endl;
+	for (std::size_t i = 0; i < names.size(); ++i)
 	{
-		return n;
+		std::cout << names[i] + "has " << result.scores_[i] << std::endl;
 	}
-	if (0 == k)
+}
+
+static void print_final(const std::map<std::string, int> &map) noexcept
+{
+	std::cout << "FINAL RESULTS FOR ALL STRATEGIES" << std::endl;
+	for (auto &strategy : map)
 	{
-		return 1;
+		std::cout << strategy.first + " has " << strategy.second << " points" <<std::endl;
 	}
-	if (k > n / 2)
-	{
-		k = n - k;
-	}
-	return binom(n - 1, k) + binom(n - 1, k - 1);
 }
 
 Fast_runner::Fast_runner(const Matrix &matrix, std::vector<std::string> names, std::size_t steps) : game(matrix, make_strategies_from_names(names)), names_(std::move(names)), steps_(steps)
@@ -52,16 +62,7 @@ void Fast_runner::run(CLI &ui)
 	{
 		game.step();
 	}
-	print_final(game.get_result());
-}
-
-void Fast_runner::print_final(const Result &result) const noexcept
-{
-	std::cout << std::string("FINAL SCORES") << std::endl;
-	for (std::size_t i = 0; i < names_.size(); ++i)
-	{
-		std::cout << names_[i] + "has " << result.scores_[i] << std::endl;
-	}
+	print_after_game(names_, game.get_result());
 }
 
 void Detailed_runner::run(CLI &ui)
@@ -71,7 +72,7 @@ void Detailed_runner::run(CLI &ui)
 		game.step();
 		print_intermediate(game.get_result());
 	}
-	print_final(game.get_result());
+	print_after_game(names_, game.get_result());
 }
 
 void Detailed_runner::print_intermediate(const Result &result) const noexcept
@@ -90,18 +91,14 @@ void Detailed_runner::print_intermediate(const Result &result) const noexcept
 	std::cout << "--------------" << std::endl;
 }
 
-void Detailed_runner::print_final(const Result &result) const noexcept
-{
-	std::cout << std::string("FINAL SCORES") << std::endl;
-	for (std::size_t i = 0; i < names_.size(); ++i)
-	{
-		std::cout << names_[i] + "has " << result.scores_[i] << std::endl;
-	}
-}
-
 void Tournament_runner::run(CLI &ui)
 {
-	std::vector<int> total_scores(names_.size()); //!!!!!!!!!!!
+	std::map<std::string, int> total_scores;
+	for (auto &name : names_)
+	{
+		total_scores.insert({name, 0});
+	}
+
 	std::vector<bool> bool_vec(names_.size());
 	std::fill(bool_vec.end() - COLS, bool_vec.end(), true);
 	while (std::next_permutation(bool_vec.begin(), bool_vec.end()))
@@ -119,10 +116,8 @@ void Tournament_runner::run(CLI &ui)
 		{
 			game.step();
 		}
-		print_final(game.get_result());
-		//add to total score for strategies
+		add_to_global_scores(total_scores, names, game.get_result());
+		print_after_game(names, game.get_result());
 	}
-
-	//print games results
-	//print final result????
+	print_final(total_scores);
 }

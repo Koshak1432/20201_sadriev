@@ -11,9 +11,6 @@ class Runner
 public:
 	virtual ~Runner() = default;
 	virtual void run(CLI &ui) = 0;
-
-private:
-	virtual void print_final(const Result &result) const noexcept = 0; //?????
 };
 
 class Fast_runner :public Runner
@@ -26,8 +23,6 @@ private:
 	Game game;
 	std::vector<std::string> names_;
 	std::size_t steps_ = DEFAULT_STEPS;
-
-	void print_final(const Result &result) const noexcept override;
 };
 
 class Detailed_runner : public Runner
@@ -41,7 +36,6 @@ private:
 	std::vector<std::string> names_;
 
 	void print_intermediate(const Result &result) const noexcept;
-	void print_final(const Result &result) const noexcept override;
 };
 
 //consume -- by value, borrow -- by reference
@@ -57,7 +51,6 @@ private:
 	std::size_t steps_ = DEFAULT_STEPS;
 	Matrix matrix_;
 
-	void print_final(const Result &result) const noexcept override;
 };
 
 #endif //PRISONER_GAME_RUNNER_H
