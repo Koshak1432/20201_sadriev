@@ -14,7 +14,7 @@ std::vector<int> Matrix::get_payoffs(const std::vector<Choice> &choices) const
 	return matrix_[choices_to_idx(choices)];
 }
 
-std::vector<int> &Matrix::operator [](std::size_t idx)
+std::vector<int> &Matrix::operator [](std::size_t idx) noexcept
 {
 	assert (idx < ROWS && idx >= 0);
 	return matrix_[idx];
@@ -48,7 +48,7 @@ void Game::step()
 	//add to scores
 	for (std::size_t i = 0; i < strategies_.size(); ++i)
 	{
-		res_.scores_[i] += res_.payoffs_[i]; //if strategies more than 3???? todo
+		res_.scores_[i] += res_.payoffs_[i];
 	}
 
 	//add to history in each strategy todo
@@ -57,6 +57,11 @@ void Game::step()
 Game::Game(const Matrix &matrix, std::vector<std::unique_ptr<Strategy>> strategies) : matrix_(matrix), strategies_(std::move(strategies)), res_()
 {
 	assert(strategies.size() == 3);
+}
+
+Result Game::get_result() const noexcept
+{
+	return res_;
 }
 
 Result::Result(int cols) :choices_(cols), payoffs_(cols), scores_(cols)
