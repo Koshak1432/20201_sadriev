@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+class Result;
+
 enum class Choice
 {
 	COOPERATE = 0,
@@ -14,7 +16,7 @@ class Strategy
 public:
 	virtual void make_choice() = 0;
 	virtual Choice get_choice() = 0;
-
+	virtual void handle_result(const Result &res) = 0;
 	virtual ~Strategy() = default;
 };
 

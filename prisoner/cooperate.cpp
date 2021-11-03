@@ -20,3 +20,6 @@ Choice Cooperate::get_choice()
 {
 	return choice;
 }
+
+void Cooperate::handle_result(const Result &res)
+{}

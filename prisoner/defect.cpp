@@ -22,3 +22,6 @@ Choice Defect::get_choice()
 {
 	return choice;
 }
+
+void Defect::handle_result(const Result &res)
+{}

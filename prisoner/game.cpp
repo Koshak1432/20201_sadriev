@@ -46,7 +46,11 @@ void Game::step()
 	{
 		res_.scores_[i] += res_.payoffs_[i];
 	}
-	//add to history in each strategy todo
+	//handle the result
+	for (auto &strategy : strategies_)
+	{
+		strategy->handle_result(res_);
+	}
 }
 
 Game::Game(const Matrix &matrix, std::vector<std::unique_ptr<Strategy>> strategies) : matrix_(matrix), strategies_(std::move(strategies)), res_()

@@ -27,3 +27,6 @@ Choice Change::get_choice()
 {
 	return choice;
 }
+
+void Change::handle_result(const Result &res)
+{}

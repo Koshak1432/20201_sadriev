@@ -18,6 +18,7 @@ Matrix read_matrix(const std::string &file_path)
 	{
 		throw std::invalid_argument("can't open matrix file\n");
 	}
+	stream.exceptions(std::ios::badbit | std::ios::failbit |std::ios::eofbit);
 	Matrix matrix{};
 	std::vector<int> inputs(COLS, 0);
 	std::vector<int> row(inputs);
