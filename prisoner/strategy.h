@@ -15,10 +15,7 @@ public:
 	virtual void make_choice() = 0;
 	virtual Choice get_choice() = 0;
 
-	virtual ~Strategy()
-	{
-		std::cout << "strategy dtor" << std::endl;
-	}
+	virtual ~Strategy() = default;
 };
 
 #endif //PRISONER_STRATEGY_H
