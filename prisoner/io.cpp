@@ -1,6 +1,5 @@
 #include "io.h"
 
-
 std::string read_line(std::ifstream stream)
 {
 	std::string line;
@@ -8,26 +7,35 @@ std::string read_line(std::ifstream stream)
 	return line;
 }
 
-Matrix read_matrix(std::ifstream stream)
+Matrix read_matrix(const std::string &file_path)
 {
-	Matrix matrix(ROWS, COLS);
-	int first = 0;
-	int second = 0;
-	int third = 0;
-	std::vector<int> vec(3, 0);
+	if (file_path.empty())
+	{
+		return Matrix{};
+	}
+	std::ifstream stream(file_path);
+	if (!stream.is_open())
+	{
+		throw std::invalid_argument("can't open matrix file\n");
+	}
+	Matrix matrix{};
+	std::vector<int> inputs(COLS, 0);
+	std::vector<int> row(inputs);
 
 	for (std::size_t i = 0; i < ROWS; ++i)
 	{
-		if (stream >> first >> second >> third)
+		if (stream >> inputs[0] >> inputs[1] >> inputs[2])
 		{
-			vec[0] = first;
-			vec[1] = second;
-			vec[2] = third;
-			matrix[i] = vec;
+			for (std::size_t j = 0; j < COLS; ++j)
+			{
+				row[j] = inputs[j];
+			}
+			matrix[i] = row;
 		}
 		else
 		{
-			throw std::invalid_argument("invalid matrix");
+			throw std::invalid_argument("invalid matrix\n");
 		}
 	}
+	return matrix;
 }

@@ -25,25 +25,25 @@ static void add_to_global_scores(std::map<std::string, int> &total_scores, const
 
 static void print_after_game(const std::vector<std::string> &names, const Result &result) noexcept
 {
-	std::cout << std::string("FINAL SCORES") << std::endl;
+	std::cout << std::string("FINAL SCORES FOR THE TRIPLE") << std::endl;
 	for (std::size_t i = 0; i < names.size(); ++i)
 	{
-		std::cout << names[i] + "has " << result.scores_[i] << std::endl;
+		std::cout << "[" + names[i] + ", " << result.scores_[i] << "]" << std::endl;
 	}
 }
 
 static void print_final(const std::map<std::string, int> &map) noexcept
 {
-	std::cout << "FINAL RESULTS FOR ALL STRATEGIES" << std::endl;
+	std::cout << "------RESULTS FOR ALL STRATEGIES------" << std::endl;
 	for (auto &strategy : map)
 	{
-		std::cout << strategy.first + " has " << strategy.second << " points" <<std::endl;
+		std::cout << "[" + strategy.first + ", " << strategy.second << "]" <<std::endl;
 	}
 }
 
 Fast_runner::Fast_runner(const Matrix &matrix, std::vector<std::string> names, std::size_t steps) : game(matrix, make_strategies_from_names(names)), names_(std::move(names)), steps_(steps)
 {
-	assert(names.size() == 3);
+	//assert(names.size() == 3);
 }
 
 Tournament_runner::Tournament_runner(const Matrix &matrix, std::vector<std::string> names, std::size_t steps) :names_(std::move(names)), steps_(steps), matrix_(matrix)
@@ -85,8 +85,7 @@ void Detailed_runner::print_intermediate(const Result &result) const noexcept
 		{
 			choice = "defect";
 		}
-		std::cout << names_[i] + " chose to" + choice + ", got" <<
-			result.payoffs_[i] << "points in this round and has " << result.scores_[i] << " in total" << std::endl;
+		std::cout << "[" + names_[i] + ", " + choice + ", " << result.payoffs_[i] << ", " << result.scores_[i] << "]" << std::endl;
 	}
 	std::cout << "--------------" << std::endl;
 }

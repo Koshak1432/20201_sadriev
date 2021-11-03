@@ -26,7 +26,7 @@ Args parse_args(int argc, char **argv);
 class CLI
 {
 public:
-	CLI();
+	CLI() = default;
 	~CLI() = default;
 
 	bool read_msg();

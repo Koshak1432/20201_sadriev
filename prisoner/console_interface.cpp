@@ -1,7 +1,6 @@
 #include "console_interface.h"
 #include <string>
 
-
 Args parse_args(int argc, char **argv)
 {
 	Args args;
@@ -28,7 +27,7 @@ Args parse_args(int argc, char **argv)
 					args.mode = Mode::DETAILED;
 					continue;
 				}
-				if ("fast" == after)
+				else if ("fast" == after)
 				{
 					args.mode = Mode::FAST;
 					continue;
@@ -59,7 +58,7 @@ Args parse_args(int argc, char **argv)
 		}
 		else
 		{
-			args.strategies.push_back(after);
+			args.strategies.emplace_back(std::string(argument));
 		}
 	}
 	return args;

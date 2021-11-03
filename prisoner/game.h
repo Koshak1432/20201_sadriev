@@ -14,16 +14,16 @@ class Matrix
 {
 public:
 	Matrix();
-	explicit Matrix(std::size_t rows = ROWS, std::size_t cols = COLS);
+//	explicit Matrix(std::size_t rows = ROWS, std::size_t cols = COLS);
 	Matrix(const Matrix &other) = default;
 	~Matrix() = default;
-	std::vector<int> get_payoffs(const std::vector<Choice> &choices) const; //get 3 payoffs
+	[[nodiscard]] std::vector<int> get_payoffs(const std::vector<Choice> &choices) const; //get 3 payoffs
 	std::vector<int> &operator[] (std::size_t idx) noexcept;
 private:
 	std::vector<std::vector<int>> matrix_;
 };
 
-struct Result //как принтить с именами, если имена уже выкинуты?????
+struct Result
 {
 	explicit Result(int cols = COLS);
 	std::vector<Choice> choices_;
@@ -32,13 +32,13 @@ struct Result //как принтить с именами, если имена �
 };
 
 //matrix from runner, to runner from main
-//strategies from runner, to runner from cli by making from names
+//strategies from runner, to runner from args by making from names
 class Game
 {
 public:
 	Game(const Matrix &matrix, std::vector<std::unique_ptr<Strategy>> strategies);
 	void step();
-	Result get_result() const noexcept;
+	[[nodiscard]] Result get_result() const noexcept;
 private:
 	Matrix matrix_;
 	std::vector<std::unique_ptr<Strategy>> strategies_;

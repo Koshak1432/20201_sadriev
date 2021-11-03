@@ -1,8 +1,8 @@
 #include "game.h"
 
-Matrix::Matrix(std::size_t rows, std::size_t cols) : matrix_(std::vector<std::vector<int>>(rows, std::vector<int>(cols, 0)))
-{
-}
+//Matrix::Matrix(std::size_t rows, std::size_t cols) : matrix_(std::vector<std::vector<int>>(rows, std::vector<int>(cols, 0)))
+//{
+//}
 
 static int choices_to_idx(const std::vector<Choice> &choices) //choices to binary code
 {
@@ -50,13 +50,12 @@ void Game::step()
 	{
 		res_.scores_[i] += res_.payoffs_[i];
 	}
-
 	//add to history in each strategy todo
 }
 
 Game::Game(const Matrix &matrix, std::vector<std::unique_ptr<Strategy>> strategies) : matrix_(matrix), strategies_(std::move(strategies)), res_()
 {
-	assert(strategies.size() == 3);
+	//assert(strategies.size() == 3);
 }
 
 Result Game::get_result() const noexcept

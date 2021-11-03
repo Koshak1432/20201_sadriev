@@ -40,7 +40,7 @@ std::unique_ptr<Product> Factory<Product, Id_type, Creator>::create_product_by_i
 	auto it = creators_.find(id);
 	if (it == creators_.end())
 	{
-		throw std::invalid_argument("invalid");
+		throw std::invalid_argument("invalid id for the factory\n");
 	}
 	return it->second();
 }
@@ -48,7 +48,7 @@ std::unique_ptr<Product> Factory<Product, Id_type, Creator>::create_product_by_i
 template<class Product, class Id_type, class Creator>
 bool Factory<Product, Id_type, Creator>::register_creator(const Id_type &id, Creator creator)
 {
-	creators_.at(id) = creator;
+	creators_.insert({id, creator});
 	return true;
 }
 

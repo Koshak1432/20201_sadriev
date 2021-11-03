@@ -4,10 +4,7 @@
 #include <fstream>
 #include "game.h"
 
-//class Matrix;
-
 std::string read_line(std::ifstream stream);
-Matrix read_matrix(std::ifstream stream);
-
+Matrix read_matrix(const std::string &file_path);
 
 #endif //PRISONER_IO_H
