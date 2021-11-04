@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-class Result;
+struct Result;
 
 enum class Choice
 {
@@ -14,7 +14,6 @@ enum class Choice
 class Strategy
 {
 public:
-	virtual void make_choice() = 0;
 	virtual Choice get_choice() = 0;
 	virtual void handle_result(const Result &res) = 0;
 	virtual ~Strategy() = default;

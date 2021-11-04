@@ -13,15 +13,12 @@ namespace
 	bool b = Factory<Strategy, std::string, std::function<std::unique_ptr<Strategy>()>>::get_instance()->register_creator("defect", create);
 }
 
-void Defect::make_choice()
-{
-	choice = Choice::DEFECT;
-}
-
 Choice Defect::get_choice()
 {
-	return choice;
+	return choice_;
 }
 
 void Defect::handle_result(const Result &res)
-{}
+{
+	choice_ = Choice::DEFECT;
+}
