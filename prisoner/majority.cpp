@@ -18,5 +18,14 @@ Choice Majority::get_choice()
 
 void Majority::handle_result(const Result &res) //todo ??????????????????????
 {
-
+	for (auto &choice : res.choices_)
+	{
+		if (Choice::COOPERATE == choice)
+		{
+			++num_coop;
+			continue;
+		}
+		++num_def;
+	}
+	(num_coop > num_def) ? choice_ = Choice::COOPERATE : choice_ = Choice::DEFECT;
 }

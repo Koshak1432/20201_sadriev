@@ -8,7 +8,6 @@
 #include "strategy.h"
 
 constexpr std::size_t ROWS = 8;
-constexpr std::size_t COLS = 3;
 
 class Matrix
 {
@@ -20,14 +19,6 @@ public:
 	std::vector<int> &operator[] (std::size_t idx) noexcept;
 private:
 	std::vector<std::vector<int>> matrix_;
-};
-
-struct Result
-{
-	explicit Result(int cols = COLS);
-	std::vector<Choice> choices_;
-	std::vector<int> payoffs_;
-	std::vector<int> scores_;
 };
 
 //matrix from runner, to runner from main

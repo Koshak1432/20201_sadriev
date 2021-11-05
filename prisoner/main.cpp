@@ -1,7 +1,6 @@
 #include "game_runner.h"
 #include "io.h"
 
-//Factory<Strategy, std::string, std::function<Strategy *()>> factory;
 
 int main(int argc, char **argv)
 {

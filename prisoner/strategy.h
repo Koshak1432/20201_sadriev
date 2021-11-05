@@ -2,13 +2,22 @@
 #define PRISONER_STRATEGY_H
 
 #include <iostream>
+#include <vector>
 
-struct Result;
+constexpr std::size_t COLS = 3;
 
 enum class Choice
 {
 	COOPERATE = 0,
 	DEFECT = 1,
+};
+
+struct Result
+{
+	explicit Result(int cols = COLS);
+	std::vector<Choice> choices_;
+	std::vector<int> payoffs_;
+	std::vector<int> scores_;
 };
 
 class Strategy

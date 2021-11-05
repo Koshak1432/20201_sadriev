@@ -50,7 +50,6 @@ private:
 	std::vector<std::string> names_;
 	std::size_t steps_ = DEFAULT_STEPS;
 	Matrix matrix_;
-
 };
 
 #endif //PRISONER_GAME_RUNNER_H
