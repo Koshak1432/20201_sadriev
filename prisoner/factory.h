@@ -6,13 +6,6 @@
 #include <functional>
 #include <memory>
 
-//struct Error_handling
-//{
-//	static void not_found()
-//	{
-//		throw std::invalid_argument("not found");
-//	}
-//};
 
 template<class Product, class Id_type, class Creator>
 class Factory
@@ -51,5 +44,7 @@ bool Factory<Product, Id_type, Creator>::register_creator(const Id_type &id, Cre
 	creators_.insert({id, creator});
 	return true;
 }
+
+using Strategy_factory = Factory<Strategy, std::string, std::function<std::unique_ptr<Strategy>()>>;
 
 #endif //PRISONER_FACTORY_H

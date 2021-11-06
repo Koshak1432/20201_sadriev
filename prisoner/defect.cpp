@@ -1,7 +1,9 @@
 #include "defect.h"
-#include "factory.h"
+
 #include <iostream>
 #include <functional>
+
+#include "factory.h"
 
 namespace
 {
@@ -10,7 +12,7 @@ namespace
 		return std::unique_ptr<Strategy>(new Defect);
 	}
 
-	bool b = Factory<Strategy, std::string, std::function<std::unique_ptr<Strategy>()>>::get_instance()->register_creator("defect", create);
+	bool b = Strategy_factory::get_instance()->register_creator("defect", create);
 }
 
 Choice Defect::get_choice()
@@ -19,6 +21,9 @@ Choice Defect::get_choice()
 }
 
 void Defect::handle_result(const Result &res)
+{}
+
+void Defect::make_choice()
 {
 	choice_ = Choice::DEFECT;
 }

@@ -1,7 +1,6 @@
 #include "change.h"
 #include "factory.h"
 
-
 namespace
 {
 	std::unique_ptr<Strategy> create()
@@ -9,7 +8,7 @@ namespace
 		return std::unique_ptr<Strategy>(new Change);
 	}
 
-	bool b = Factory<Strategy, std::string, std::function<std::unique_ptr<Strategy>()>>::get_instance()->register_creator("change", create);
+	bool b = Strategy_factory::get_instance()->register_creator("change", create);
 }
 
 Choice Change::get_choice()
@@ -18,6 +17,9 @@ Choice Change::get_choice()
 }
 
 void Change::handle_result(const Result &res)
+{}
+
+void Change::make_choice()
 {
 	if (choice_ == Choice::COOPERATE)
 	{

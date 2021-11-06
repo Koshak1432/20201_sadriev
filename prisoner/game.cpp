@@ -36,6 +36,7 @@ void Game::step()
 	//ask for choices
 	for (std::size_t i = 0; i < strategies_.size(); ++i)
 	{
+		strategies_[i]->make_choice();
 		res_.choices_[i] = strategies_[i]->get_choice();
 	}
 	//get payoffs

@@ -4,7 +4,6 @@
 #include <fstream>
 #include "game.h"
 
-
 std::string read_line(std::ifstream &stream);
 Matrix read_matrix(const std::string &file_path);
 

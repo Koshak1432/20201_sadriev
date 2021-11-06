@@ -1,8 +1,10 @@
-#include "endurer.h"
+#include "patient.h"
+
+#include <filesystem>
+
 #include "factory.h"
 #include "io.h"
 #include "config_provider.h"
-#include <filesystem>
 
 namespace
 {
@@ -10,38 +12,39 @@ namespace
 	{
 		std::size_t verge = DEFAULT_VERGE;
 		std::filesystem::path path(Provider::get_instance()->get_dir());
-		std::ifstream stream(path / "endurer.txt");
+		std::ifstream stream(path / "patient.txt");
 		if (stream.is_open())
 		{
 			stream.exceptions(std::ios::badbit | std::ios::failbit);
 			std::string input_verge = read_line(stream);
 			verge = std::stoul(input_verge); //throw exception invalid arg
 		}
-		return std::unique_ptr<Strategy>(new Endurer(verge));
+		return std::unique_ptr<Strategy>(new Patient(verge));
 	}
 
-	bool b = Factory<Strategy, std::string, std::function<std::unique_ptr<Strategy>()>>::get_instance()->register_creator("endurer", create);
+	bool b = Strategy_factory::get_instance()->register_creator("patient", create);
 }
 
-Choice Endurer::get_choice()
+Choice Patient::get_choice()
 {
 	return choice_;
 }
 
-void Endurer::handle_result(const Result &res)
+void Patient::handle_result(const Result &res)
 {
 	for (auto &choice : res.choices_)
 	{
 		if (Choice::DEFECT == choice)
 		{
-			++num_def;
+			++num_def_;
 		}
-	}
-	if (num_def > verge_)
-	{
-		choice_ = Choice::DEFECT;
 	}
 }
 
-Endurer::Endurer(std::size_t verge) : verge_(verge)
+Patient::Patient(std::size_t verge) : verge_(verge)
 {}
+
+void Patient::make_choice()
+{
+	(num_def_ > verge_) ? choice_ = Choice::DEFECT : choice_ = Choice::COOPERATE;
+}

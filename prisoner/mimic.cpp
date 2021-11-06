@@ -8,7 +8,7 @@ namespace
 		return std::unique_ptr<Strategy>(new Mimic);
 	}
 
-	bool b = Factory<Strategy, std::string, std::function<std::unique_ptr<Strategy>()>>::get_instance()->register_creator("mimic", create);
+	bool b = Strategy_factory::get_instance()->register_creator("mimic", create);
 }
 
 Choice Mimic::get_choice()
@@ -16,7 +16,7 @@ Choice Mimic::get_choice()
 	return choice_;
 }
 
-void Mimic::handle_result(const Result &res) //todo ??????????????????????
+void Mimic::handle_result(const Result &res)
 {
 	int max = 0;
 	for (std::size_t i = 0; i < res.scores_.size(); ++i)
@@ -28,3 +28,6 @@ void Mimic::handle_result(const Result &res) //todo ??????????????????????
 		}
 	}
 }
+
+void Mimic::make_choice()
+{}

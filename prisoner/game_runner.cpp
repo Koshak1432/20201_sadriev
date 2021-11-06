@@ -7,7 +7,7 @@ static std::vector<std::unique_ptr<Strategy>> make_strategies_from_names(const s
 	strategies.reserve(COLS);
 	for (auto &name : names)
 	{
-		strategies.push_back(Factory<Strategy, std::string, std::function<std::unique_ptr<Strategy>()>>::get_instance()->create_product_by_id(name));
+		strategies.push_back(Strategy_factory::get_instance()->create_product_by_id(name));
 	}
 	return strategies;
 }

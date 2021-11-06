@@ -8,7 +8,7 @@ namespace
 		return std::unique_ptr<Strategy>(new Cooperate);
 	}
 
-	bool b = Factory<Strategy, std::string, std::function<std::unique_ptr<Strategy>()>>::get_instance()->register_creator("cooperate", create);
+	bool b = Strategy_factory::get_instance()->register_creator("cooperate", create);
 }
 
 Choice Cooperate::get_choice()
@@ -17,6 +17,9 @@ Choice Cooperate::get_choice()
 }
 
 void Cooperate::handle_result(const Result &res)
+{}
+
+void Cooperate::make_choice()
 {
 	choice_ = Choice::COOPERATE;
 }

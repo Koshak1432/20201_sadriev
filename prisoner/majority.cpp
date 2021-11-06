@@ -8,7 +8,7 @@ namespace
 		return std::unique_ptr<Strategy>(new Majority);
 	}
 
-	bool b = Factory<Strategy, std::string, std::function<std::unique_ptr<Strategy>()>>::get_instance()->register_creator("majority", create);
+	bool b = Strategy_factory::get_instance()->register_creator("majority", create);
 }
 
 Choice Majority::get_choice()
@@ -16,7 +16,7 @@ Choice Majority::get_choice()
 	return choice_;
 }
 
-void Majority::handle_result(const Result &res) //todo ??????????????????????
+void Majority::handle_result(const Result &res)
 {
 	for (auto &choice : res.choices_)
 	{
@@ -27,5 +27,9 @@ void Majority::handle_result(const Result &res) //todo ??????????????????????
 		}
 		++num_def;
 	}
+}
+
+void Majority::make_choice()
+{
 	(num_coop > num_def) ? choice_ = Choice::COOPERATE : choice_ = Choice::DEFECT;
 }
