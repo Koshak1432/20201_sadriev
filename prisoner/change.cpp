@@ -1,6 +1,7 @@
 #include "change.h"
 #include "factory.h"
 
+
 namespace
 {
 	std::unique_ptr<Strategy> create()

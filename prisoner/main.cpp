@@ -1,6 +1,6 @@
 #include "game_runner.h"
 #include "io.h"
-
+#include "config_provider.h"
 
 int main(int argc, char **argv)
 {
@@ -11,6 +11,7 @@ int main(int argc, char **argv)
 	}
 	CLI ui;
 	Args args = parse_args(argc, argv);
+	Provider::get_instance()->set_dir(args.config_dir);
 
 	std::unique_ptr<Runner> runner = nullptr;
 

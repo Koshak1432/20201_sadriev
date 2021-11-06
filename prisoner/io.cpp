@@ -1,6 +1,6 @@
 #include "io.h"
 
-std::string read_line(std::ifstream stream)
+std::string read_line(std::ifstream &stream)
 {
 	std::string line;
 	std::getline(stream, line);
