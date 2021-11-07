@@ -1,6 +1,7 @@
 #include "game_runner.h"
 #include "io.h"
 #include "config_provider.h"
+#include "console_interface.h"
 
 int main(int argc, char **argv)
 {
@@ -9,7 +10,6 @@ int main(int argc, char **argv)
 		std::cerr << "gimme strategies!\n" << std::endl;
 		return -1;
 	}
-	CLI ui;
 	Args args = parse_args(argc, argv);
 	Provider::get_instance()->set_dir(args.config_dir);
 
@@ -28,6 +28,6 @@ int main(int argc, char **argv)
 		runner = std::unique_ptr<Runner>(new Tournament_runner(read_matrix(args.matrix_file), args.strategies, args.steps));
 	}
 
-	runner->run(ui);
+	runner->run();
 	return 0;
 }

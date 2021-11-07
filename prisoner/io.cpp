@@ -2,6 +2,7 @@
 
 static std::string read_line(std::ifstream &stream)
 {
+	assert(stream.is_open());
 	std::string line;
 	std::getline(stream, line);
 	return line;
@@ -9,6 +10,7 @@ static std::string read_line(std::ifstream &stream)
 
 std::size_t read_size_t(std::ifstream &stream)
 {
+	assert(stream.is_open());
 	return std::stoul(read_line(stream));
 }
 
@@ -23,16 +25,16 @@ std::string read_string(std::ifstream &stream)
 	return string;
 }
 
-Matrix read_matrix(const std::string &file_path)
+Matrix read_matrix(const std::string &file_name)
 {
-	if (file_path.empty())
+	if (file_name.empty())
 	{
 		return Matrix{};
 	}
-	std::ifstream stream(file_path);
+	std::ifstream stream(file_name);
 	if (!stream.is_open())
 	{
-		throw std::invalid_argument("can't open matrix file\n");
+		throw std::invalid_argument("can't open matrix file");
 	}
 	stream.exceptions(std::ios::badbit | std::ios::failbit);
 	Matrix matrix{};
@@ -51,7 +53,7 @@ Matrix read_matrix(const std::string &file_path)
 		}
 		else
 		{
-			throw std::invalid_argument("invalid matrix\n");
+			throw std::invalid_argument("invalid matrix");
 		}
 	}
 	return matrix;

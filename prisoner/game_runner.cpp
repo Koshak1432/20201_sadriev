@@ -58,6 +58,17 @@ void Detailed_runner::print_intermediate(const Result &result) const noexcept
 	std::cout << "--------------" << std::endl;
 }
 
+static bool read_msg()
+{
+	std::string str;
+	std::cin >> str;
+	if ("quit" == str)
+	{
+		return false;
+	}
+	return true;
+}
+
 Fast_runner::Fast_runner(const Matrix &matrix, std::vector<std::string> names, std::size_t steps) : game(matrix, make_strategies_from_names(names)), names_(std::move(names)), steps_(steps)
 {}
 
@@ -67,7 +78,7 @@ Tournament_runner::Tournament_runner(const Matrix &matrix, std::vector<std::stri
 Detailed_runner::Detailed_runner(const Matrix &matrix, std::vector<std::string> names) :game(matrix, make_strategies_from_names(names)), names_(std::move(names))
 {}
 
-void Fast_runner::run(CLI &ui)
+void Fast_runner::run()
 {
 	for (std::size_t i = 0; i < steps_; ++i)
 	{
@@ -76,9 +87,9 @@ void Fast_runner::run(CLI &ui)
 	print_after_game(names_, game.get_result());
 }
 
-void Detailed_runner::run(CLI &ui)
+void Detailed_runner::run()
 {
-	while (ui.read_msg())
+	while (read_msg())
 	{
 		game.step();
 		print_intermediate(game.get_result());
@@ -86,7 +97,7 @@ void Detailed_runner::run(CLI &ui)
 	print_after_game(names_, game.get_result());
 }
 
-void Tournament_runner::run(CLI &ui)
+void Tournament_runner::run()
 {
 	std::map<std::string, int> total_scores;
 	for (auto &name : names_)

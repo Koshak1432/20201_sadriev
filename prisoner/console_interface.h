@@ -23,15 +23,4 @@ struct Args
 
 Args parse_args(int argc, char **argv);
 
-class CLI
-{
-public:
-	CLI() = default;
-	~CLI() = default;
-
-	bool read_msg();
-private:
-
-};
-
 #endif //PRISONER_CONSOLE_INTERFACE_H

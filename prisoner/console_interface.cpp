@@ -8,7 +8,7 @@ Args parse_args(int argc, char **argv)
 	std::string_view before;
 	std::string_view argument;
 	std::string after;
-	for (std::size_t i = 1; i < argc; ++i)
+	for (int i = 1; i < argc; ++i)
 	{
 		argument = argv[i];
 		if ("--" == argument.substr(0, 2))
@@ -20,6 +20,10 @@ Args parse_args(int argc, char **argv)
 			}
 			after = argument.substr(pos + 1, argument.length() - (pos + 1));
 			before = argument.substr(2, pos - 2);
+			if (after.empty())
+			{
+				throw std::invalid_argument("invalid argument after =");
+			}
 			if ("mode" == before)
 			{
 				if ("detailed" == after)
@@ -44,7 +48,7 @@ Args parse_args(int argc, char **argv)
 			}
 			else if ("steps" == before)
 			{
-				args.steps = std::stoul(after);
+				args.steps = std::stoul(after); //check
 			}
 			else if ("configs" == before)
 			{
@@ -64,14 +68,4 @@ Args parse_args(int argc, char **argv)
 	return args;
 }
 
-bool CLI::read_msg()
-{
-	std::string str;
-	std::cin >> str;
-	if ("quit" == str)
-	{
-		return false;
-	}
-	return true;
-}
 
