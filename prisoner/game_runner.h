@@ -1,8 +1,7 @@
 #ifndef PRISONER_GAME_RUNNER_H
 #define PRISONER_GAME_RUNNER_H
 
-#include "factory.h"
-#include "strategy.h"
+#include "strategy_factory.h"
 #include "console_interface.h"
 #include "game.h"
 
@@ -38,8 +37,6 @@ private:
 	void print_intermediate(const Result &result) const noexcept;
 };
 
-//consume -- by value, borrow -- by reference
-//own games
 class Tournament_runner :public Runner
 {
 public:

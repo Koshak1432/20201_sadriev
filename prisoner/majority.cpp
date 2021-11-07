@@ -1,5 +1,5 @@
 #include "majority.h"
-#include "factory.h"
+#include "strategy_factory.h"
 
 namespace
 {

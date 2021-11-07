@@ -1,10 +1,26 @@
 #include "io.h"
 
-std::string read_line(std::ifstream &stream)
+static std::string read_line(std::ifstream &stream)
 {
 	std::string line;
 	std::getline(stream, line);
 	return line;
+}
+
+std::size_t read_size_t(std::ifstream &stream)
+{
+	return std::stoul(read_line(stream));
+}
+
+std::string read_string(std::ifstream &stream)
+{
+	std::string string = read_line(stream);
+
+	if ('\r' == string[string.size() - 1])
+	{
+		string.pop_back();
+	}
+	return string;
 }
 
 Matrix read_matrix(const std::string &file_path)

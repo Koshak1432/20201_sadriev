@@ -2,7 +2,7 @@
 
 #include <filesystem>
 
-#include "factory.h"
+#include "strategy_factory.h"
 #include "io.h"
 #include "config_provider.h"
 
@@ -16,8 +16,7 @@ namespace
 		if (stream.is_open())
 		{
 			stream.exceptions(std::ios::badbit | std::ios::failbit);
-			std::string input_verge = read_line(stream);
-			verge = std::stoul(input_verge); //throw exception invalid arg
+			verge = read_size_t(stream); //throw exception invalid arg
 		}
 		return std::unique_ptr<Strategy>(new Patient(verge));
 	}
