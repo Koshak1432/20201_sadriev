@@ -1,7 +1,7 @@
 #ifndef PRISONER_MAJORITY_H
 #define PRISONER_MAJORITY_H
 
-#include "strategy.h"
+#include "../strategy.h"
 
 class Majority : public Strategy
 {

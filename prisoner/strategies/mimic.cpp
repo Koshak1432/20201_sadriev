@@ -1,5 +1,5 @@
 #include "mimic.h"
-#include "strategy_factory.h"
+#include "../strategy_factory.h"
 
 namespace
 {

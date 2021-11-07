@@ -2,7 +2,7 @@
 
 #include <chrono>
 
-#include "strategy_factory.h"
+#include "../strategy_factory.h"
 
 namespace
 {

@@ -1,7 +1,7 @@
 #ifndef PRISONER_PATIENT_H
 #define PRISONER_PATIENT_H
 
-#include "strategy.h"
+#include "../strategy.h"
 
 constexpr std::size_t DEFAULT_VERGE = 5;
 

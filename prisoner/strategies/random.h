@@ -3,7 +3,7 @@
 
 #include <random>
 
-#include "strategy.h"
+#include "../strategy.h"
 
 class Random : public Strategy
 {

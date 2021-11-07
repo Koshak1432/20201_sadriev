@@ -2,9 +2,9 @@
 
 #include <filesystem>
 
-#include "strategy_factory.h"
-#include "config_provider.h"
-#include "io.h"
+#include "../strategy_factory.h"
+#include "../config_provider.h"
+#include "../io.h"
 
 namespace
 {

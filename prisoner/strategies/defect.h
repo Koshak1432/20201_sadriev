@@ -1,7 +1,7 @@
 #ifndef PRISONER_DEFECT_H
 #define PRISONER_DEFECT_H
 
-#include "strategy.h"
+#include "../strategy.h"
 
 class Defect : public Strategy
 {

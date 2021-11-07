@@ -1,7 +1,7 @@
 #ifndef PRISONER_ELECTION_H
 #define PRISONER_ELECTION_H
 
-#include "strategy.h"
+#include "../strategy.h"
 #include <memory>
 
 class Election : public Strategy
