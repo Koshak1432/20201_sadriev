@@ -16,7 +16,7 @@ namespace
 		std::ifstream stream(path / "election.txt");
 		if (!stream.is_open())
 		{
-			throw std::invalid_argument("can't open election config file\n");
+			throw std::invalid_argument("can't open election config file");
 		}
 		stream.exceptions(std::ios::badbit | std::ios::failbit);
 		std::vector<std::string> names{};

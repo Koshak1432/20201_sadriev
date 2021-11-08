@@ -11,7 +11,7 @@ Provider *Provider::get_instance()
 	return &provider;
 }
 
-std::string Provider::get_dir()
+std::string Provider::get_dir() const
 {
 	return path_;
 }

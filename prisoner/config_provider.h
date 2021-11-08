@@ -8,7 +8,7 @@ class Provider
 public:
 	static Provider *get_instance();
 	void set_dir(std::string new_path);
-	std::string get_dir();
+	[[nodiscard]] std::string get_dir() const;
 private:
 	std::string path_;
 };

@@ -1,3 +1,5 @@
+#include <exception>
+
 #include "game_runner.h"
 #include "io.h"
 #include "config_provider.h"
@@ -10,24 +12,33 @@ int main(int argc, char **argv)
 		std::cerr << "gimme strategies!\n" << std::endl;
 		return -1;
 	}
-	Args args = parse_args(argc, argv);
-	Provider::get_instance()->set_dir(args.config_dir);
-
-	std::unique_ptr<Runner> runner = nullptr;
-
-	if (Mode::FAST == args.mode)
+	try
 	{
-		runner = std::unique_ptr<Runner>(new Fast_runner(read_matrix(args.matrix_file), args.strategies, args.steps));
+		Args args = parse_args(argc, argv);
+		Provider::get_instance()->set_dir(args.config_dir);
+
+		std::unique_ptr<Runner> runner = nullptr;
+
+		if (Mode::FAST == args.mode)
+		{
+			runner = std::unique_ptr<Runner>(new Fast_runner(read_matrix(args.matrix_file), args.strategies, args.steps));
+		}
+		else if (Mode::DETAILED == args.mode)
+		{
+			runner = std::unique_ptr<Runner>(new Detailed_runner(read_matrix(args.matrix_file), args.strategies));
+		}
+		else
+		{
+			runner = std::unique_ptr<Runner>(new Tournament_runner(read_matrix(args.matrix_file), args.strategies, args.steps));
+		}
+
+		runner->run();
 	}
-	else if (Mode::DETAILED == args.mode)
+	catch(std::exception &e)
 	{
-		runner = std::unique_ptr<Runner>(new Detailed_runner(read_matrix(args.matrix_file), args.strategies));
-	}
-	else
-	{
-		runner = std::unique_ptr<Runner>(new Tournament_runner(read_matrix(args.matrix_file), args.strategies, args.steps));
+		std::cerr << "Catch exception: " << e.what() << std::endl;
+		return 11;
 	}
 
-	runner->run();
 	return 0;
 }

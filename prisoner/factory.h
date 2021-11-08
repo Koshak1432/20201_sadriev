@@ -32,7 +32,7 @@ std::unique_ptr<Product> Factory<Product, Id_type, Creator>::create_product_by_i
 	auto it = creators_.find(id);
 	if (it == creators_.end())
 	{
-		throw std::invalid_argument("invalid id for the factory\n");
+		throw std::invalid_argument("invalid id for the factory");
 	}
 	return it->second();
 }
