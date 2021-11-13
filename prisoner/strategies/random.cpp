@@ -8,7 +8,7 @@ namespace
 {
 	std::unique_ptr<Strategy> create()
 	{
-		return std::unique_ptr<Strategy>(new Random);
+		return std::make_unique<Random>();
 	}
 
 	bool b = Strategy_factory::get_instance()->register_creator("random", create);

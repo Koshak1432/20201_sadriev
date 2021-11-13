@@ -9,7 +9,7 @@ int main(int argc, char **argv)
 {
 	if (argc < 4)
 	{
-		std::cerr << "gimme strategies!\n" << std::endl;
+		std::cerr << "gimme strategies!" << std::endl;
 		return -1;
 	}
 	try
@@ -21,15 +21,15 @@ int main(int argc, char **argv)
 
 		if (Mode::FAST == args.mode)
 		{
-			runner = std::unique_ptr<Runner>(new Fast_runner(read_matrix(args.matrix_file), args.strategies, args.steps));
+			runner = std::make_unique<Fast_runner>(read_matrix(args.matrix_file), args.strategies, args.steps);
 		}
 		else if (Mode::DETAILED == args.mode)
 		{
-			runner = std::unique_ptr<Runner>(new Detailed_runner(read_matrix(args.matrix_file), args.strategies));
+			runner = std::make_unique<Detailed_runner>(read_matrix(args.matrix_file), args.strategies);
 		}
 		else
 		{
-			runner = std::unique_ptr<Runner>(new Tournament_runner(read_matrix(args.matrix_file), args.strategies, args.steps));
+			runner = std::make_unique<Tournament_runner>(read_matrix(args.matrix_file), args.strategies, args.steps);
 		}
 
 		runner->run();

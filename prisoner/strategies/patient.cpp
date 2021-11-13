@@ -18,7 +18,7 @@ namespace
 			stream.exceptions(std::ios::badbit | std::ios::failbit);
 			verge = read_size_t(stream); //throw exception invalid arg
 		}
-		return std::unique_ptr<Strategy>(new Patient(verge));
+		return std::make_unique<Patient>(verge);
 	}
 
 	bool b = Strategy_factory::get_instance()->register_creator("patient", create);

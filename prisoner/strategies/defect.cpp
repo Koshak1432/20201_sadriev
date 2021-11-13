@@ -9,7 +9,7 @@ namespace
 {
 	std::unique_ptr<Strategy> create()
 	{
-		return std::unique_ptr<Strategy>(new Defect);
+		return std::make_unique<Defect>();
 	}
 
 	bool b = Strategy_factory::get_instance()->register_creator("defect", create);

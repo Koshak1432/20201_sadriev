@@ -5,7 +5,7 @@ namespace
 {
 	std::unique_ptr<Strategy> create()
 	{
-		return std::unique_ptr<Strategy>(new Mimic);
+		return std::make_unique<Mimic>();
 	}
 
 	bool b = Strategy_factory::get_instance()->register_creator("mimic", create);

@@ -31,7 +31,7 @@ namespace
 		{
 			strategies.push_back(Strategy_factory::get_instance()->create_product_by_id(name));
 		}
-		return std::unique_ptr<Strategy>(new Election(std::move(strategies)));
+		return std::make_unique<Election>(std::move(strategies));
 	}
 
 	bool b = Strategy_factory::get_instance()->register_creator("election", create);
