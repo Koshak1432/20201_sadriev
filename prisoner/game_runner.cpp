@@ -43,6 +43,17 @@ static void print_final(const std::map<std::string, int> &map) noexcept
 	}
 }
 
+static bool read_msg() noexcept
+{
+	std::string str;
+	std::cin >> str;
+	if ("quit" == str)
+	{
+		return false;
+	}
+	return true;
+}
+
 void Detailed_runner::print_intermediate(const Result &result) const noexcept
 {
 	std::cout << "--------------" << std::endl;
@@ -56,17 +67,6 @@ void Detailed_runner::print_intermediate(const Result &result) const noexcept
 		std::cout << "[" + names_[i] + ", " + choice + ", " << result.payoffs_[i] << ", " << result.scores_[i] << "]" << std::endl;
 	}
 	std::cout << "--------------" << std::endl;
-}
-
-static bool read_msg()
-{
-	std::string str;
-	std::cin >> str;
-	if ("quit" == str)
-	{
-		return false;
-	}
-	return true;
 }
 
 Fast_runner::Fast_runner(const Matrix &matrix, std::vector<std::string> names, std::size_t steps) : game(matrix, make_strategies_from_names(names)), names_(std::move(names)), steps_(steps)
@@ -106,7 +106,7 @@ void Tournament_runner::run()
 	}
 
 	std::vector<bool> bool_vec(names_.size());
-	std::fill(bool_vec.end() - COLS, bool_vec.end(), true);
+	std::fill(bool_vec.begin(), bool_vec.begin() + COLS, true);
 	do
 	{
 		std::vector<std::string> names{};
@@ -125,7 +125,7 @@ void Tournament_runner::run()
 		}
 		add_to_global_scores(total_scores, names, game.get_result());
 		print_after_game(names, game.get_result());
-	} while (std::next_permutation(bool_vec.begin(), bool_vec.end()));
+	} while (std::prev_permutation(bool_vec.begin(), bool_vec.end()));
 
 	print_final(total_scores);
 }

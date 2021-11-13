@@ -11,7 +11,7 @@ namespace
 	bool b = Strategy_factory::get_instance()->register_creator("mimic", create);
 }
 
-Choice Mimic::get_choice()
+Choice Mimic::get_choice() const noexcept
 {
 	return choice_;
 }

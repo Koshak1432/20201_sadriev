@@ -9,7 +9,7 @@ class Election : public Strategy
 public:
 	explicit Election(std::vector<std::unique_ptr<Strategy>> strategies);
 	void make_choice() override;
-	Choice get_choice() override;
+	[[nodiscard]] Choice get_choice() const noexcept override;
 	void handle_result(const Result &res) override;
 private:
 	Choice choice_ = Choice::DEFECT;

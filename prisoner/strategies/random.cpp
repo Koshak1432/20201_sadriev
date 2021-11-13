@@ -14,7 +14,7 @@ namespace
 	bool b = Strategy_factory::get_instance()->register_creator("random", create);
 }
 
-Choice Random::get_choice()
+Choice Random::get_choice() const noexcept
 {
 	return choice_;
 }

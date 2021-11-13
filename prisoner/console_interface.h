@@ -1,6 +1,7 @@
 #ifndef PRISONER_CONSOLE_INTERFACE_H
 #define PRISONER_CONSOLE_INTERFACE_H
-#include <iostream>
+
+#include <string>
 #include <vector>
 
 constexpr std::size_t DEFAULT_STEPS = 10;
@@ -14,11 +15,11 @@ enum class Mode
 
 struct Args
 {
-	std::vector<std::string> strategies;
+	std::vector<std::string> strategies{};
 	std::size_t steps = DEFAULT_STEPS;
 	Mode mode = Mode::DETAILED;
-	std::string config_dir;
-	std::string matrix_file;
+	std::string config_dir{};
+	std::string matrix_file{};
 };
 
 Args parse_args(int argc, char **argv);

@@ -1,6 +1,6 @@
 #include "config_provider.h"
 
-void Provider::set_dir(std::string new_path)
+void Provider::set_dir(std::string new_path) noexcept
 {
 	path_ = std::move(new_path);
 }
@@ -11,7 +11,7 @@ Provider *Provider::get_instance()
 	return &provider;
 }
 
-std::string Provider::get_dir() const
+std::string Provider::get_dir() const noexcept
 {
 	return path_;
 }

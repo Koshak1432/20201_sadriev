@@ -15,7 +15,7 @@ public:
 	Matrix();
 	Matrix(const Matrix &other) = default;
 	~Matrix() = default;
-	[[nodiscard]] std::vector<int> get_payoffs(const std::vector<Choice> &choices) const; //get 3 payoffs
+	[[nodiscard]] std::vector<int> get_payoffs(const std::vector<Choice> &choices) const noexcept; //get 3 payoffs
 	std::vector<int> &operator[] (std::size_t idx) noexcept;
 private:
 	std::vector<std::vector<int>> matrix_;

@@ -16,7 +16,6 @@ class Fast_runner :public Runner
 public:
 	Fast_runner(const Matrix &matrix, std::vector<std::string> names, std::size_t steps);
 	void run() override;
-
 private:
 	Game game;
 	std::vector<std::string> names_;
@@ -28,7 +27,6 @@ class Detailed_runner : public Runner
 public:
 	Detailed_runner(const Matrix &matrix, std::vector<std::string> names);
 	void run() override;
-
 private:
 	Game game;
 	std::vector<std::string> names_;
@@ -41,7 +39,6 @@ class Tournament_runner :public Runner
 public:
 	Tournament_runner(const Matrix &matrix, std::vector<std::string> names, std::size_t steps);
 	void run() override;
-
 private:
 	std::vector<std::string> names_;
 	std::size_t steps_;

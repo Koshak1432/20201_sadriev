@@ -1,5 +1,5 @@
 #include "console_interface.h"
-#include <string>
+#include <stdexcept>
 
 Args parse_args(int argc, char **argv)
 {
@@ -48,7 +48,7 @@ Args parse_args(int argc, char **argv)
 			}
 			else if ("steps" == before)
 			{
-				args.steps = std::stoul(after); //check
+				args.steps = std::stoul(after);
 			}
 			else if ("configs" == before)
 			{

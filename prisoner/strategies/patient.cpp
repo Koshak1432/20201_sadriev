@@ -24,7 +24,7 @@ namespace
 	bool b = Strategy_factory::get_instance()->register_creator("patient", create);
 }
 
-Choice Patient::get_choice()
+Choice Patient::get_choice() const noexcept
 {
 	return choice_;
 }

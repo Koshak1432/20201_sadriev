@@ -1,11 +1,11 @@
 #include "game.h"
 
-static int choices_to_idx(const std::vector<Choice> &choices) //choices to binary code
+static int choices_to_idx(const std::vector<Choice> &choices) noexcept //choices to binary code
 {
 	return static_cast<int>(choices[0]) * 4 + static_cast<int>(choices[1]) * 2 + static_cast<int>(choices[2]) * 1;
 }
 
-std::vector<int> Matrix::get_payoffs(const std::vector<Choice> &choices) const
+std::vector<int> Matrix::get_payoffs(const std::vector<Choice> &choices) const noexcept
 {
 	return matrix_[choices_to_idx(choices)];
 }

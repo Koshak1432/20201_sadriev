@@ -10,7 +10,7 @@ class Random : public Strategy
 public:
 	Random();
 	void make_choice() override;
-	Choice get_choice() override;
+	[[nodiscard]] Choice get_choice() const noexcept override;
 	void handle_result(const Result &res) override;
 private:
 	Choice choice_ = Choice::COOPERATE;

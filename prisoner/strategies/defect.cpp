@@ -15,7 +15,7 @@ namespace
 	bool b = Strategy_factory::get_instance()->register_creator("defect", create);
 }
 
-Choice Defect::get_choice()
+Choice Defect::get_choice() const noexcept
 {
 	return choice_;
 }

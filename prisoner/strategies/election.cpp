@@ -37,7 +37,7 @@ namespace
 	bool b = Strategy_factory::get_instance()->register_creator("election", create);
 }
 
-Choice Election::get_choice()
+Choice Election::get_choice() const noexcept
 {
 	return choice_;
 }

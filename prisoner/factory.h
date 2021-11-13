@@ -1,7 +1,6 @@
 #ifndef PRISONER_FACTORY_H
 #define PRISONER_FACTORY_H
 
-#include <iostream>
 #include <map>
 #include <functional>
 #include <memory>
