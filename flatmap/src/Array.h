@@ -5,13 +5,16 @@ template<class T>
 class Array
 {
 public:
-	explicit Array(std::size_t size = 1); // takes array size as parameter
-	Array(const Array<T> &other); // copy ctor
-	Array(Array<T> &&other) noexcept; //move ctor
+	// takes array size as parameter
+	explicit Array(std::size_t size = 1);
+	Array(const Array<T> &other);
+	Array(Array<T> &&other) noexcept;
 	~Array();
 
-	void resize(std::size_t new_capacity); //makes an array with new_capacity and copies elements from the old one
-	std::size_t get_size() const noexcept; //gets a size of an array
+	//makes an array with new_capacity and copies elements from the old one
+	void resize(std::size_t new_capacity);
+	//gets a size of an array
+	std::size_t get_size() const noexcept;
 	bool empty() const noexcept;
 	void push_back(T elem);
 
@@ -19,16 +22,20 @@ public:
 	void erase(std::size_t idx) noexcept;
 	void insert(std::size_t idx, const T &value);
 	void clear() noexcept;
+	void swap(Array<T> &other) noexcept;
 
-	Array<T> &operator =(const Array<T> &other); //assigns the fields of the left array to the fields of the other array
-	Array<T> &operator =(Array<T> &&other) noexcept; //move assignment operator
-	T &operator [](std::size_t idx) noexcept; //returns the element by the idx
+	//assigns the fields of the left array to the fields of the other array
+	Array<T> &operator =(const Array<T> &other);
+	//move assignment operator
+	Array<T> &operator =(Array<T> &&other) noexcept;
+	//returns the element by the idx
+	T &operator [](std::size_t idx) noexcept;
 	const T &operator [](std::size_t idx) const;
 
 private:
 	T *data_ = nullptr;
 	std::size_t capacity_ = 0;
-	std::size_t size_ = 0; //how many elements in the array
+	std::size_t size_ = 0; 			//how many elements in the array
 	void make_shift_right(std::size_t idx);
 };
 
@@ -189,6 +196,14 @@ template<class T>
 bool Array<T>::empty() const noexcept
 {
 	return size_ == 0;
+}
+
+template<class T>
+void Array<T>::swap(Array<T> &other) noexcept
+{
+	std::swap<T*>(data_, other.data_);
+	std::swap<std::size_t>(capacity_, other.capacity_);
+	std::swap<std::size_t>(size_, other.size_);
 }
 
 #endif //FLATMAP_ARRAY_H

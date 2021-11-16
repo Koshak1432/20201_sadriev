@@ -156,11 +156,21 @@ TEST(FlatTest, opBrackets)
 	std::string str1 = "sanya";
 	std::string str2 = "Terentiy";
 	std::string str3 = "KEKa";
+	std::string str4 = "PRISONER №993";
 	EXPECT_TRUE(my_map.insert(str1, 1));
 	EXPECT_TRUE(my_map.insert(str2, 2));
 	EXPECT_EQ(my_map[str1], 1);
 	EXPECT_EQ(my_map[str3], int());
 	EXPECT_EQ(my_map.size(), 3);
+
+	my_map[str3] = 3;
+	my_map[str2] = 22;
+	my_map[str1] = 11111;
+	my_map[str4] = 4;
+	EXPECT_EQ(my_map[str3], 3);
+	EXPECT_EQ(my_map[str2], 22);
+	EXPECT_EQ(my_map[str1], 11111);
+	EXPECT_EQ(my_map[str4], 4);
 }
 
 TEST(FlatTest, swap)

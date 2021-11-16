@@ -10,29 +10,39 @@ template<class Key, class Value>
 class FlatMap
 {
 public:
-	explicit FlatMap(std::size_t size = 1); //takes flatmap size as parameter
-	FlatMap(const FlatMap<Key, Value> &other); //copy constructor
-	FlatMap(FlatMap<Key, Value> &&other) noexcept; //move constructor
+	//takes flatmap size as parameter
+	explicit FlatMap(std::size_t size = 1);
+	FlatMap(const FlatMap<Key, Value> &other);
+	FlatMap(FlatMap<Key, Value> &&other) noexcept;
 	~FlatMap() = default;
 
-	void swap(FlatMap<Key, Value> &other); //swaps fields of two flatmaps
+	//swaps fields of two flatmaps
+	void swap(FlatMap<Key, Value> &other) noexcept;
 
-	FlatMap<Key, Value> &operator =(const FlatMap<Key, Value> &other); //assigns left operand field to the other fields
-	FlatMap<Key, Value> &operator =(FlatMap<Key, Value> &&other) noexcept; //move assignment without copying fields
+	//assigns left operand field to the other fields
+	FlatMap<Key, Value> &operator =(const FlatMap<Key, Value> &other);
+	//move assignment without copying fields
+	FlatMap<Key, Value> &operator =(FlatMap<Key, Value> &&other) noexcept;
 
-	bool erase(const Key &key) noexcept; //erases element by the key, returns false if a flatmap doesn't contain an element with such key, else returns true
-	void clear() noexcept; //applies erase method for every element in fields of the object
-	bool insert(const Key &key, const Value &value); //returns false if a flatmap contains an element with such key, else returns true
-	bool contains(const Key &key) const noexcept; // returns true if a flatmap contains an element with such key, else returns false
+	//erases element by the key, returns false if a flatmap doesn't contain an element with such key, else returns true
+	bool erase(const Key &key) noexcept;
+	//applies erase method for every element in fields of the object
+	void clear() noexcept;
+	//returns false if a flatmap contains an element with such key, else returns true
+	bool insert(const Key &key, const Value &value);
+	// returns true if a flatmap contains an element with such key, else returns false
+	bool contains(const Key &key) const noexcept;
+	//returns a reference to the Value by the key, inserts an element with default value if a flatmap doesn't contain such an element
+	Value &operator [](const Key &key) noexcept;
 
-	Value &operator [](const Key &key) noexcept; //returns a reference to the Value by the key, inserts an element with default value
-												// if a flatmap doesn't contain such an element
-
-	Value &at(const Key &key); // returns a reference to the Value by the key, throw out_of_range if a ftalmap doesn't contain an element with such key
+	// returns a reference to the Value by the key, throw out_of_range if a ftalmap doesn't contain an element with such key
+	Value &at(const Key &key);
 	const Value &at(const Key &key) const;
 
-	std::size_t size() const noexcept; //gets the number of elements in a flatmap
-	bool empty() const noexcept; //returns true if the flatmap is empty
+	//gets the number of elements in a flatmap
+	std::size_t size() const noexcept;
+	//returns true if the flatmap is empty
+	bool empty() const noexcept;
 
 	//returns true if the fields of the first flatmap are equal to the fields of the other
 	friend bool operator ==(const FlatMap<Key, Value> &first, const FlatMap<Key, Value> &second) noexcept
@@ -60,9 +70,9 @@ public:
 	//void print_flatmap();
 
 private:
-	Array<Key> key_arr_; //keys array
-	Array<Value> val_arr_; //values array
-	std::size_t bin_search(const Key &key) const; //lover_bound method
+	Array<Key> key_arr_; 							//keys array
+	Array<Value> val_arr_; 							//values array
+	std::size_t bin_search(const Key &key) const; 	//lover_bound method
 };
 
 template<class Key, class Value>
@@ -236,14 +246,10 @@ Value &FlatMap<Key, Value>::operator [](const Key &key) noexcept
 }
 
 template<class Key, class Value>
-void FlatMap<Key, Value>::swap(FlatMap<Key, Value> &other)
+void FlatMap<Key, Value>::swap(FlatMap<Key, Value> &other) noexcept
 {
-	Array<Key> tmp_key = key_arr_;
-	Array<Value> tmp_val = val_arr_;
-	key_arr_ = other.key_arr_;
-	val_arr_ = other.val_arr_;
-	other.key_arr_ = tmp_key;
-	other.val_arr_ = tmp_val;
+	key_arr_.swap(other.key_arr_);
+	val_arr_.swap(other.val_arr_);
 }
 
 
