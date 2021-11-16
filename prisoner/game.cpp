@@ -1,5 +1,7 @@
 #include "game.h"
 
+constexpr std::size_t ROWS = 8;
+
 static int choices_to_idx(const std::vector<Choice> &choices) noexcept //choices to binary code
 {
 	return static_cast<int>(choices[0]) * 4 + static_cast<int>(choices[1]) * 2 + static_cast<int>(choices[2]) * 1;

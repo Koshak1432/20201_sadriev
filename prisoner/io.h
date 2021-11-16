@@ -2,7 +2,8 @@
 #define PRISONER_IO_H
 
 #include <fstream>
-#include "game.h"
+
+class Matrix;
 
 std::size_t read_size_t(std::ifstream &stream);
 std::string read_string(std::ifstream &stream);

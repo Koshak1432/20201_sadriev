@@ -1,5 +1,7 @@
 #include "game_runner.h"
 
+#include "console_interface.h"
+
 static std::vector<std::unique_ptr<Strategy>> make_strategies_from_names(const std::vector<std::string> &names)
 {
 	assert(COLS == names.size());
@@ -25,50 +27,6 @@ static void add_to_global_scores(std::map<std::string, int> &total_scores, const
 	}
 }
 
-static void print_after_game(const std::vector<std::string> &names, const Result &result) noexcept
-{
-	std::cout << std::string("FINAL SCORES FOR THE TRIPLE") << std::endl;
-	for (std::size_t i = 0; i < names.size(); ++i)
-	{
-		std::cout << "[" + names[i] + ", " << result.scores_[i] << "]" << std::endl;
-	}
-}
-
-static void print_final(const std::map<std::string, int> &map) noexcept
-{
-	std::cout << "------RESULTS FOR ALL STRATEGIES------" << std::endl;
-	for (auto &strategy : map)
-	{
-		std::cout << "[" + strategy.first + ", " << strategy.second << "]" <<std::endl;
-	}
-}
-
-static bool read_msg() noexcept
-{
-	std::string str;
-	std::cin >> str;
-	if ("quit" == str)
-	{
-		return false;
-	}
-	return true;
-}
-
-void Detailed_runner::print_intermediate(const Result &result) const noexcept
-{
-	std::cout << "--------------" << std::endl;
-	for (std::size_t i = 0; i < names_.size(); ++i)
-	{
-		std::string choice = "cooperate";
-		if (Choice::DEFECT == result.choices_[i])
-		{
-			choice = "defect";
-		}
-		std::cout << "[" + names_[i] + ", " + choice + ", " << result.payoffs_[i] << ", " << result.scores_[i] << "]" << std::endl;
-	}
-	std::cout << "--------------" << std::endl;
-}
-
 Fast_runner::Fast_runner(const Matrix &matrix, std::vector<std::string> names, std::size_t steps) : game(matrix, make_strategies_from_names(names)), names_(std::move(names)), steps_(steps)
 {}
 
@@ -78,26 +36,26 @@ Tournament_runner::Tournament_runner(const Matrix &matrix, std::vector<std::stri
 Detailed_runner::Detailed_runner(const Matrix &matrix, std::vector<std::string> names) :game(matrix, make_strategies_from_names(names)), names_(std::move(names))
 {}
 
-void Fast_runner::run()
+void Fast_runner::run(CLI &ui)
 {
 	for (std::size_t i = 0; i < steps_; ++i)
 	{
 		game.step();
 	}
-	print_after_game(names_, game.get_result());
+	ui.print_after_game(names_, game.get_result());
 }
 
-void Detailed_runner::run()
+void Detailed_runner::run(CLI &ui)
 {
-	while (read_msg())
+	while (ui.read_msg())
 	{
 		game.step();
-		print_intermediate(game.get_result());
+		ui.print_intermediate(names_, game.get_result());
 	}
-	print_after_game(names_, game.get_result());
+	ui.print_after_game(names_, game.get_result());
 }
 
-void Tournament_runner::run()
+void Tournament_runner::run(CLI &ui)
 {
 	std::map<std::string, int> total_scores;
 	for (auto &name : names_)
@@ -124,8 +82,8 @@ void Tournament_runner::run()
 			game.step();
 		}
 		add_to_global_scores(total_scores, names, game.get_result());
-		print_after_game(names, game.get_result());
+		ui.print_after_game(names, game.get_result());
 	} while (std::prev_permutation(bool_vec.begin(), bool_vec.end()));
 
-	print_final(total_scores);
+	ui.print_final(total_scores);
 }

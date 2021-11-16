@@ -7,7 +7,8 @@
 TEST(prison, parse_args_check)
 {
 	std::vector<const char *> argv = {"blank", "change", "random", "mimic", "--mode=fast", "--steps=30"};
-	Args args = parse_args(6, const_cast<char **>(argv.data()));
+	CLI ui;
+	Args args = ui.parse_args(6, const_cast<char **>(argv.data()));
 	EXPECT_EQ(args.steps, 30);
 	EXPECT_EQ(args.mode, Mode::FAST);
 	EXPECT_EQ(args.strategies[0], "change");
@@ -15,19 +16,19 @@ TEST(prison, parse_args_check)
 	EXPECT_EQ(args.strategies[2], "mimic");
 
 	std::vector<const char *> argv2 = {"", "--steps="};
-	EXPECT_THROW(parse_args(2, const_cast<char **>(argv2.data())), std::invalid_argument);
+	EXPECT_THROW(ui.parse_args(2, const_cast<char **>(argv2.data())), std::invalid_argument);
 
 	std::vector<const char *> argv3 = {"", "--steps30"};
-	EXPECT_THROW(parse_args(2, const_cast<char **>(argv3.data())), std::invalid_argument);
+	EXPECT_THROW(ui.parse_args(2, const_cast<char **>(argv3.data())), std::invalid_argument);
 
 	std::vector<const char *> argv4 = {"", "--mode=test"};
-	EXPECT_THROW(parse_args(2, const_cast<char **>(argv4.data())), std::invalid_argument);
+	EXPECT_THROW(ui.parse_args(2, const_cast<char **>(argv4.data())), std::invalid_argument);
 
 	std::vector<const char *> argv5 = {"", "--steps=ggagaa"};
-	EXPECT_THROW(parse_args(2, const_cast<char **>(argv5.data())), std::invalid_argument);
+	EXPECT_THROW(ui.parse_args(2, const_cast<char **>(argv5.data())), std::invalid_argument);
 
 	std::vector<const char *> argv6 = {"", "--lol=2021"};
-	EXPECT_THROW(parse_args(2, const_cast<char **>(argv6.data())), std::invalid_argument);
+	EXPECT_THROW(ui.parse_args(2, const_cast<char **>(argv6.data())), std::invalid_argument);
 }
 
 TEST(prison, read_matrix_check)
@@ -93,23 +94,25 @@ TEST(prison, runs)
 	std::vector<const char *> argv = {"blank", "election", "patient", "mimic", "--mode=fast", "--steps=30",
 					  "--matrix=/mnt/c/Users/sadri/20201_sadriev/prisoner/Google_tests/matrix_file",
 					  "--configs=/mnt/c/Users/sadri/20201_sadriev/prisoner/configs"};
-	Args args = parse_args((int)argv.size(), const_cast<char **>(argv.data()));
+
+	CLI ui;
+	Args args = ui.parse_args((int)argv.size(), const_cast<char **>(argv.data()));
 	Provider::get_instance()->set_dir(args.config_dir);
 	Matrix input_matrix = read_matrix(args.matrix_file);
 	std::vector<std::string> strategies2(args.strategies);
 
 	Fast_runner runner1(input_matrix, args.strategies, args.steps);
-	EXPECT_NO_THROW(runner1.run());
+	EXPECT_NO_THROW(runner1.run(ui));
 
 	Tournament_runner runner2(input_matrix, strategies2, args.steps);
-	EXPECT_NO_THROW(runner2.run());
+	EXPECT_NO_THROW(runner2.run(ui));
 
 	std::vector<const char *> argv2 = {"blank", "random", "mimic", "not_strategy"};
-	Args args2 = parse_args((int)argv2.size(), const_cast<char **>(argv2.data()));
+	Args args2 = ui.parse_args((int)argv2.size(), const_cast<char **>(argv2.data()));
 
 	std::vector<std::string> strategies3(args2.strategies);
 	EXPECT_THROW(Fast_runner runner3(read_matrix(args2.matrix_file), args2.strategies, args2.steps), std::invalid_argument);
 
 	Tournament_runner runner4(read_matrix(args2.matrix_file), strategies3, args2.steps);
-	EXPECT_THROW(runner4.run(), std::invalid_argument);
+	EXPECT_THROW(runner4.run(ui), std::invalid_argument);
 }

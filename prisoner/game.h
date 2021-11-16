@@ -7,7 +7,7 @@
 
 #include "strategy.h"
 
-constexpr std::size_t ROWS = 8;
+
 
 class Matrix
 {

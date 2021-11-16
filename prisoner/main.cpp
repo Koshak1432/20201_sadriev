@@ -9,15 +9,17 @@ int main(int argc, char **argv)
 {
 	if (argc < 4)
 	{
-		std::cerr << "gimme strategies!" << std::endl;
+		std::cerr << "Mandatory arguments: names of at least 3 strategies" << std::endl;
 		return -1;
 	}
 	try
 	{
-		Args args = parse_args(argc, argv);
+		CLI ui;
+		ui.print_help();
+		Args args = ui.parse_args(argc, argv);
 		Provider::get_instance()->set_dir(args.config_dir);
 
-		std::unique_ptr<Runner> runner = nullptr;
+		std::unique_ptr<Runner> runner;
 
 		if (Mode::FAST == args.mode)
 		{
@@ -32,11 +34,11 @@ int main(int argc, char **argv)
 			runner = std::make_unique<Tournament_runner>(read_matrix(args.matrix_file), args.strategies, args.steps);
 		}
 
-		runner->run();
+		runner->run(ui);
 	}
 	catch(std::exception &e)
 	{
-		std::cerr << "Catch exception: " << e.what() << std::endl;
+		std::cerr << "Caught exception: " << e.what() << std::endl;
 		return 11;
 	}
 

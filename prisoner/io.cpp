@@ -1,5 +1,9 @@
 #include "io.h"
 
+#include "game.h"
+
+constexpr std::size_t ROWS = 8;
+
 static std::string read_line(std::ifstream &stream)
 {
 	assert(stream.is_open());
