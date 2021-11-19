@@ -6,5 +6,5 @@ set(CMAKE_PREFIX_PATH "C:/Qt/6.2.1/mingw81_64/lib/cmake")
 
 find_package(Qt6Widgets REQUIRED)
 
-add_executable(game_of_life_v2_0 main.cpp)
+add_executable(game_of_life_v2_0 main.cpp engine.cpp game_runner.cpp)
 target_link_libraries(game_of_life_v2_0 Qt6::Widgets)
