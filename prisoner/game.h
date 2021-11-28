@@ -7,8 +7,6 @@
 
 #include "strategy.h"
 
-
-
 class Matrix
 {
 public:

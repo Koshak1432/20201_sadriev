@@ -10,6 +10,8 @@ int main(int argc, char **argv)
 	if (argc < 4)
 	{
 		std::cerr << "Mandatory arguments: names of at least 3 strategies" << std::endl;
+		CLI ui;
+		ui.print_help();
 		return -1;
 	}
 	try

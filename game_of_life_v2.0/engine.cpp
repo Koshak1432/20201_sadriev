@@ -2,35 +2,35 @@
 
 #include <cassert>
 #include <iostream>
-#include <ctime> //todo delete in release
+#include <ctime> //todo: delete in release
 
-static std::size_t get_toroid_coord(long long i, std::size_t max) noexcept
+static std::size_t getToroidCoord(int i, std::size_t max) noexcept
 {
 	assert(0 != max);
 	while (i < 0)
 	{
-		i += static_cast<long long>(max);
+		i += static_cast<int>(max);
 	}
 	return i % max;
 }
 
-bool Field::get_cell(long long x, long long y) const noexcept
+bool Field::getCell(int x, int y) const noexcept
 {
-	return field_[get_toroid_coord(y, height_)][get_toroid_coord(x, width_)];
+	return field_[getToroidCoord(y, height_)][getToroidCoord(x, width_)];
 }
 
-std::size_t Field::count_neighbours(long long x, long long y) const noexcept
+std::size_t Field::countNeighbours(int x, int y) const noexcept
 {
 	std::size_t neighbours = 0;
-	for (long long i = x - 1; i <= x + 1; ++i)
+	for (int i = x - 1; i <= x + 1; ++i)
 	{
-		for (long long j = y - 1; j <= y + 1; ++j)
+		for (int j = y - 1; j <= y + 1; ++j)
 		{
 			if ((x == i) && (y == j))
 			{
 				continue;
 			}
-			if (get_cell(i, j))
+			if (getCell(i, j))
 			{
 				++neighbours;
 			}
@@ -39,19 +39,19 @@ std::size_t Field::count_neighbours(long long x, long long y) const noexcept
 	return neighbours;
 }
 
-std::size_t Field::get_height() const noexcept
+std::size_t Field::getHeight() const noexcept
 {
 	return height_;
 }
 
-std::size_t Field::get_width() const noexcept
+std::size_t Field::getWidth() const noexcept
 {
 	return width_;
 }
 
-void Field::set_cell(long long x, long long y, bool cell) noexcept
+void Field::setCell(int x, int y, bool cell) noexcept
 {
-	field_[get_toroid_coord(y, height_)][get_toroid_coord(x, width_)] = cell;
+	field_[getToroidCoord(y, height_)][getToroidCoord(x, width_)] = cell;
 }
 
 void Field::swap(Field &other) noexcept
@@ -77,45 +77,45 @@ Field::Field(std::size_t width, std::size_t height) : field_(height), width_(wid
 	}
 }
 
-void State::make_next_field()
+void State::makeNextField()
 {
-	for (std::size_t x = 0; x < current_.get_width(); ++x)
+	for (int x = 0; x < current_.getWidth(); ++x)
 	{
-		for (std::size_t y = 0; y < current_.get_height(); ++y)
-		{ 	//todo remove static cast ???????????????????????????????
-			std::size_t neighbours = current_.count_neighbours(static_cast<long long>(x), static_cast<long long>(y));
-			bool cell = current_.get_cell(static_cast<long long>(x), static_cast<long long>(y));
-			next_.set_cell(static_cast<long long>(x), static_cast<long long>(y), cell);
+		for (int y = 0; y < current_.getHeight(); ++y)
+		{
+			std::size_t neighbours = current_.countNeighbours(x, y);
+			bool cell = current_.getCell(x, y);
+			next_.setCell(x, y, cell);
 			if (3 == neighbours && !cell)				//custom rules
 			{
-				next_.set_cell(static_cast<long long>(x), static_cast<long long>(y), true);
+				next_.setCell(x, y, true);
 			}
 			else if ((neighbours < 2 || neighbours > 3) && cell)				//custom rules
 			{
-				next_.set_cell(static_cast<long long>(x), static_cast<long long>(y), false);
+				next_.setCell(x, y, false);
 			}
 		}
 	}
 	current_.swap(next_);
 }
 
-void State::print_field() const noexcept
+void State::printField() const noexcept
 {
 	std::cout << "-------------------------------" << std::endl;
-	for (std::size_t x = 0; x < current_.get_width(); ++x)
+	for (int x = 0; x < current_.getWidth(); ++x)
 	{
-		for (std::size_t y = 0; y < current_.get_height(); ++y)
+		for (int y = 0; y < current_.getHeight(); ++y)
 		{
-			current_.get_cell(static_cast<long long>(x), static_cast<long long>(y)) ? (std::cout << "+") : (std::cout << "-");
+			current_.getCell(x, y) ? (std::cout << "+") : (std::cout << "-");
 		}
 		std::cout << std::endl;
 	}
 
-	for (long long x = 0; x < current_.get_width(); ++x)
+	for (int x = 0; x < current_.getWidth(); ++x)
 	{
-		for (long long y = 0; y < current_.get_height(); ++y)
+		for (int y = 0; y < current_.getHeight(); ++y)
 		{
-			std::cout << current_.count_neighbours(x, y);
+			std::cout << current_.countNeighbours(x, y);
 		}
 		std::cout << std::endl;
 	}
@@ -130,8 +130,8 @@ void State::play()
 		std::cin >> str;
 		if ("quit" != str)
 		{
-			print_field();
-			make_next_field();
+//			printField();
+			makeNextField();
 		}
 		else
 		{
@@ -142,6 +142,11 @@ void State::play()
 
 State::State(std::size_t width, std::size_t height) : current_(width, height), next_(width, height)
 {}
+
+Field State::getField() const noexcept
+{
+	return current_;
+}
 
 
 
