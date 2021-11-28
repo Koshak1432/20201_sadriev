@@ -24,7 +24,7 @@ private:
 	QPoint lastPoint;
 
 
-	void drawLineTo(const QPoint &endPoint);
+	void drawLine(const QPoint &startPoint, const QPoint &endPoint, bool cellState);
 };
 
 #endif //GAME_OF_LIFE_V2_0_RENDERAREA_H
