@@ -18,6 +18,8 @@ struct Result
 	std::vector<Choice> choices_;
 	std::vector<int> payoffs_;
 	std::vector<int> scores_;
+
+	friend bool operator ==(const Result &first, const Result &second) noexcept;
 };
 
 class Strategy

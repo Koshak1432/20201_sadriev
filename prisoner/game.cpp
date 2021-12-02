@@ -1,4 +1,6 @@
 #include "game.h"
+#include "strategy.h"
+
 
 constexpr std::size_t ROWS = 8;
 
@@ -65,3 +67,8 @@ Result Game::get_result() const noexcept
 
 Result::Result(int cols) :choices_(cols), payoffs_(cols), scores_(cols)
 {}
+
+bool operator ==(const Result &first, const Result &second) noexcept
+{
+	return (first.payoffs_ == second.payoffs_ && first.choices_ == second.choices_ && first.scores_ == second.scores_);
+}

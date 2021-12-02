@@ -2,7 +2,6 @@
 
 #include <QPaintEvent>
 #include <QPainter>
-#include <cmath>
 
 #include "engine.h"
 

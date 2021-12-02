@@ -19,8 +19,6 @@ private:
 	std::vector<std::vector<int>> matrix_;
 };
 
-//matrix from runner, to runner from main
-//strategies from runner, to runner from args by making from names
 class Game
 {
 public:

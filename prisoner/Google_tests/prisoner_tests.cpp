@@ -3,6 +3,74 @@
 #include "../io.h"
 #include "../console_interface.h"
 #include "../config_provider.h"
+#include "mock_prison.h"
+
+using ::testing::AtLeast;
+using ::testing::Return;
+
+TEST(prison, game_mocking)
+{
+	std::vector<std::unique_ptr<Strategy>> strategies {};
+	strategies.reserve(3);
+
+	strategies.push_back(std::make_unique<MockStrategy>());
+	strategies.push_back(std::make_unique<MockStrategy>());
+	strategies.push_back(std::make_unique<MockStrategy>());
+
+	auto *first = static_cast<MockStrategy *>(strategies[0].get());
+	auto *second = static_cast<MockStrategy *>(strategies[1].get());
+	auto *third = static_cast<MockStrategy *>(strategies[2].get());
+
+	Result result1_1(3);
+	result1_1.choices_ = {Choice::COOPERATE, Choice::DEFECT, Choice::COOPERATE};
+	result1_1.payoffs_ = {3, 9, 3};
+	result1_1.scores_ = {3, 9, 3};
+
+	Result result1_2(3);
+	result1_2.choices_ = {Choice::COOPERATE, Choice::DEFECT, Choice::DEFECT};
+	result1_2.payoffs_ = {0, 5, 5};
+	result1_2.scores_ = {3, 9 + 5, 3 + 5};
+
+	EXPECT_CALL(*first, make_choice())
+		.Times(2);
+	EXPECT_CALL(*first, get_choice())
+		.Times(2)
+		.WillRepeatedly(Return(Choice::COOPERATE));
+	EXPECT_CALL(*first, handle_result(result1_1))
+		.Times(1);
+	EXPECT_CALL(*first, handle_result(result1_2))
+		.Times(1);
+
+	EXPECT_CALL(*second, make_choice())
+			.Times(2);
+	EXPECT_CALL(*second, get_choice())
+			.Times(2)
+			.WillRepeatedly(Return(Choice::DEFECT));
+	EXPECT_CALL(*second, handle_result(result1_1))
+			.Times(1);
+	EXPECT_CALL(*second, handle_result(result1_2))
+			.Times(1);
+
+
+	EXPECT_CALL(*third, make_choice())
+			.Times(2);
+	EXPECT_CALL(*third, get_choice())
+			.Times(2)
+			.WillOnce(Return(Choice::COOPERATE))
+			.WillRepeatedly(Return(Choice::DEFECT));
+	EXPECT_CALL(*third, handle_result(result1_1))
+			.Times(1);
+	EXPECT_CALL(*third, handle_result(result1_2))
+			.Times(1);
+
+	Matrix matrix{};
+	Game game(matrix, std::move(strategies));
+	for (std::size_t i = 0; i < 2; ++i)
+	{
+		game.step();
+	}
+
+}
 
 TEST(prison, parse_args_check)
 {
