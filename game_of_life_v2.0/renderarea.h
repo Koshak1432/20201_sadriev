@@ -17,6 +17,7 @@ protected:
 	void mousePressEvent(QMouseEvent *event) override;
 	void mouseMoveEvent(QMouseEvent *event) override;
 	void mouseReleaseEvent(QMouseEvent *event) override;
+	QSize sizeHint() const override;
 
 private:
 	Field *field_ = nullptr;

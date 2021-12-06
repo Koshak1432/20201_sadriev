@@ -1,9 +1,14 @@
 #include "game.h"
 
 #include <QTimer>
+#include <QScrollArea>
 
-Game::Game(int speed, QWidget *parent) : QWidget(parent), state_(), renderArea_(new RenderArea(state_.getField())), timer_(new QTimer()), speed_(speed)
+#include "renderarea.h"
+Game::Game(int speed, QWidget *parent)
+			: QWidget(parent), state_(), scrollArea_(new QScrollArea()), timer_(new QTimer()), speed_(speed)
 {
+	scrollArea_->setBackgroundRole(QPalette::Dark);
+	scrollArea_->setWidget(new RenderArea(state_.getField()));
 	connect(timer_, &QTimer::timeout, this, &Game::gameUpdate);
 }
 
@@ -27,10 +32,10 @@ void Game::gameUpdate()
 {
 	state_.makeNextField();
 
-	renderArea_->update();
+	scrollArea_->widget()->update();
 }
 
-RenderArea *Game::getRenderArea() noexcept
+QScrollArea *Game::getScrollArea() noexcept
 {
-	return renderArea_;
+	return scrollArea_;
 }

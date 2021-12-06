@@ -14,7 +14,9 @@ constexpr QColor COLOR_LIVE(57,255,20);
 constexpr QColor COLOR_DEAD(255, 0, 0);
 
 RenderArea::RenderArea(Field &field, QWidget *parent) : QWidget(parent), field_(&field)
-{}
+{
+
+}
 
 void RenderArea::paintEvent(QPaintEvent *event)
 {
@@ -107,6 +109,11 @@ void RenderArea::drawLine(const QPoint &startPoint, const QPoint &endPoint, bool
 		}
 	}
 	update();
+}
+
+QSize RenderArea::sizeHint() const
+{
+	return {DEFAULT_WIDTH * RECT_WIDTH, DEFAULT_HEIGHT * RECT_HEIGHT}; //return QSize(...)
 }
 
 

@@ -2,11 +2,12 @@
 
 #include <QLayout>
 #include <QToolBar>
+#include <QScrollArea>
 
 GameWindow::GameWindow() : game_()
 {
 	createActions();
-	setCentralWidget(game_.getRenderArea());
+	setCentralWidget(game_.getScrollArea());
 
 	setWindowTitle("Game of life");
 	resize(1000, 1000);
