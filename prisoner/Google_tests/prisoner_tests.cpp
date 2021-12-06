@@ -10,23 +10,23 @@ using ::testing::Return;
 
 TEST(prison, game_mocking)
 {
-	std::vector<std::unique_ptr<Strategy>> strategies {};
-	strategies.reserve(3);
-
-	strategies.push_back(std::make_unique<MockStrategy>());
-	strategies.push_back(std::make_unique<MockStrategy>());
-	strategies.push_back(std::make_unique<MockStrategy>());
+	std::vector<std::unique_ptr<Strategy>> strategies(3);
+	constexpr std::size_t numStrategies = 3;
+	for (std::size_t i = 0; i < numStrategies; ++i)
+	{
+		strategies[i] = std::make_unique<MockStrategy>();
+	}
 
 	auto *first = static_cast<MockStrategy *>(strategies[0].get());
 	auto *second = static_cast<MockStrategy *>(strategies[1].get());
 	auto *third = static_cast<MockStrategy *>(strategies[2].get());
 
-	Result result1_1(3);
+	Result result1_1(numStrategies);
 	result1_1.choices_ = {Choice::COOPERATE, Choice::DEFECT, Choice::COOPERATE};
 	result1_1.payoffs_ = {3, 9, 3};
 	result1_1.scores_ = {3, 9, 3};
 
-	Result result1_2(3);
+	Result result1_2(numStrategies);
 	result1_2.choices_ = {Choice::COOPERATE, Choice::DEFECT, Choice::DEFECT};
 	result1_2.payoffs_ = {0, 5, 5};
 	result1_2.scores_ = {3, 9 + 5, 3 + 5};
@@ -69,7 +69,6 @@ TEST(prison, game_mocking)
 	{
 		game.step();
 	}
-
 }
 
 TEST(prison, parse_args_check)

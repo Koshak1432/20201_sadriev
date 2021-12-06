@@ -1,11 +1,10 @@
 #ifndef GAME_OF_LIFE_V2_0_ENGINE_H
 #define GAME_OF_LIFE_V2_0_ENGINE_H
 
-#include <cstddef>
 #include <vector>
 
-constexpr std::size_t DEFAULT_WIDTH = 5;
-constexpr std::size_t DEFAULT_HEIGHT = 5;
+constexpr std::size_t DEFAULT_WIDTH = 50;
+constexpr std::size_t DEFAULT_HEIGHT = 25;
 
 class Field
 {
@@ -29,13 +28,13 @@ class State
 public:
 	explicit State(std::size_t width = DEFAULT_WIDTH, std::size_t height = DEFAULT_HEIGHT);
 	[[nodiscard]] Field getField() const noexcept;
-	void printField() const noexcept;
-	void play();
+	Field &getField() noexcept;
+	void makeNextField();
 private:
 	Field current_;
 	Field next_;
 
-	void makeNextField();
+
 };
 
 #endif //GAME_OF_LIFE_V2_0_ENGINE_H

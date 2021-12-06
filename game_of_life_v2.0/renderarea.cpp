@@ -5,9 +5,9 @@
 
 #include "engine.h"
 
-constexpr int RECT_WIDTH = 50;
-constexpr int RECT_HEIGHT = 50;
-constexpr int BORDER_WIDTH = 4;
+constexpr int RECT_WIDTH = 20;
+constexpr int RECT_HEIGHT = 20;
+constexpr int BORDER_WIDTH = 1;
 constexpr bool CELL_LIVE = true;
 constexpr bool CELL_DEAD = false;
 constexpr QColor COLOR_LIVE(57,255,20);
@@ -20,7 +20,6 @@ void RenderArea::paintEvent(QPaintEvent *event)
 {
 	QPainter painter = QPainter(this);
 	QPen pen;
-	//nPen.setBrush(QBrush()); //to print without border
 	pen.setWidth(BORDER_WIDTH);
 	pen.setJoinStyle(Qt::MiterJoin);
 	painter.setPen(pen);
@@ -29,20 +28,10 @@ void RenderArea::paintEvent(QPaintEvent *event)
 		for (int x = 0; x < field_->getWidth(); ++x)
 		{
 			(field_->getCell(x, y)) ? painter.setBrush(COLOR_LIVE) : painter.setBrush(COLOR_DEAD);
-			painter.drawRect(x * RECT_WIDTH + BORDER_WIDTH / 2, y * RECT_HEIGHT + BORDER_WIDTH / 2, RECT_WIDTH, RECT_HEIGHT); //учитывать при обработке кликов сдвиг на 2
+			//учитывать при обработке кликов сдвиг на border / width
+			painter.drawRect(x * RECT_WIDTH + BORDER_WIDTH / 2, y * RECT_HEIGHT + BORDER_WIDTH / 2, RECT_WIDTH, RECT_HEIGHT);
 		}
 	}
-//	QPen mPen;
-//	mPen.setWidth(0);
-//	paint.setPen(mPen);
-//	for (int y = 0; y < field_->getHeight(); ++y)
-//	{
-//		paint.drawLine(0, y * RECT_HEIGHT, static_cast<int>(field_->getWidth()) * RECT_WIDTH, y * RECT_HEIGHT);
-//	}
-//	for (int x = 0; x < field_->getWidth(); ++x)
-//	{
-//		paint.drawLine(x * RECT_WIDTH, 0, x * RECT_WIDTH, static_cast<int>(field_->getHeight()) * RECT_HEIGHT);
-//	}
 }
 
 void RenderArea::mousePressEvent(QMouseEvent *event)

@@ -23,7 +23,6 @@ private:
 	bool drawing = false;
 	QPoint lastPoint;
 
-
 	void drawLine(const QPoint &startPoint, const QPoint &endPoint, bool cellState);
 };
 

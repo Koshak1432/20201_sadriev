@@ -1,8 +1,6 @@
 #include "engine.h"
 
 #include <cassert>
-#include <iostream>
-#include <ctime> //todo: delete in release
 
 static std::size_t getToroidCoord(int i, std::size_t max) noexcept
 {
@@ -63,18 +61,7 @@ void Field::swap(Field &other) noexcept
 
 Field::Field(std::size_t width, std::size_t height) : field_(height), width_(width), height_(height)
 {
-	srand(993);
-	field_.reserve(height);
-	std::vector<bool> row(width);
-	row.reserve(width);
-	for (std::size_t i = 0; i < height; ++i)
-	{
-		for (std::size_t j = 0; j < width; ++j)
-		{
-			(0 == rand() % 2) ? row[j] = true : row[j] = false;
-		}
-		field_[i] = row;
-	}
+	std::fill(field_.begin(), field_.end(), std::vector<bool>(width, false));
 }
 
 void State::makeNextField()
@@ -99,51 +86,15 @@ void State::makeNextField()
 	current_.swap(next_);
 }
 
-void State::printField() const noexcept
-{
-	std::cout << "-------------------------------" << std::endl;
-	for (int x = 0; x < current_.getWidth(); ++x)
-	{
-		for (int y = 0; y < current_.getHeight(); ++y)
-		{
-			current_.getCell(x, y) ? (std::cout << "+") : (std::cout << "-");
-		}
-		std::cout << std::endl;
-	}
-
-	for (int x = 0; x < current_.getWidth(); ++x)
-	{
-		for (int y = 0; y < current_.getHeight(); ++y)
-		{
-			std::cout << current_.countNeighbours(x, y);
-		}
-		std::cout << std::endl;
-	}
-	std::cout << "-------------------------------" << std::endl << std::endl;
-}
-
-void State::play()
-{
-	while (true)
-	{
-		std::string str;
-		std::cin >> str;
-		if ("quit" != str)
-		{
-//			printField();
-			makeNextField();
-		}
-		else
-		{
-			break;
-		}
-	}
-}
-
 State::State(std::size_t width, std::size_t height) : current_(width, height), next_(width, height)
 {}
 
 Field State::getField() const noexcept
+{
+	return current_;
+}
+
+Field &State::getField() noexcept
 {
 	return current_;
 }
