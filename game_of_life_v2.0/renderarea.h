@@ -2,6 +2,7 @@
 #define GAME_OF_LIFE_V2_0_RENDERAREA_H
 
 #include <QWidget>
+#include <QWheelEvent>
 
 class Field;
 
@@ -19,9 +20,10 @@ protected:
 	void mousePressEvent(QMouseEvent *event) override;
 	void mouseMoveEvent(QMouseEvent *event) override;
 	void mouseReleaseEvent(QMouseEvent *event) override;
+	void wheelEvent(QWheelEvent *event) override;
 	[[nodiscard]] QSize sizeHint() const override;
 
-public slots:
+private slots:
 	void zoomIn();
 	void zoomOut();
 
@@ -30,7 +32,10 @@ private:
 	bool drawing = false;
 	QPoint lastPoint;
 	double scaleFactor_ = DEFAULT_SCALE_FACTOR;
+
 	void drawLine(const QPoint &startPoint, const QPoint &endPoint, bool cellState);
+	[[nodiscard]] int getScaledRectWidth() const noexcept;
+	[[nodiscard]] int getScaledRectHeight() const noexcept;
 	void scaleArea(double scaleFactor = DEFAULT_SCALE_FACTOR);
 };
 
