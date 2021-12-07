@@ -37,12 +37,12 @@ std::size_t Field::countNeighbours(int x, int y) const noexcept
 	return neighbours;
 }
 
-std::size_t Field::getHeight() const noexcept
+int Field::getHeight() const noexcept
 {
 	return height_;
 }
 
-std::size_t Field::getWidth() const noexcept
+int Field::getWidth() const noexcept
 {
 	return width_;
 }
@@ -59,7 +59,7 @@ void Field::swap(Field &other) noexcept
 	field_.swap(other.field_);
 }
 
-Field::Field(std::size_t width, std::size_t height) : field_(height), width_(width), height_(height)
+Field::Field(int width, int height) : field_(height), width_(width), height_(height)
 {
 	std::fill(field_.begin(), field_.end(), std::vector<bool>(width, false));
 }
@@ -86,13 +86,8 @@ void State::makeNextField()
 	current_.swap(next_);
 }
 
-State::State(std::size_t width, std::size_t height) : current_(width, height), next_(width, height)
+State::State(int width, int height) : current_(width, height), next_(width, height)
 {}
-
-Field State::getField() const noexcept
-{
-	return current_;
-}
 
 Field &State::getField() noexcept
 {

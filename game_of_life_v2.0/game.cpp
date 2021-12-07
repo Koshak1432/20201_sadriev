@@ -4,6 +4,7 @@
 #include <QScrollArea>
 
 #include "renderarea.h"
+
 Game::Game(int speed, QWidget *parent)
 			: QWidget(parent), state_(), scrollArea_(new QScrollArea()), timer_(new QTimer()), speed_(speed)
 {
@@ -31,11 +32,15 @@ void Game::pause()
 void Game::gameUpdate()
 {
 	state_.makeNextField();
-
 	scrollArea_->widget()->update();
 }
 
 QScrollArea *Game::getScrollArea() noexcept
 {
 	return scrollArea_;
+}
+
+RenderArea *Game::getRenderArea()
+{
+	return dynamic_cast<RenderArea *>(scrollArea_->widget());
 }

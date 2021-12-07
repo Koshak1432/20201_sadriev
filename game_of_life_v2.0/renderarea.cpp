@@ -5,18 +5,22 @@
 
 #include "engine.h"
 
-constexpr int RECT_WIDTH = 20;
-constexpr int RECT_HEIGHT = 20;
+constexpr int DEFAULT_RECT_WIDTH = 20;
+constexpr int DEFAULT_RECT_HEIGHT = 20;
 constexpr int BORDER_WIDTH = 1;
 constexpr bool CELL_LIVE = true;
 constexpr bool CELL_DEAD = false;
 constexpr QColor COLOR_LIVE(57,255,20);
 constexpr QColor COLOR_DEAD(255, 0, 0);
+constexpr double SCALE_LOWER_BORDER = 0.33;
+constexpr double SCALE_UPPER_BORDER = 4.0;
+constexpr double ZOOM_IN_FACTOR = 1.25;
+constexpr double ZOOM_OUT_FACTOR = 1 / ZOOM_IN_FACTOR;
+
+
 
 RenderArea::RenderArea(Field &field, QWidget *parent) : QWidget(parent), field_(&field)
-{
-
-}
+{}
 
 void RenderArea::paintEvent(QPaintEvent *event)
 {
@@ -25,13 +29,16 @@ void RenderArea::paintEvent(QPaintEvent *event)
 	pen.setWidth(BORDER_WIDTH);
 	pen.setJoinStyle(Qt::MiterJoin);
 	painter.setPen(pen);
+	int scaledRectWidth = static_cast<int>(DEFAULT_RECT_WIDTH * scaleFactor_);
+	int scaledRectHeight = static_cast<int>(DEFAULT_RECT_HEIGHT * scaleFactor_);
+
 	for (int y = 0; y < field_->getHeight(); ++y)
 	{
 		for (int x = 0; x < field_->getWidth(); ++x)
 		{
 			(field_->getCell(x, y)) ? painter.setBrush(COLOR_LIVE) : painter.setBrush(COLOR_DEAD);
 			//учитывать при обработке кликов сдвиг на border / width
-			painter.drawRect(x * RECT_WIDTH + BORDER_WIDTH / 2, y * RECT_HEIGHT + BORDER_WIDTH / 2, RECT_WIDTH, RECT_HEIGHT);
+			painter.drawRect(x * scaledRectWidth + BORDER_WIDTH / 2, y * scaledRectHeight + BORDER_WIDTH / 2, scaledRectWidth, scaledRectHeight);
 		}
 	}
 }
@@ -79,10 +86,13 @@ void RenderArea::mouseReleaseEvent(QMouseEvent *event)
 
 void RenderArea::drawLine(const QPoint &startPoint, const QPoint &endPoint, bool cellState)
 {
-	int x0 = (startPoint.x() - (BORDER_WIDTH / 2)) / RECT_WIDTH;
-	int x1 = (endPoint.x() - (BORDER_WIDTH / 2)) / RECT_WIDTH;
-	int y0 = (startPoint.y() - (BORDER_WIDTH / 2)) / RECT_HEIGHT;
-	int y1 = (endPoint.y() - (BORDER_WIDTH / 2)) / RECT_HEIGHT;
+	int scaledRectWidth = static_cast<int>(DEFAULT_RECT_WIDTH * scaleFactor_);
+	int scaledRectHeight = static_cast<int>(DEFAULT_RECT_HEIGHT * scaleFactor_);
+
+	int x0 = (startPoint.x() - (BORDER_WIDTH / 2)) / scaledRectWidth;
+	int x1 = (endPoint.x() - (BORDER_WIDTH / 2)) / scaledRectWidth;
+	int y0 = (startPoint.y() - (BORDER_WIDTH / 2)) / scaledRectHeight;
+	int y1 = (endPoint.y() - (BORDER_WIDTH / 2)) / scaledRectHeight;
 
 	int dx = std::abs(x0 - x1);
 	int sx = (x0 < x1) ? 1 : -1;
@@ -113,8 +123,26 @@ void RenderArea::drawLine(const QPoint &startPoint, const QPoint &endPoint, bool
 
 QSize RenderArea::sizeHint() const
 {
-	return {DEFAULT_WIDTH * RECT_WIDTH, DEFAULT_HEIGHT * RECT_HEIGHT}; //return QSize(...)
+	return {static_cast<int>(DEFAULT_WIDTH * DEFAULT_RECT_WIDTH * scaleFactor_), static_cast<int>(DEFAULT_HEIGHT * DEFAULT_RECT_HEIGHT * scaleFactor_)}; //return QSize(...)
 }
 
+void RenderArea::zoomIn()
+{
+	scaleArea(ZOOM_IN_FACTOR);
+}
 
+void RenderArea::zoomOut()
+{
+	scaleArea(ZOOM_OUT_FACTOR);
+}
+
+void RenderArea::scaleArea(double scaleFactor)
+{
+	scaleFactor_ *= scaleFactor;
+	if (scaleFactor_ < SCALE_LOWER_BORDER || scaleFactor_ > SCALE_UPPER_BORDER)
+	{
+		scaleFactor_ = DEFAULT_SCALE_FACTOR;
+	}
+	resize(sizeHint());
+}
 

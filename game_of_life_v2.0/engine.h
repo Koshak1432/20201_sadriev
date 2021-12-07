@@ -3,38 +3,35 @@
 
 #include <vector>
 
-constexpr std::size_t DEFAULT_WIDTH = 50;
-constexpr std::size_t DEFAULT_HEIGHT = 25;
+constexpr int DEFAULT_WIDTH = 80;
+constexpr int DEFAULT_HEIGHT = 40;
 
 class Field
 {
 public:
-	explicit Field(std::size_t width = DEFAULT_WIDTH, std::size_t height = DEFAULT_HEIGHT);
+	explicit Field(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT); //check > 0 ??????
 
-	[[nodiscard]] std::size_t getHeight() const noexcept;
-	[[nodiscard]] std::size_t getWidth() const noexcept;
+	[[nodiscard]] int getHeight() const noexcept;
+	[[nodiscard]] int getWidth() const noexcept;
 	[[nodiscard]] std::size_t countNeighbours(int x, int y) const noexcept;
 	[[nodiscard]] bool getCell(int x, int y) const noexcept;
 	void setCell(int x, int y, bool cell) noexcept;
 	void swap(Field &other) noexcept;
 private:
 	std::vector<std::vector<bool>> field_;
-	std::size_t height_ = DEFAULT_HEIGHT;
-	std::size_t width_ = DEFAULT_WIDTH;
+	int height_ = DEFAULT_HEIGHT;
+	int width_ = DEFAULT_WIDTH;
 };
 
 class State
 {
 public:
-	explicit State(std::size_t width = DEFAULT_WIDTH, std::size_t height = DEFAULT_HEIGHT);
-	[[nodiscard]] Field getField() const noexcept;
+	explicit State(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT);
 	Field &getField() noexcept;
 	void makeNextField();
 private:
 	Field current_;
 	Field next_;
-
-
 };
 
 #endif //GAME_OF_LIFE_V2_0_ENGINE_H

@@ -11,15 +11,11 @@ class GameWindow : public QMainWindow
 public:
 	explicit GameWindow();
 
+private slots:
+
 private:
 	Game game_;
-
-//	QAction *playAction;
-//	QAction *pauseAction;
-//	QAction *saveAction;
-//	QAction *loadAction;
-
-	void createActions();
+	void createToolBar();
 };
 
 #endif //GAME_OF_LIFE_V2_0_GAMEWINDOW_H

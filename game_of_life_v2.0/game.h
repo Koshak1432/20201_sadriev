@@ -2,19 +2,20 @@
 #define GAME_OF_LIFE_V2_0_GAME_H
 
 #include <QWidget>
+
 #include "engine.h"
 
 class QScrollArea;
+class RenderArea;
 
 constexpr int DEFAULT_SPEED = 250;
-
 
 class Game : public QWidget
 {
 public:
 	explicit Game(int speed = DEFAULT_SPEED, QWidget *parent = nullptr);
 	QScrollArea *getScrollArea() noexcept;
-
+	RenderArea *getRenderArea();
 public slots:
 	void play();
 	void pause();
@@ -24,7 +25,6 @@ private slots:
 
 private:
 	State state_;
-
 	QScrollArea *scrollArea_;
 	QTimer *timer_;
 	int speed_ = DEFAULT_SPEED;
