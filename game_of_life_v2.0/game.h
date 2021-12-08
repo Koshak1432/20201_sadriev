@@ -13,9 +13,10 @@ constexpr int DEFAULT_SPEED = 250;
 class Game : public QWidget
 {
 public:
-	explicit Game(int speed = DEFAULT_SPEED, QWidget *parent = nullptr);
+	explicit Game(State state = State(), int speed = DEFAULT_SPEED, QWidget *parent = nullptr);
 	QScrollArea *getScrollArea() noexcept;
 	RenderArea *getRenderArea();
+	Game &operator =(Game &&other) noexcept;
 public slots:
 	void play();
 	void pause();

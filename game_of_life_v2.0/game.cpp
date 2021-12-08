@@ -5,8 +5,8 @@
 
 #include "renderarea.h"
 
-Game::Game(int speed, QWidget *parent)
-			: QWidget(parent), state_(), scrollArea_(new QScrollArea()), timer_(new QTimer()), speed_(speed)
+Game::Game(State state, int speed, QWidget *parent)
+			: QWidget(parent), state_(std::move(state)), scrollArea_(new QScrollArea()), timer_(new QTimer()), speed_(speed)
 {
 	scrollArea_->setBackgroundRole(QPalette::Dark);
 	scrollArea_->setWidget(new RenderArea(state_.getField()));
@@ -43,4 +43,17 @@ QScrollArea *Game::getScrollArea() noexcept
 RenderArea *Game::getRenderArea()
 {
 	return dynamic_cast<RenderArea *>(scrollArea_->widget());
+}
+
+Game &Game::operator =(Game &&other) noexcept
+{
+	if (&other != this)
+	{
+		state_ = std::move(other.state_);
+		scrollArea_ = other.scrollArea_;
+		timer_ = other.timer_;
+		speed_ = other.speed_;
+		isPlaying = other.isPlaying;
+	}
+	return *this;
 }

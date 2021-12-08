@@ -1,13 +1,14 @@
 #include "engine.h"
 
 #include <cassert>
+#include <utility>
 
 static std::size_t getToroidCoord(int i, std::size_t max) noexcept
 {
 	assert(0 != max);
 	while (i < 0)
 	{
-		i += static_cast<int>(max);
+		i += int(max);
 	}
 	return i % max;
 }
@@ -64,6 +65,20 @@ Field::Field(int width, int height) : field_(height), width_(width), height_(hei
 	std::fill(field_.begin(), field_.end(), std::vector<bool>(width, false));
 }
 
+Field::Field(Field &&other) noexcept : field_(std::move(other.field_)), height_(other.height_), width_(other.width_)
+{}
+
+Field &Field::operator =(Field &&other) noexcept
+{
+	if (&other != this)
+	{
+		field_ = std::move(other.field_);
+		height_ = other.height_;
+		width_ = other.width_;
+	}
+	return *this;
+}
+
 void State::makeNextField()
 {
 	for (int x = 0; x < current_.getWidth(); ++x)
@@ -73,11 +88,11 @@ void State::makeNextField()
 			std::size_t neighbours = current_.countNeighbours(x, y);
 			bool cell = current_.getCell(x, y);
 			next_.setCell(x, y, cell);
-			if (3 == neighbours && !cell)				//custom rules
+			if (rules_.birth_[neighbours] && !cell)
 			{
 				next_.setCell(x, y, true);
 			}
-			else if ((neighbours < 2 || neighbours > 3) && cell)				//custom rules
+			else if (!rules_.sustain_[neighbours] && cell)
 			{
 				next_.setCell(x, y, false);
 			}
@@ -86,7 +101,7 @@ void State::makeNextField()
 	current_.swap(next_);
 }
 
-State::State(int width, int height) : current_(width, height), next_(width, height)
+State::State(Rules rules, int width, int height) noexcept: current_(width, height), next_(width, height), rules_(std::move(rules))
 {}
 
 Field &State::getField() noexcept
@@ -94,6 +109,54 @@ Field &State::getField() noexcept
 	return current_;
 }
 
+State::State(State &&other) noexcept : current_(std::move(other.current_)), next_(std::move(other.next_)), rules_(std::move(other.rules_))
+{}
 
+State &State::operator =(State &&other) noexcept
+{
+	if (&other != this)
+	{
+		current_ = std::move(other.current_);
+		next_ = std::move(other.next_);
+		rules_ = std::move(other.rules_);
+	}
+	return *this;
+}
 
+int State::getWidth() noexcept
+{
+	return current_.getWidth();
+}
 
+int State::getHeight() noexcept
+{
+	return current_.getHeight();
+}
+
+Field &State::getCurrent()
+{
+	return current_;
+}
+
+Rules::Rules() noexcept : birth_(9, false), sustain_(9, false)
+{
+	birth_[3] = true;
+	sustain_[2] = true;
+	sustain_[3] = true;
+}
+
+Rules::Rules(std::vector<bool> birth, std::vector<bool> sustain) noexcept : birth_(std::move(birth)), sustain_(std::move(sustain))
+{}
+
+Rules::Rules(Rules &&other) noexcept :birth_(std::move(other.birth_)), sustain_(std::move(other.sustain_))
+{}
+
+Rules &Rules::operator =(Rules &&other) noexcept
+{
+	if (&other != this)
+	{
+		birth_ = std::move(other.birth_);
+		sustain_ = std::move(other.sustain_);
+	}
+	return *this;
+}
