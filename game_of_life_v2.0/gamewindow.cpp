@@ -53,6 +53,5 @@ void GameWindow::loadFile(const QString &fileName)
 	{
 		QMessageBox::warning(this, "Application", tr("Cannot read file %1:\n%2.") .arg(QDir::toNativeSeparators(fileName), file.errorString()));
 	}
-	game_ = std::move(Game(readState(&file)));
-	update();
+	game_.setState(readState(&file));
 }

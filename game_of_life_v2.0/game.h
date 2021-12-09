@@ -16,7 +16,7 @@ public:
 	explicit Game(State state = State(), int speed = DEFAULT_SPEED, QWidget *parent = nullptr);
 	QScrollArea *getScrollArea() noexcept;
 	RenderArea *getRenderArea();
-	Game &operator =(Game &&other) noexcept;
+	void setState(State state);
 public slots:
 	void play();
 	void pause();

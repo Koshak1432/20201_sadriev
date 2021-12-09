@@ -17,30 +17,15 @@ enum class Expecting
 
 static void expectChar(QIODevice *device, char expectedChar)
 {
-	char ch{};
-
-	if (sizeof(expectedChar) != device->peek(&ch, sizeof(expectedChar)))
+	if (expectedChar != device->peek(sizeof(expectedChar)).at(0))
 	{
-		throw std::invalid_argument("I'M DYING!!!");
+		throw std::invalid_argument("Invalid data in file (expectChar)");
 	}
-	qDebug() << "ch is " << ch;
-	qDebug() << "expect is " << expectedChar;
-	if (expectedChar != ch)
-	{
-		throw std::invalid_argument("NOT EQ");
-	}
-//	if (expectedChar != device->peek(sizeof(expectedChar)).at(0))
-//	{
-//		throw std::invalid_argument("Invalid data in file (expectChar)");
-//	}
 }
 
 static bool isDigit(QIODevice *device)
 {
-	char digit{};
-	device->peek(&digit, sizeof(char));
-	qDebug() << "check for digit it is : " << digit;
-	return (0 != std::isalpha(digit));
+	return (0 != std::isdigit(device->peek(sizeof(char)).at(0)));
 }
 
 static QString readNumber(QIODevice *device)
@@ -53,9 +38,8 @@ static QString readNumber(QIODevice *device)
 		{
 			throw std::invalid_argument("Invalid data in file (readNumber)");
 		}
-		str.append(QChar(digit));
+		str.append(digit);
 	}
-	qDebug() << "string is " << str;
 	return str;
 }
 
@@ -64,30 +48,30 @@ static void skipWhiteSpaces(QIODevice *device)
 	char ch{};
 	if (sizeof(char) != device->peek(&ch, sizeof(char)))
 	{
-		throw std::invalid_argument("error in skip spaces 1");
+		throw std::invalid_argument("error in skip spaces");
 	}
 	while (' ' == ch)
 	{
 		device->skip(sizeof(char));
 		if (sizeof(char) != device->peek(&ch, sizeof(char)))
 		{
-			throw std::invalid_argument("error in skip spaces 2");
+			throw std::invalid_argument("error in skip spaces");
 		}
 	}
-//	device->ungetChar(ch);
 }
 
 static std::vector<bool> readRule(const QString &numInString)
 {
-	std::vector<bool> ruleVec;
+	std::vector<bool> ruleVec(9, false);
 	for (auto digit : numInString)
 	{
-		ruleVec[int(digit.toLatin1())] = true;
+		int idx = int(digit.toLatin1()) - '0';
+		ruleVec[idx] = true;
 	}
 	return ruleVec;
 }
 
-static State&& readHeader(QIODevice *device)
+static State readHeader(QIODevice *device)
 {
 	std::vector<Expecting> expect{Expecting {'x'}, Expecting::SPACE, Expecting{'='}, Expecting::SPACE,
 								  Expecting::NUMBER, Expecting{','}, Expecting::SPACE, Expecting{'y'},
@@ -108,7 +92,6 @@ static State&& readHeader(QIODevice *device)
 			device->skip(sizeof(char));
 			continue;
 		}
-
 		switch (action)
 		{
 			case Expecting::SPACE:
@@ -136,7 +119,7 @@ static State&& readHeader(QIODevice *device)
 	{
 		throw std::invalid_argument("can't convert width and height from header info");
 	}
-	return std::move(state);
+	return state;
 }
 
 static void readRle(QIODevice *device, State &state, int &x, int &y, bool &end)
@@ -208,7 +191,7 @@ static void readRle(QIODevice *device, State &state, int &x, int &y, bool &end)
 	}
 }
 
-State &&readState(QIODevice *device)
+State readState(QIODevice *device)
 {
 	char ch{};
 	State state;
@@ -230,7 +213,7 @@ State &&readState(QIODevice *device)
 			}
 			case 'x':
 			{
-				state = readHeader(device);
+				state = std::move(readHeader(device));
 				break;
 			}
 			default:
@@ -239,11 +222,9 @@ State &&readState(QIODevice *device)
 				readRle(device, state, x, y, end);
 				if (end)
 				{
-					return std::move(state);
+					return state;
 				}
 			}
-
 		}
 	}
-
 }

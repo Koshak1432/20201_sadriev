@@ -5,6 +5,6 @@
 class State;
 class QIODevice;
 
-State &&readState(QIODevice *device);
+State readState(QIODevice *device);
 
 #endif //GAME_OF_LIFE_V2_0_IO_H

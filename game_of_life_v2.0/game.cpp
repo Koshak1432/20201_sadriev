@@ -32,6 +32,7 @@ void Game::pause()
 void Game::gameUpdate()
 {
 	state_.makeNextField();
+
 	scrollArea_->widget()->update();
 }
 
@@ -45,15 +46,7 @@ RenderArea *Game::getRenderArea()
 	return dynamic_cast<RenderArea *>(scrollArea_->widget());
 }
 
-Game &Game::operator =(Game &&other) noexcept
+void Game::setState(State state)
 {
-	if (&other != this)
-	{
-		state_ = std::move(other.state_);
-		scrollArea_ = other.scrollArea_;
-		timer_ = other.timer_;
-		speed_ = other.speed_;
-		isPlaying = other.isPlaying;
-	}
-	return *this;
+	state_ = std::move(state);
 }

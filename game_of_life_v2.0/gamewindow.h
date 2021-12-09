@@ -4,7 +4,6 @@
 #include <QMainWindow>
 
 #include "game.h"
-#include "io.h"
 
 class GameWindow : public QMainWindow
 {
@@ -14,8 +13,6 @@ public:
 
 private slots:
 	void open();
-
-
 private:
 	Game game_;
 
