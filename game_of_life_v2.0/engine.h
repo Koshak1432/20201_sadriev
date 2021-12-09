@@ -44,10 +44,9 @@ public:
 	explicit State(Rules rules = Rules(), int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT) noexcept;
 	State(State &&other) noexcept;
 
-	Field &getCurrent();
+	Field &getCurrent() noexcept;
 	int getWidth() noexcept;
 	int getHeight() noexcept;
-	Field &getField() noexcept;
 	void makeNextField();
 	State &operator =(State &&other) noexcept;
 private:

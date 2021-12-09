@@ -200,7 +200,7 @@ State readState(QIODevice *device)
 
 	while (true)
 	{
-		if (sizeof (ch) != device->peek(&ch, sizeof (ch)))
+		if (sizeof(ch) != device->peek(&ch, sizeof(ch)))
 		{
 			throw std::invalid_argument("can't peek char");
 		}

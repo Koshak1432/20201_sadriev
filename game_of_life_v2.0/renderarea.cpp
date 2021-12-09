@@ -116,7 +116,7 @@ void RenderArea::drawLine(const QPoint &startPoint, const QPoint &endPoint, bool
 
 QSize RenderArea::sizeHint() const
 {
-	return {int(DEFAULT_WIDTH * DEFAULT_RECT_WIDTH * scaleFactor_), int(DEFAULT_HEIGHT * DEFAULT_RECT_HEIGHT * scaleFactor_)}; //return QSize(...)
+	return {DEFAULT_WIDTH * getScaledRectWidth(), DEFAULT_HEIGHT * getScaledRectHeight()}; //return QSize(...)
 }
 
 void RenderArea::zoomIn()

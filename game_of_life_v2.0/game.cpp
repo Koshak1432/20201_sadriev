@@ -9,7 +9,8 @@ Game::Game(State state, int speed, QWidget *parent)
 			: QWidget(parent), state_(std::move(state)), scrollArea_(new QScrollArea()), timer_(new QTimer()), speed_(speed)
 {
 	scrollArea_->setBackgroundRole(QPalette::Dark);
-	scrollArea_->setWidget(new RenderArea(state_.getField()));
+	scrollArea_->setWidget(new RenderArea(state_.getCurrent()));
+	scrollArea_->setAlignment(Qt::AlignVCenter | Qt::AlignHCenter);
 	connect(timer_, &QTimer::timeout, this, &Game::gameUpdate);
 }
 
@@ -49,4 +50,6 @@ RenderArea *Game::getRenderArea()
 void Game::setState(State state)
 {
 	state_ = std::move(state);
+	scrollArea_->setWidget(new RenderArea(state_.getCurrent()));
+	scrollArea_->setAlignment(Qt::AlignVCenter | Qt::AlignHCenter);
 }

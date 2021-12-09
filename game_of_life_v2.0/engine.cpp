@@ -1,7 +1,6 @@
 #include "engine.h"
 
 #include <cassert>
-#include <utility>
 
 static std::size_t getToroidCoord(int i, std::size_t max) noexcept
 {
@@ -104,11 +103,6 @@ void State::makeNextField()
 State::State(Rules rules, int width, int height) noexcept: current_(width, height), next_(width, height), rules_(std::move(rules))
 {}
 
-Field &State::getField() noexcept
-{
-	return current_;
-}
-
 State::State(State &&other) noexcept : current_(std::move(other.current_)), next_(std::move(other.next_)), rules_(std::move(other.rules_))
 {}
 
@@ -133,7 +127,7 @@ int State::getHeight() noexcept
 	return current_.getHeight();
 }
 
-Field &State::getCurrent()
+Field &State::getCurrent() noexcept
 {
 	return current_;
 }
