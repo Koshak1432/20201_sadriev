@@ -18,6 +18,7 @@ public:
 	QScrollArea *getScrollArea() noexcept;
 	RenderArea *getRenderArea();
 	void setState(State state);
+	State &getState();
 public slots:
 	void play();
 	void pause();

@@ -12,6 +12,7 @@ public:
 	explicit Field(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT); //check > 0 ??????
 
 	Field(Field &&other) noexcept;
+	Field(const Field &other) = default;
 	[[nodiscard]] int getHeight() const noexcept;
 	[[nodiscard]] int getWidth() const noexcept;
 	[[nodiscard]] std::size_t countNeighbours(int x, int y) const noexcept;
@@ -29,6 +30,7 @@ private:
 struct Rules
 {
 	Rules() noexcept;
+	Rules(const Rules &other) = default;
 	Rules(Rules &&other) noexcept;
 	Rules(std::vector<bool> birth, std::vector<bool> sustain) noexcept;
 
@@ -43,10 +45,12 @@ class State
 public:
 	explicit State(Rules rules = Rules(), int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT) noexcept;
 	State(State &&other) noexcept;
+	State(State &other) = default;
 
 	Field &getCurrent() noexcept;
-	int getWidth() noexcept;
-	int getHeight() noexcept;
+	[[nodiscard]] int getWidth() const noexcept;
+	[[nodiscard]] int getHeight() const noexcept;
+	[[nodiscard]] Rules getRules() const;
 	void makeNextField();
 	State &operator =(State &&other) noexcept;
 private:

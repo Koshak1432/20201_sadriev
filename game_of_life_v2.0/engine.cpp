@@ -117,12 +117,12 @@ State &State::operator =(State &&other) noexcept
 	return *this;
 }
 
-int State::getWidth() noexcept
+int State::getWidth() const noexcept
 {
 	return current_.getWidth();
 }
 
-int State::getHeight() noexcept
+int State::getHeight() const noexcept
 {
 	return current_.getHeight();
 }
@@ -130,6 +130,11 @@ int State::getHeight() noexcept
 Field &State::getCurrent() noexcept
 {
 	return current_;
+}
+
+Rules State::getRules() const
+{
+	return rules_;
 }
 
 Rules::Rules() noexcept : birth_(9, false), sustain_(9, false)

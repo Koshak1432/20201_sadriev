@@ -13,7 +13,6 @@
 
 constexpr int MAX_SPEED = 100;
 constexpr int MIN_SPEED = 1;
-
 constexpr int DEFAULT_STEP = 1;
 
 GameWindow::GameWindow() : game_()
@@ -33,6 +32,7 @@ void GameWindow::createToolBar()
 	auto *saveAction = new QAction("Save");
 	auto *openAction = new QAction("Open");
 	auto *speedLabel = new QLabel("Speed:");
+
 	auto *speedSpinBox = new QSpinBox;
 	speedSpinBox->setRange(MIN_SPEED, MAX_SPEED);
 	speedSpinBox->setValue(MIN_SPEED);
@@ -42,19 +42,23 @@ void GameWindow::createToolBar()
 	toolBar->addAction(pauseAction);
 	toolBar->addAction(saveAction);
 	toolBar->addAction(openAction);
-	toolBar->addWidget(speedLabel);
-	toolBar->addWidget(speedSpinBox);
+
+	QAction *labelAction = toolBar->addWidget(speedLabel);
+	QAction *speedAction = toolBar->addWidget(speedSpinBox);
+
+	toolBar->insertSeparator(saveAction);
+	toolBar->insertSeparator(labelAction);
 
 	connect(playAction, &QAction::triggered, &game_, &Game::play);
 	connect(pauseAction, &QAction::triggered, &game_, &Game::pause);
 	connect(openAction, &QAction::triggered, this, &GameWindow::open);
+	connect(saveAction, &QAction::triggered, this, &GameWindow::saveAs);
 	connect(speedSpinBox, &QSpinBox::valueChanged, &game_, &Game::changeSpeed);
-//	connect(saveButton, &QAction::triggered, &game_, &Game::play);
 }
 
 void GameWindow::open()
 {
-	QString fileName = QFileDialog::getOpenFileName(this);
+	QString fileName = QFileDialog::getOpenFileName(this, QString("Open file"), QString(), QString("RLE (*.rle)"));
 	if (!fileName.isEmpty())
 	{
 		loadFile(fileName);
@@ -66,7 +70,26 @@ void GameWindow::loadFile(const QString &fileName)
 	QFile file(fileName);
 	if (!file.open(QFile::ReadOnly | QFile::Text))
 	{
-		QMessageBox::warning(this, "Application", tr("Cannot read file %1:\n%2.") .arg(QDir::toNativeSeparators(fileName), file.errorString()));
+		QMessageBox::warning(this, "WARNING", QString("Can't open file %1:\n%2.").arg(QDir::toNativeSeparators(fileName), file.errorString()));
 	}
 	game_.setState(readState(&file));
+}
+
+void GameWindow::saveAs()
+{
+	QString fileName = QFileDialog::getSaveFileName(this, "Save file", "", "RLE (*.rle)");
+	if (!fileName.isEmpty())
+	{
+		saveFile(fileName);
+	}
+}
+
+void GameWindow::saveFile(const QString &fileName)
+{
+	QFile file(fileName);
+	if (!file.open(QFile::WriteOnly | QFile::Text))
+	{
+		QMessageBox::warning(this, "WARNING", QString("Can't open file %1:\n%2.").arg(QDir::toNativeSeparators(fileName), file.errorString()));
+	}
+	saveToFile(&file, game_.getState());
 }

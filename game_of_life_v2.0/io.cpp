@@ -9,7 +9,12 @@
 
 #include "engine.h"
 
-enum class Expecting
+constexpr QChar LIVE_CELL = 'o';
+constexpr QChar DEAD_CELL = 'b';
+constexpr QChar END_OF_LINE = '$';
+constexpr QChar RLE_END = '!';
+
+enum class Expectations
 {
 	SPACE = 128,
 	NUMBER,
@@ -73,12 +78,13 @@ static std::vector<bool> readRule(const QString &numInString)
 
 static State readHeader(QIODevice *device)
 {
-	std::vector<Expecting> expect{Expecting {'x'}, Expecting::SPACE, Expecting{'='}, Expecting::SPACE,
-								  Expecting::NUMBER, Expecting{','}, Expecting::SPACE, Expecting{'y'},
-								  Expecting::SPACE, Expecting{'='}, Expecting::SPACE, Expecting::NUMBER,
-								  Expecting{','}, Expecting::SPACE, Expecting{'r'}, Expecting{'u'}, Expecting{'l'}, Expecting{'e'},
-								  Expecting::SPACE, Expecting{'='}, Expecting::SPACE, Expecting{'B'}, Expecting::NUMBER, Expecting{'/'},
-								  Expecting{'S'}, Expecting::NUMBER, Expecting::SPACE, Expecting{'\n'}};
+	std::vector<Expectations> expect{Expectations {'x'}, Expectations::SPACE, Expectations{'='}, Expectations::SPACE,
+								  Expectations::NUMBER, Expectations{','}, Expectations::SPACE, Expectations{'y'},
+								  Expectations::SPACE, Expectations{'='}, Expectations::SPACE, Expectations::NUMBER,
+								  Expectations{','}, Expectations::SPACE, Expectations{'r'}, Expectations{'u'},
+								  Expectations{'l'}, Expectations{'e'}, Expectations::SPACE, Expectations{'='},
+								  Expectations::SPACE, Expectations{'B'}, Expectations::NUMBER, Expectations{'/'},
+								  Expectations{'S'}, Expectations::NUMBER, Expectations::SPACE, Expectations{'\n'}};
 
 	constexpr int numNumbers = 4;
 	QStringList stringNumbers{};
@@ -94,12 +100,12 @@ static State readHeader(QIODevice *device)
 		}
 		switch (action)
 		{
-			case Expecting::SPACE:
+			case Expectations::SPACE:
 			{
 				skipWhiteSpaces(device);
 				break;
 			}
-			case Expecting::NUMBER:
+			case Expectations::NUMBER:
 			{
 				stringNumbers.append(readNumber(device));
 				break;
@@ -122,7 +128,7 @@ static State readHeader(QIODevice *device)
 	return state;
 }
 
-static void readRle(QIODevice *device, State &state, int &x, int &y, bool &end)
+static void readRLE(QIODevice *device, State &state, int &x, int &y, bool &end)
 {
 	while (true)
 	{
@@ -219,7 +225,7 @@ State readState(QIODevice *device)
 			default:
 			{
 				bool end = false;
-				readRle(device, state, x, y, end);
+				readRLE(device, state, x, y, end);
 				if (end)
 				{
 					return state;
@@ -227,4 +233,95 @@ State readState(QIODevice *device)
 			}
 		}
 	}
+}
+
+static void writeRulesIdx(QTextStream &out, const std::vector<bool> &rule)
+{
+	for (int i = 0; i < rule.size(); ++i)
+	{
+		if (rule[i])
+		{
+			out << i;
+		}
+	}
+}
+
+static void writeHeader(QTextStream &out, const State &state)
+{
+	Rules rules(state.getRules());
+
+	out << "x = " << state.getWidth() << ", y = " << state.getHeight() <<
+		", rule = B";
+	writeRulesIdx(out, rules.birth_);
+	out << "/S";
+	writeRulesIdx(out, rules.sustain_);
+	out << "\n";
+}
+
+static QString getRowData(Field &field, int row)
+{
+	QString rowString;
+	rowString.reserve(field.getWidth());
+	for (int col = 0; col < field.getWidth(); ++col)
+	{
+		field.getCell(col, row) ? rowString.append(LIVE_CELL) : rowString.append(DEAD_CELL);
+	}
+	return rowString;
+}
+
+static QString getEncodedString(const QString &data)
+{
+	if (data.isEmpty())
+	{
+		return {};
+	}
+	QChar prevChar = data[0];
+	ulong count = 1;
+	QString encoding;
+	encoding.reserve(data.size());
+
+	for (qsizetype i = 1; i < data.size(); ++i)
+	{
+		QChar currentChar = data[i];
+		if (currentChar != prevChar)
+		{
+			if (count > 1)
+			{
+				encoding += QString::number(count);
+			}
+			encoding += prevChar;
+			prevChar = currentChar;
+			count = 1;
+		}
+		else
+		{
+			++count;
+		}
+	}
+	if (DEAD_CELL != prevChar)
+	{
+		if (count > 1)
+		{
+			encoding += QString::number(count);
+		}
+		encoding += prevChar;
+	}
+	return encoding;
+}
+
+static void writeRLE(QTextStream &out, Field &field)
+{
+	for (int row = 0; row < field.getHeight(); ++row)
+	{
+		QString rowString = getRowData(field, row);
+		out << getEncodedString(rowString) + END_OF_LINE + '\n';
+	}
+	out << RLE_END;
+}
+
+void saveToFile(QIODevice *device, State &state)
+{
+	QTextStream out(device);
+	writeHeader(out, state);
+	writeRLE(out, state.getCurrent());
 }

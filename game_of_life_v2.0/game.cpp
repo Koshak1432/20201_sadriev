@@ -61,3 +61,8 @@ void Game::changeSpeed(int newSpeed)
 	speed_ = newSpeed;
 	timer_->setInterval(SEC / newSpeed);
 }
+
+State &Game::getState()
+{
+	return state_;
+}
