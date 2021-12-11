@@ -5,12 +5,15 @@
 
 #include "renderarea.h"
 
+constexpr int SEC = 1000;
+
 Game::Game(State state, int speed, QWidget *parent)
 			: QWidget(parent), state_(std::move(state)), scrollArea_(new QScrollArea()), timer_(new QTimer()), speed_(speed)
 {
 	scrollArea_->setBackgroundRole(QPalette::Dark);
 	scrollArea_->setWidget(new RenderArea(state_.getCurrent()));
 	scrollArea_->setAlignment(Qt::AlignVCenter | Qt::AlignHCenter);
+	timer_->setInterval(SEC / speed);
 	connect(timer_, &QTimer::timeout, this, &Game::gameUpdate);
 }
 
@@ -21,7 +24,7 @@ void Game::play()
 		return;
 	}
 	isPlaying = true;
-	timer_->start(speed_);
+	timer_->start();
 }
 
 void Game::pause()
@@ -51,5 +54,10 @@ void Game::setState(State state)
 {
 	state_ = std::move(state);
 	scrollArea_->setWidget(new RenderArea(state_.getCurrent()));
-	scrollArea_->setAlignment(Qt::AlignVCenter | Qt::AlignHCenter);
+}
+
+void Game::changeSpeed(int newSpeed)
+{
+	speed_ = newSpeed;
+	timer_->setInterval(SEC / newSpeed);
 }
