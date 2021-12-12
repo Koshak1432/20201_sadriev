@@ -14,6 +14,8 @@ constexpr QChar DEAD_CELL = 'b';
 constexpr QChar END_OF_LINE = '$';
 constexpr QChar RLE_END = '!';
 constexpr int CHARS_NUMBER = 128;
+constexpr int OFFSET_FIELD = 30;
+constexpr int OFFSET_COORD = 10;
 
 enum class Expectations
 {
@@ -121,7 +123,7 @@ static State readHeader(QIODevice *device)
 	Rules rules(readRule(stringNumbers[2]), readRule(stringNumbers[3]));
 
 	bool ok = true;
-	State state(std::move(rules), stringNumbers[0].toInt(&ok), stringNumbers[1].toInt(&ok));
+	State state(std::move(rules), stringNumbers[0].toInt(&ok) + OFFSET_FIELD, stringNumbers[1].toInt(&ok) + OFFSET_FIELD);
 	if (!ok)
 	{
 		throw std::invalid_argument("can't convert width and height from header info");
@@ -159,7 +161,7 @@ static void readRLE(QIODevice *device, State &state, int &x, int &y, bool &end)
 		if ('$' == tag)
 		{
 			x = 0;
-			++y;
+			y += runCount;
 		}
 		else if ('\n' == tag)
 		{
@@ -183,7 +185,7 @@ static void readRLE(QIODevice *device, State &state, int &x, int &y, bool &end)
 			{
 				if (x < state.getWidth() && y < state.getHeight())
 				{
-					state.getCurrent().setCell(x, y, 'b' != tag);
+					state.getCurrent().setCell(x + OFFSET_COORD, y + OFFSET_COORD, 'b' != tag);
 					++x;
 				}
 				else
