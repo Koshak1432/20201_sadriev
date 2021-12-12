@@ -13,10 +13,11 @@ constexpr QChar LIVE_CELL = 'o';
 constexpr QChar DEAD_CELL = 'b';
 constexpr QChar END_OF_LINE = '$';
 constexpr QChar RLE_END = '!';
+constexpr int CHARS_NUMBER = 128;
 
 enum class Expectations
 {
-	SPACE = 128,
+	SPACE = CHARS_NUMBER,
 	NUMBER,
 };
 
@@ -92,7 +93,7 @@ static State readHeader(QIODevice *device)
 
 	for (auto action : expect)
 	{
-		if (static_cast<int>(action) < 128)
+		if (static_cast<int>(action) < static_cast<int>(Expectations::SPACE))
 		{
 			expectChar(device, static_cast<char>(action));
 			device->skip(sizeof(char));
@@ -150,26 +151,12 @@ static void readRLE(QIODevice *device, State &state, int &x, int &y, bool &end)
 				throw std::invalid_argument("can't read rle");
 			}
 		}
+		skipWhiteSpaces(device);
 		if (!device->getChar(&tag))
 		{
 			throw std::invalid_argument("can't read rle");
 		}
-		if ('b' == tag || 'o' == tag)
-		{
-			for (int i = 0; i < runCount; ++i)
-			{
-				if (x < state.getWidth() && y < state.getHeight())
-				{
-					state.getCurrent().setCell(x, y, 'o' == tag);
-					++x;
-				}
-				else
-				{
-					throw std::invalid_argument("invalid info in rle");
-				}
-			}
-		}
-		else if ('$' == tag)
+		if ('$' == tag)
 		{
 			x = 0;
 			++y;
@@ -178,7 +165,7 @@ static void readRLE(QIODevice *device, State &state, int &x, int &y, bool &end)
 		{
 			if (!stringRunCount.isEmpty())
 			{
-				throw std::invalid_argument("invalid info in rle");
+				throw std::invalid_argument("new line after run count is forbidden");
 			}
 			else
 			{
@@ -190,10 +177,22 @@ static void readRLE(QIODevice *device, State &state, int &x, int &y, bool &end)
 			end = true;
 			return;
 		}
-		else
+		else //RLE readers that cannot handle more than two states should treat all letters other than b as equivalent to o.
 		{
-			throw std::invalid_argument("can't read rle");
+			for (int i = 0; i < runCount; ++i)
+			{
+				if (x < state.getWidth() && y < state.getHeight())
+				{
+					state.getCurrent().setCell(x, y, 'b' != tag);
+					++x;
+				}
+				else
+				{
+					throw std::invalid_argument("invalid info in rle");
+				}
+			}
 		}
+
 	}
 }
 
@@ -212,6 +211,10 @@ State readState(QIODevice *device)
 		}
 		switch (ch)
 		{
+			case ' ':
+			{
+				throw std::invalid_argument("space in the beginning of line is forbidden");
+			}
 			case '#':
 			{
 				device->readLine();
@@ -250,8 +253,7 @@ static void writeHeader(QTextStream &out, const State &state)
 {
 	Rules rules(state.getRules());
 
-	out << "x = " << state.getWidth() << ", y = " << state.getHeight() <<
-		", rule = B";
+	out << "x = " << state.getWidth() << ", y = " << state.getHeight() << ", rule = B";
 	writeRulesIdx(out, rules.birth_);
 	out << "/S";
 	writeRulesIdx(out, rules.sustain_);
@@ -269,7 +271,7 @@ static QString getRowData(Field &field, int row)
 	return rowString;
 }
 
-static QString getEncodedString(const QString &data)
+static QString getEncodedString(QString data)
 {
 	if (data.isEmpty())
 	{
@@ -313,8 +315,7 @@ static void writeRLE(QTextStream &out, Field &field)
 {
 	for (int row = 0; row < field.getHeight(); ++row)
 	{
-		QString rowString = getRowData(field, row);
-		out << getEncodedString(rowString) + END_OF_LINE + '\n';
+		out << getEncodedString(getRowData(field, row)) + END_OF_LINE + '\n';
 	}
 	out << RLE_END;
 }

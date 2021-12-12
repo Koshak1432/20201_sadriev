@@ -72,6 +72,11 @@ void GameWindow::loadFile(const QString &fileName)
 	{
 		QMessageBox::warning(this, "WARNING", QString("Can't open file %1:\n%2.").arg(QDir::toNativeSeparators(fileName), file.errorString()));
 	}
+	if (0 == file.size())
+	{
+		QMessageBox::warning(this, "WARNING", QString("An empty file"));
+		return;
+	}
 	game_.setState(readState(&file));
 }
 
