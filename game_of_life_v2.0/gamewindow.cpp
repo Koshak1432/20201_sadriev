@@ -11,9 +11,12 @@
 #include "renderarea.h"
 #include "io.h"
 
-constexpr int MAX_SPEED = 100;
-constexpr int MIN_SPEED = 1;
-constexpr int DEFAULT_STEP = 1;
+namespace
+{
+	constexpr int MAX_SPEED = 100;
+	constexpr int MIN_SPEED = 1;
+	constexpr int DEFAULT_STEP = 1;
+}
 
 GameWindow::GameWindow() : game_()
 {
@@ -29,7 +32,7 @@ void GameWindow::createToolBar()
 
 	auto *playAction = new QAction("Play");
 	auto *pauseAction = new QAction("Pause");
-	auto *saveAction = new QAction("Save");
+	auto *saveAction = new QAction("Save Ass");
 	auto *openAction = new QAction("Open");
 	auto *speedLabel = new QLabel("Speed:");
 
@@ -71,6 +74,7 @@ void GameWindow::loadFile(const QString &fileName)
 	if (!file.open(QFile::ReadOnly | QFile::Text))
 	{
 		QMessageBox::warning(this, "WARNING", QString("Can't open file %1:\n%2.").arg(QDir::toNativeSeparators(fileName), file.errorString()));
+		return;
 	}
 	if (0 == file.size())
 	{
@@ -95,6 +99,7 @@ void GameWindow::saveFile(const QString &fileName)
 	if (!file.open(QFile::WriteOnly | QFile::Text))
 	{
 		QMessageBox::warning(this, "WARNING", QString("Can't open file %1:\n%2.").arg(QDir::toNativeSeparators(fileName), file.errorString()));
+		return;
 	}
 	saveToFile(&file, game_.getState());
 }

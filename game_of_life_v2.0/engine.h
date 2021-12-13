@@ -3,13 +3,16 @@
 
 #include <vector>
 
-constexpr int DEFAULT_WIDTH = 80;
-constexpr int DEFAULT_HEIGHT = 40;
+namespace
+{
+	constexpr int DEFAULT_WIDTH = 80;
+	constexpr int DEFAULT_HEIGHT = 40;
+}
 
 class Field
 {
 public:
-	explicit Field(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT); //check > 0 ??????
+	explicit Field(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT);
 
 	Field(Field &&other) noexcept;
 	Field(const Field &other) = default;
@@ -32,12 +35,12 @@ struct Rules
 	Rules() noexcept;
 	Rules(const Rules &other) = default;
 	Rules(Rules &&other) noexcept;
-	Rules(std::vector<bool> birth, std::vector<bool> sustain) noexcept;
+	Rules(std::vector<bool> birth, std::vector<bool> survival) noexcept;
 
 	Rules &operator =(Rules &&other) noexcept;
 
 	std::vector<bool> birth_;
-	std::vector<bool> sustain_;
+	std::vector<bool> survival_;
 };
 
 class State
@@ -53,6 +56,7 @@ public:
 	[[nodiscard]] Rules getRules() const;
 	void makeNextField();
 	State &operator =(State &&other) noexcept;
+
 private:
 	Field current_;
 	Field next_;

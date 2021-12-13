@@ -5,15 +5,19 @@
 
 #include "renderarea.h"
 
-constexpr int SEC = 1000;
+namespace
+{
+	constexpr int SEC = 1000;
+	constexpr int DEFAULT_SPEED = 1;
+}
 
-Game::Game(State state, int speed, QWidget *parent)
-			: QWidget(parent), state_(std::move(state)), scrollArea_(new QScrollArea()), timer_(new QTimer()), speed_(speed)
+Game::Game(State state, QWidget *parent)
+			: QWidget(parent), state_(std::move(state)), scrollArea_(new QScrollArea()), timer_(new QTimer())
 {
 	scrollArea_->setBackgroundRole(QPalette::Dark);
 	scrollArea_->setWidget(new RenderArea(state_.getCurrent()));
 	scrollArea_->setAlignment(Qt::AlignVCenter | Qt::AlignHCenter);
-	timer_->setInterval(SEC / speed);
+	timer_->setInterval(SEC / DEFAULT_SPEED);
 	connect(timer_, &QTimer::timeout, this, &Game::gameUpdate);
 }
 
@@ -36,7 +40,6 @@ void Game::pause()
 void Game::gameUpdate()
 {
 	state_.makeNextField();
-
 	scrollArea_->widget()->update();
 }
 
@@ -45,20 +48,15 @@ QScrollArea *Game::getScrollArea() noexcept
 	return scrollArea_;
 }
 
-RenderArea *Game::getRenderArea()
-{
-	return dynamic_cast<RenderArea *>(scrollArea_->widget());
-}
-
 void Game::setState(State state)
 {
 	state_ = std::move(state);
+	RenderArea render(state_.getCurrent());
 	scrollArea_->setWidget(new RenderArea(state_.getCurrent()));
 }
 
 void Game::changeSpeed(int newSpeed)
 {
-	speed_ = newSpeed;
 	timer_->setInterval(SEC / newSpeed);
 }
 

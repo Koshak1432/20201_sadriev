@@ -4,18 +4,20 @@
 
 #include "engine.h"
 
-constexpr int DEFAULT_RECT_WIDTH = 20;
-constexpr int DEFAULT_RECT_HEIGHT = 20;
-constexpr int BORDER_WIDTH = 1;
-constexpr bool CELL_LIVE = true;
-constexpr bool CELL_DEAD = false;
-constexpr QColor COLOR_LIVE(57,255,20);
-constexpr QColor COLOR_DEAD(255, 0, 0);
-constexpr double SCALE_LOWER_BORDER = 0.1;
-constexpr double SCALE_UPPER_BORDER = 5.0;
-constexpr double ZOOM_IN_FACTOR = 1.25;
-constexpr double ZOOM_OUT_FACTOR = 1 / ZOOM_IN_FACTOR;
-
+namespace
+{
+	constexpr int DEFAULT_RECT_WIDTH = 20;
+	constexpr int DEFAULT_RECT_HEIGHT = 20;
+	constexpr int BORDER_WIDTH = 1;
+	constexpr bool CELL_LIVE = true;
+	constexpr bool CELL_DEAD = false;
+	constexpr QColor COLOR_LIVE(57,255,20);
+	constexpr QColor COLOR_DEAD(255, 0, 0);
+	constexpr double SCALE_LOWER_BORDER = 0.1;
+	constexpr double SCALE_UPPER_BORDER = 5.0;
+	constexpr double ZOOM_IN_FACTOR = 1.25;
+	constexpr double ZOOM_OUT_FACTOR = 1 / ZOOM_IN_FACTOR;
+}
 
 RenderArea::RenderArea(Field &field, QWidget *parent) : QWidget(parent), field_(&field)
 {}

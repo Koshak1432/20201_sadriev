@@ -6,7 +6,11 @@
 
 class Field;
 
-constexpr double DEFAULT_SCALE_FACTOR = 1.0;
+namespace
+{
+	constexpr double DEFAULT_SCALE_FACTOR = 1.0;
+}
+
 
 class RenderArea :public QWidget
 {

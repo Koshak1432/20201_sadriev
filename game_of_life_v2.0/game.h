@@ -8,17 +8,16 @@
 class QScrollArea;
 class RenderArea;
 
-constexpr int DEFAULT_SPEED = 1;
-
 class Game : public QWidget
 {
 	Q_OBJECT
 public:
-	explicit Game(State state = State(), int speed = DEFAULT_SPEED, QWidget *parent = nullptr);
+	explicit Game(State state = State(), QWidget *parent = nullptr);
 	QScrollArea *getScrollArea() noexcept;
-	RenderArea *getRenderArea();
 	void setState(State state);
 	State &getState();
+	~Game() override = default;
+
 public slots:
 	void play();
 	void pause();
@@ -31,7 +30,6 @@ private:
 	State state_;
 	QScrollArea *scrollArea_;
 	QTimer *timer_;
-	int speed_ = DEFAULT_SPEED;
 	bool isPlaying = false;
 };
 

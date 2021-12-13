@@ -10,6 +10,7 @@ class GameWindow : public QMainWindow
 	Q_OBJECT
 public:
 	explicit GameWindow();
+	~GameWindow() override = default;
 
 private slots:
 	void saveAs();

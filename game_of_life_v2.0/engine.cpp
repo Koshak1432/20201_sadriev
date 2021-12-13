@@ -91,7 +91,7 @@ void State::makeNextField()
 			{
 				next_.setCell(x, y, true);
 			}
-			else if (!rules_.sustain_[neighbours] && cell)
+			else if (!rules_.survival_[neighbours] && cell)
 			{
 				next_.setCell(x, y, false);
 			}
@@ -137,17 +137,17 @@ Rules State::getRules() const
 	return rules_;
 }
 
-Rules::Rules() noexcept : birth_(9, false), sustain_(9, false)
+Rules::Rules() noexcept : birth_(9, false), survival_(9, false)
 {
 	birth_[3] = true;
-	sustain_[2] = true;
-	sustain_[3] = true;
+	survival_[2] = true;
+	survival_[3] = true;
 }
 
-Rules::Rules(std::vector<bool> birth, std::vector<bool> sustain) noexcept : birth_(std::move(birth)), sustain_(std::move(sustain))
+Rules::Rules(std::vector<bool> birth, std::vector<bool> survival) noexcept : birth_(std::move(birth)), survival_(std::move(survival))
 {}
 
-Rules::Rules(Rules &&other) noexcept :birth_(std::move(other.birth_)), sustain_(std::move(other.sustain_))
+Rules::Rules(Rules &&other) noexcept : birth_(std::move(other.birth_)), survival_(std::move(other.survival_))
 {}
 
 Rules &Rules::operator =(Rules &&other) noexcept
@@ -155,7 +155,7 @@ Rules &Rules::operator =(Rules &&other) noexcept
 	if (&other != this)
 	{
 		birth_ = std::move(other.birth_);
-		sustain_ = std::move(other.sustain_);
+		survival_ = std::move(other.survival_);
 	}
 	return *this;
 }
