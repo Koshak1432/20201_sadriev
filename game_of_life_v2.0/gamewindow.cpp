@@ -32,8 +32,9 @@ void GameWindow::createToolBar()
 
 	auto *playAction = new QAction("Play");
 	auto *pauseAction = new QAction("Pause");
-	auto *saveAction = new QAction("Save Ass");
+	auto *saveAction = new QAction("Save As");
 	auto *openAction = new QAction("Open");
+	auto *clearAction = new QAction("Clear field");
 	auto *speedLabel = new QLabel("Speed:");
 
 	auto *speedSpinBox = new QSpinBox;
@@ -45,6 +46,7 @@ void GameWindow::createToolBar()
 	toolBar->addAction(pauseAction);
 	toolBar->addAction(saveAction);
 	toolBar->addAction(openAction);
+	toolBar->addAction(clearAction);
 
 	QAction *labelAction = toolBar->addWidget(speedLabel);
 	QAction *speedAction = toolBar->addWidget(speedSpinBox);
@@ -57,6 +59,7 @@ void GameWindow::createToolBar()
 	connect(openAction, &QAction::triggered, this, &GameWindow::open);
 	connect(saveAction, &QAction::triggered, this, &GameWindow::saveAs);
 	connect(speedSpinBox, &QSpinBox::valueChanged, &game_, &Game::changeSpeed);
+	connect(clearAction, &QAction::triggered, &game_, &Game::clear);
 }
 
 void GameWindow::open()
@@ -81,7 +84,7 @@ void GameWindow::loadFile(const QString &fileName)
 		QMessageBox::warning(this, "WARNING", QString("An empty file"));
 		return;
 	}
-	game_.setState(readState(&file));
+	readState(&file, game_.getState());
 }
 
 void GameWindow::saveAs()

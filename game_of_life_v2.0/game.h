@@ -15,12 +15,14 @@ public:
 	explicit Game(State state = State(), QWidget *parent = nullptr);
 	QScrollArea *getScrollArea() noexcept;
 	void setState(State state);
+
 	State &getState();
 	~Game() override = default;
 
 public slots:
 	void play();
 	void pause();
+	void clear();
 	void changeSpeed(int newSpeed);
 
 private slots:

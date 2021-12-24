@@ -35,7 +35,6 @@ void RenderArea::paintEvent(QPaintEvent *event)
 		for (int x = 0; x < field_->getWidth(); ++x)
 		{
 			(field_->getCell(x, y)) ? painter.setBrush(COLOR_LIVE) : painter.setBrush(COLOR_DEAD);
-			//учитывать при обработке кликов сдвиг на border / width
 			painter.drawRect(x * getScaledRectWidth() + BORDER_WIDTH / 2, y * getScaledRectHeight() + BORDER_WIDTH / 2, getScaledRectWidth(), getScaledRectHeight());
 		}
 	}

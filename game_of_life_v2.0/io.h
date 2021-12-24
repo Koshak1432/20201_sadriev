@@ -4,7 +4,9 @@
 class State;
 class QIODevice;
 
-State readState(QIODevice *device);
+void readState(QIODevice *device, State &currentState);
 void saveToFile(QIODevice *device, State &state);
+
+
 
 #endif //GAME_OF_LIFE_V2_0_IO_H

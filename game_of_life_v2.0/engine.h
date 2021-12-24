@@ -22,8 +22,11 @@ public:
 	[[nodiscard]] bool getCell(int x, int y) const noexcept;
 	void setCell(int x, int y, bool cell) noexcept;
 	void swap(Field &other) noexcept;
+	void resize(int newWidth, int newHeight);
+	void copyToCenterFrom(const Field &other);
 
 	Field &operator =(Field &&other) noexcept;
+	Field &operator =(const Field &other) = default;
 private:
 	std::vector<std::vector<bool>> field_;
 	int height_ = DEFAULT_HEIGHT;
@@ -38,6 +41,7 @@ struct Rules
 	Rules(std::vector<bool> birth, std::vector<bool> survival) noexcept;
 
 	Rules &operator =(Rules &&other) noexcept;
+	Rules &operator =(const Rules &other) = default;
 
 	std::vector<bool> birth_;
 	std::vector<bool> survival_;
@@ -54,8 +58,12 @@ public:
 	[[nodiscard]] int getWidth() const noexcept;
 	[[nodiscard]] int getHeight() const noexcept;
 	[[nodiscard]] Rules getRules() const;
+	void setRules(Rules rules);
+	void clear();
 	void makeNextField();
+
 	State &operator =(State &&other) noexcept;
+	State &operator =(const State &other) = default;
 
 private:
 	Field current_;

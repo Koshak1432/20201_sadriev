@@ -11,7 +11,6 @@ namespace
 	constexpr double DEFAULT_SCALE_FACTOR = 1.0;
 }
 
-
 class RenderArea :public QWidget
 {
 	Q_OBJECT

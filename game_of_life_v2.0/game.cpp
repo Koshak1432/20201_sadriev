@@ -64,3 +64,9 @@ State &Game::getState()
 {
 	return state_;
 }
+
+void Game::clear()
+{
+	state_.clear();
+	gameUpdate();
+}

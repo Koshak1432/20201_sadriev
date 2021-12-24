@@ -22,6 +22,13 @@ namespace
 		NUMBER,
 	};
 
+	struct RLEHeader
+	{
+		int x = 0;
+		int y = 0;
+		Rules rules;
+	};
+
 	void expectChar(QIODevice *device, char expectedChar)
 	{
 		if (expectedChar != device->peek(sizeof(expectedChar)).at(0))
@@ -39,7 +46,7 @@ namespace
 	{
 		QString str;
 		char digit;
-		while(isDigit(device))
+		while (isDigit(device))
 		{
 			if (!device->getChar(&digit))
 			{
@@ -52,7 +59,7 @@ namespace
 
 	void skipWhiteSpaces(QIODevice *device)
 	{
-		char ch{};
+		char ch {};
 		if (sizeof(char) != device->peek(&ch, sizeof(char)))
 		{
 			throw std::invalid_argument("error in skip spaces");
@@ -70,7 +77,7 @@ namespace
 	std::vector<bool> readRule(const QString &numInString)
 	{
 		std::vector<bool> ruleVec(9, false);
-		for (auto digit : numInString)
+		for (auto digit: numInString)
 		{
 			int idx = int(digit.toLatin1()) - '0';
 			ruleVec[idx] = true;
@@ -78,21 +85,29 @@ namespace
 		return ruleVec;
 	}
 
-	State readHeader(QIODevice *device)
+	RLEHeader readHeader(QIODevice *device, State &currentState)
 	{
-		std::vector<Expectations> expect{Expectations {'x'}, Expectations::SPACE, Expectations{'='}, Expectations::SPACE,
-										 Expectations::NUMBER, Expectations{','}, Expectations::SPACE, Expectations{'y'},
-										 Expectations::SPACE, Expectations{'='}, Expectations::SPACE, Expectations::NUMBER,
-										 Expectations{','}, Expectations::SPACE, Expectations{'r'}, Expectations{'u'},
-										 Expectations{'l'}, Expectations{'e'}, Expectations::SPACE, Expectations{'='},
-										 Expectations::SPACE, Expectations{'B'}, Expectations::NUMBER, Expectations{'/'},
-										 Expectations{'S'}, Expectations::NUMBER, Expectations::SPACE, Expectations{'\n'}};
+		std::vector<Expectations> expect {Expectations {'x'}, Expectations::SPACE, Expectations {'='},
+										  Expectations::SPACE,
+										  Expectations::NUMBER, Expectations {','}, Expectations::SPACE,
+										  Expectations {'y'},
+										  Expectations::SPACE, Expectations {'='}, Expectations::SPACE,
+										  Expectations::NUMBER,
+										  Expectations {','}, Expectations::SPACE, Expectations {'r'},
+										  Expectations {'u'},
+										  Expectations {'l'}, Expectations {'e'}, Expectations::SPACE,
+										  Expectations {'='},
+										  Expectations::SPACE, Expectations {'B'}, Expectations::NUMBER,
+										  Expectations {'/'},
+										  Expectations {'S'}, Expectations::NUMBER, Expectations::SPACE,
+										  Expectations {'\n'}};
 
 		constexpr int numNumbers = 4;
-		QStringList stringNumbers{};
+		RLEHeader header;
+		QStringList stringNumbers {};
 		stringNumbers.reserve(numNumbers);
 
-		for (auto action : expect)
+		for (auto action: expect)
 		{
 			if (static_cast<int>(action) < static_cast<int>(Expectations::SPACE))
 			{
@@ -118,25 +133,31 @@ namespace
 				}
 			}
 		}
-
 		Rules rules(readRule(stringNumbers[2]), readRule(stringNumbers[3]));
 
 		bool ok = true;
-		State state(std::move(rules), stringNumbers[0].toInt(&ok), stringNumbers[1].toInt(&ok));
+		int headerWidth = stringNumbers[0].toInt(&ok);
+		int headerHeight = stringNumbers[1].toInt(&ok);
 		if (!ok)
 		{
 			throw std::invalid_argument("can't convert width and height from header info");
 		}
-		return state;
+
+		header.x = headerWidth;
+		header.y = headerHeight;
+		header.rules = std::move(rules);
+		return header;
+
+
 	}
 
-	void readRLE(QIODevice *device, State &state, int &x, int &y, bool &end)
+	void readRLE(QIODevice *device, Field &field, int &x, int &y, bool &end)
 	{
 		while (true)
 		{
 			int runCount = 0;
 			QString stringRunCount;
-			char tag{};
+			char tag {};
 			bool ok = true;
 
 			stringRunCount = readNumber(device);
@@ -182,9 +203,9 @@ namespace
 			{
 				for (int i = 0; i < runCount; ++i)
 				{
-					if (x < state.getWidth() && y < state.getHeight())
+					if (x < field.getWidth() && y < field.getHeight())
 					{
-						state.getCurrent().setCell(x, y, 'b' != tag);
+						field.setCell(x, y, 'b' != tag);
 						++x;
 					}
 					else
@@ -278,12 +299,25 @@ namespace
 		}
 		out << RLE_END;
 	}
+
+	void setSizeFromHeader(const RLEHeader &header, Field &field)
+	{
+		if (header.y > field.getHeight())
+		{
+			field.resize(field.getWidth(), header.y);
+		}
+		if (header.x > field.getWidth())
+		{
+			field.resize(header.x, field.getHeight());
+		}
+	}
 }
 
-State readState(QIODevice *device)
+void readState(QIODevice *device, State &currentState)
 {
 	char ch{};
-	State state;
+	Field field;
+	RLEHeader header;
 	int x = 0;
 	int y = 0;
 
@@ -306,16 +340,20 @@ State readState(QIODevice *device)
 			}
 			case 'x':
 			{
-				state = std::move(readHeader(device));
+				header = readHeader(device, currentState);
+				field = Field(header.x, header.y);
 				break;
 			}
 			default:
 			{
 				bool end = false;
-				readRLE(device, state, x, y, end);
+				readRLE(device, field, x, y, end);
 				if (end)
 				{
-					return state;
+					currentState.clear();
+					currentState.setRules(std::move(header.rules));
+					currentState.getCurrent().copyToCenterFrom(field);
+					return;
 				}
 			}
 		}

@@ -78,6 +78,32 @@ Field &Field::operator =(Field &&other) noexcept
 	return *this;
 }
 
+void Field::resize(int newWidth, int newHeight)
+{
+	Field tmpField(newWidth, newHeight);
+	copyToCenterFrom(tmpField);
+}
+
+void Field::copyToCenterFrom(const Field &other)
+{
+	int intersectionX = std::min(width_, other.width_);
+	int intersectionY = std::min(height_, other.height_);
+
+	int srcYOffset = (other.height_ - intersectionY) / 2;
+	int srcXOffset = (other.width_ - intersectionX) / 2;
+
+	int dstYOffset = (height_ - intersectionY) / 2;
+	int dstXOffset = (width_ - intersectionX) / 2;
+	
+	for (int y = 0; y < intersectionY; ++y)
+	{
+		for (int x = 0; x < intersectionX; ++x)
+		{
+			field_[dstYOffset + y][dstXOffset + x] = other.field_[srcYOffset + y][srcXOffset + x];
+		}
+	}
+}
+
 void State::makeNextField()
 {
 	for (int x = 0; x < current_.getWidth(); ++x)
@@ -135,6 +161,22 @@ Field &State::getCurrent() noexcept
 Rules State::getRules() const
 {
 	return rules_;
+}
+
+void State::clear()
+{
+	for (int row = 0; row < current_.getHeight(); ++row)
+	{
+		for (int col = 0; col < current_.getWidth(); ++col)
+		{
+			current_.setCell(col, row, false);
+		}
+	}
+}
+
+void State::setRules(Rules rules)
+{
+	rules_ = std::move(rules);
 }
 
 Rules::Rules() noexcept : birth_(9, false), survival_(9, false)
