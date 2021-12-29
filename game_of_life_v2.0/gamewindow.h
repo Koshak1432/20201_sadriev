@@ -5,6 +5,9 @@
 
 #include "game.h"
 
+class RulesDialog;
+class SizeDialog;
+
 class GameWindow : public QMainWindow
 {
 	Q_OBJECT
@@ -17,6 +20,9 @@ private slots:
 	void open();
 private:
 	Game game_;
+
+	RulesDialog *rulesDialog_;
+	SizeDialog *sizeDialog_;
 
 	void createToolBar();
 	void loadFile(const QString &fileName);

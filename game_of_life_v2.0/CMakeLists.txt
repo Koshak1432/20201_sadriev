@@ -10,5 +10,5 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-add_executable(game_of_life_v2_0 main.cpp engine.cpp renderarea.cpp renderarea.h gamewindow.cpp gamewindow.h game.cpp game.h io.cpp io.h)
+add_executable(game_of_life_v2_0 main.cpp engine.cpp renderarea.cpp renderarea.h gamewindow.cpp gamewindow.h game.cpp game.h io.cpp io.h rulesdialog.cpp rulesdialog.h sizedialog.cpp sizedialog.h)
 target_link_libraries(game_of_life_v2_0 Qt6::Widgets)

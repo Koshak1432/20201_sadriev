@@ -4,7 +4,7 @@
 #include <QWidget>
 #include <QWheelEvent>
 
-class Field;
+class IField;
 
 namespace
 {
@@ -15,7 +15,7 @@ class RenderArea :public QWidget
 {
 	Q_OBJECT
 public:
-	explicit RenderArea(Field &field, QWidget *parent = nullptr);
+	explicit RenderArea(IField &field, QWidget *parent = nullptr);
 	~RenderArea() override = default;
 
 protected:
@@ -31,7 +31,7 @@ private slots:
 	void zoomOut();
 
 private:
-	Field *field_ = nullptr;
+	IField *field_ = nullptr;
 	bool drawing = false;
 	QPoint lastPoint;
 	double scaleFactor_ = DEFAULT_SCALE_FACTOR;

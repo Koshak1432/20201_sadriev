@@ -10,6 +10,8 @@
 
 #include "renderarea.h"
 #include "io.h"
+#include "rulesdialog.h"
+#include "sizedialog.h"
 
 namespace
 {
@@ -18,7 +20,9 @@ namespace
 	constexpr int DEFAULT_STEP = 1;
 }
 
-GameWindow::GameWindow() : game_()
+GameWindow::GameWindow()
+						: game_(), rulesDialog_(new RulesDialog(game_.getState().getRules(),this)),
+						sizeDialog_(new SizeDialog(QPoint(game_.getState().getWidth(), game_.getState().getHeight())))
 {
 	createToolBar();
 	setCentralWidget(game_.getScrollArea());
@@ -34,8 +38,10 @@ void GameWindow::createToolBar()
 	auto *pauseAction = new QAction("Pause");
 	auto *saveAction = new QAction("Save As");
 	auto *openAction = new QAction("Open");
-	auto *clearAction = new QAction("Clear field");
+	auto *clearAction = new QAction("Clear");
 	auto *speedLabel = new QLabel("Speed:");
+	auto *rulesAction = new QAction("Rules");
+	auto *sizeAction = new QAction("Change size");
 
 	auto *speedSpinBox = new QSpinBox;
 	speedSpinBox->setRange(MIN_SPEED, MAX_SPEED);
@@ -50,6 +56,8 @@ void GameWindow::createToolBar()
 
 	QAction *labelAction = toolBar->addWidget(speedLabel);
 	QAction *speedAction = toolBar->addWidget(speedSpinBox);
+	toolBar->addAction(rulesAction);
+	toolBar->addAction(sizeAction);
 
 	toolBar->insertSeparator(saveAction);
 	toolBar->insertSeparator(labelAction);
@@ -60,6 +68,13 @@ void GameWindow::createToolBar()
 	connect(saveAction, &QAction::triggered, this, &GameWindow::saveAs);
 	connect(speedSpinBox, &QSpinBox::valueChanged, &game_, &Game::changeSpeed);
 	connect(clearAction, &QAction::triggered, &game_, &Game::clear);
+	connect(rulesAction, &QAction::triggered, rulesDialog_, &QDialog::open);
+	connect(sizeAction, &QAction::triggered, sizeDialog_, &QDialog::open);
+
+	connect(rulesDialog_, &RulesDialog::birthBoxChanged, &game_, &Game::changeBirthRule);
+	connect(rulesDialog_, &RulesDialog::survivalBoxChanged, &game_, &Game::changeSurvivalRule);
+	connect(sizeDialog_, &SizeDialog::widthChanged, &game_, &Game::changeWidth);
+	connect(sizeDialog_, &SizeDialog::heightChanged, &game_, &Game::changeHeight);
 }
 
 void GameWindow::open()
@@ -85,6 +100,9 @@ void GameWindow::loadFile(const QString &fileName)
 		return;
 	}
 	readState(&file, game_.getState());
+	rulesDialog_->changeBoxes(game_.getState().getRules());
+	sizeDialog_->changeSizeSpinBoxes(QPoint(game_.getState().getWidth(), game_.getState().getHeight()));
+	game_.getScrollArea()->setWidget(new RenderArea(game_.getState().getCurrent()));
 }
 
 void GameWindow::saveAs()
@@ -106,3 +124,4 @@ void GameWindow::saveFile(const QString &fileName)
 	}
 	saveToFile(&file, game_.getState());
 }
+

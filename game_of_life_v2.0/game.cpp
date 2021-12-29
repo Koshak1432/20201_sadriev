@@ -70,3 +70,26 @@ void Game::clear()
 	state_.clear();
 	gameUpdate();
 }
+
+void Game::changeBirthRule(int idx, bool checked)
+{
+	state_.setBirthRule(idx, checked);
+}
+
+void Game::changeSurvivalRule(int idx, bool checked)
+{
+	state_.setSurvivalRule(idx, checked);
+}
+
+void Game::changeHeight(int newHeight)
+{
+	state_.resize(state_.getWidth(), newHeight);
+	scrollArea_->setWidget(new RenderArea(state_.getCurrent()));
+}
+
+void Game::changeWidth(int newWidth)
+{
+	state_.resize(newWidth, state_.getHeight());
+	scrollArea_->setWidget(new RenderArea(state_.getCurrent()));
+}
+

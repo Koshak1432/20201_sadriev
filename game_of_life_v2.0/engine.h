@@ -9,24 +9,37 @@ namespace
 	constexpr int DEFAULT_HEIGHT = 40;
 }
 
-class Field
+class IField
+{
+public:
+	virtual ~IField() = default;
+	virtual void setCell(int x, int y, bool cell) noexcept = 0;
+	[[nodiscard]] virtual bool getCell(int x, int y) const noexcept = 0;
+	[[nodiscard]] virtual int getHeight() const noexcept = 0;
+	[[nodiscard]] virtual int getWidth() const noexcept = 0;
+	[[nodiscard]] virtual std::size_t countNeighbours(int x, int y) const noexcept = 0;
+};
+
+class Field : public IField
 {
 public:
 	explicit Field(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT);
-
 	Field(Field &&other) noexcept;
 	Field(const Field &other) = default;
-	[[nodiscard]] int getHeight() const noexcept;
-	[[nodiscard]] int getWidth() const noexcept;
-	[[nodiscard]] std::size_t countNeighbours(int x, int y) const noexcept;
-	[[nodiscard]] bool getCell(int x, int y) const noexcept;
-	void setCell(int x, int y, bool cell) noexcept;
+
+	[[nodiscard]] int getHeight() const noexcept override;
+	[[nodiscard]] int getWidth() const noexcept override;
+	[[nodiscard]] std::size_t countNeighbours(int x, int y) const noexcept override;
+	[[nodiscard]] bool getCell(int x, int y) const noexcept override;
+	void setCell(int x, int y, bool cell) noexcept override;
+
 	void swap(Field &other) noexcept;
 	void resize(int newWidth, int newHeight);
 	void copyToCenterFrom(const Field &other);
 
 	Field &operator =(Field &&other) noexcept;
 	Field &operator =(const Field &other) = default;
+
 private:
 	std::vector<std::vector<bool>> field_;
 	int height_ = DEFAULT_HEIGHT;
@@ -55,12 +68,16 @@ public:
 	State(State &other) = default;
 
 	Field &getCurrent() noexcept;
+	Field &getNext() noexcept;
 	[[nodiscard]] int getWidth() const noexcept;
 	[[nodiscard]] int getHeight() const noexcept;
 	[[nodiscard]] Rules getRules() const;
 	void setRules(Rules rules);
+	void setBirthRule(int idx, bool checked);
+	void setSurvivalRule(int idx, bool checked);
 	void clear();
 	void makeNextField();
+	void resize(int newWidth, int newHeight);
 
 	State &operator =(State &&other) noexcept;
 	State &operator =(const State &other) = default;

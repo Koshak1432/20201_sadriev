@@ -11,6 +11,7 @@ class RenderArea;
 class Game : public QWidget
 {
 	Q_OBJECT
+
 public:
 	explicit Game(State state = State(), QWidget *parent = nullptr);
 	QScrollArea *getScrollArea() noexcept;
@@ -24,6 +25,10 @@ public slots:
 	void pause();
 	void clear();
 	void changeSpeed(int newSpeed);
+	void changeBirthRule(int idx, bool checked);
+	void changeSurvivalRule(int idx, bool checked);
+	void changeWidth(int newWidth);
+	void changeHeight(int newHeight);
 
 private slots:
 	void gameUpdate();

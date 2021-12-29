@@ -19,7 +19,7 @@ namespace
 	constexpr double ZOOM_OUT_FACTOR = 1 / ZOOM_IN_FACTOR;
 }
 
-RenderArea::RenderArea(Field &field, QWidget *parent) : QWidget(parent), field_(&field)
+RenderArea::RenderArea(IField &field, QWidget *parent) : QWidget(parent), field_(&field)
 {}
 
 void RenderArea::paintEvent(QPaintEvent *event)
@@ -53,13 +53,17 @@ void RenderArea::mouseMoveEvent(QMouseEvent *event)
 {
 	if (drawing)
 	{
-		if (event->buttons() & Qt::LeftButton)
+		if (this->rect().contains(event->pos(), true))
 		{
-			drawLine(lastPoint, event->pos(), CELL_LIVE);
-		}
-		else if (event->buttons() & Qt::RightButton)
-		{
-			drawLine(lastPoint, event->pos(), CELL_DEAD);
+			if (event->buttons() & Qt::LeftButton)
+			{
+				drawLine(lastPoint, event->pos(), CELL_LIVE);
+			}
+			else if (event->buttons() & Qt::RightButton)
+			{
+				drawLine(lastPoint, event->pos(), CELL_DEAD);
+			}
+
 		}
 		lastPoint = event->pos();
 	}
@@ -67,7 +71,7 @@ void RenderArea::mouseMoveEvent(QMouseEvent *event)
 
 void RenderArea::mouseReleaseEvent(QMouseEvent *event)
 {
-	if (drawing)
+	if (drawing && this->rect().contains(event->pos(), true))
 	{
 		if (Qt::LeftButton == event->button())
 		{
@@ -117,7 +121,7 @@ void RenderArea::drawLine(const QPoint &startPoint, const QPoint &endPoint, bool
 
 QSize RenderArea::sizeHint() const
 {
-	return {DEFAULT_WIDTH * getScaledRectWidth(), DEFAULT_HEIGHT * getScaledRectHeight()};
+	return {field_->getWidth() * getScaledRectWidth(), field_->getHeight() * getScaledRectHeight()};
 }
 
 void RenderArea::zoomIn()

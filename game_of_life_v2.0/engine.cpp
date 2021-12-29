@@ -81,7 +81,10 @@ Field &Field::operator =(Field &&other) noexcept
 void Field::resize(int newWidth, int newHeight)
 {
 	Field tmpField(newWidth, newHeight);
-	copyToCenterFrom(tmpField);
+	tmpField.copyToCenterFrom(*this);
+	field_ = tmpField.field_;
+	width_ = newWidth;
+	height_ = newHeight;
 }
 
 void Field::copyToCenterFrom(const Field &other)
@@ -177,6 +180,27 @@ void State::clear()
 void State::setRules(Rules rules)
 {
 	rules_ = std::move(rules);
+}
+
+void State::setBirthRule(int idx, bool checked)
+{
+	rules_.birth_[idx] = checked;
+}
+
+void State::setSurvivalRule(int idx, bool checked)
+{
+	rules_.survival_[idx] = checked;
+}
+
+void State::resize(int newWidth, int newHeight)
+{
+	current_.resize(newWidth, newHeight);
+	next_.resize(newWidth, newHeight);
+}
+
+Field &State::getNext() noexcept
+{
+	return next_;
 }
 
 Rules::Rules() noexcept : birth_(9, false), survival_(9, false)

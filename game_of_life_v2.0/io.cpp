@@ -15,6 +15,7 @@ namespace
 	constexpr QChar END_OF_LINE = '$';
 	constexpr QChar RLE_END = '!';
 	constexpr int CHARS_NUMBER = 128;
+	constexpr int DEFAULT_OFFSET = 10;
 
 	enum class Expectations
 	{
@@ -304,11 +305,11 @@ namespace
 	{
 		if (header.y > field.getHeight())
 		{
-			field.resize(field.getWidth(), header.y);
+			field.resize(field.getWidth(), header.y + DEFAULT_OFFSET);
 		}
 		if (header.x > field.getWidth())
 		{
-			field.resize(header.x, field.getHeight());
+			field.resize(header.x + DEFAULT_OFFSET, field.getHeight());
 		}
 	}
 }
@@ -316,7 +317,7 @@ namespace
 void readState(QIODevice *device, State &currentState)
 {
 	char ch{};
-	Field field;
+	Field field(currentState.getWidth(), currentState.getHeight());
 	RLEHeader header;
 	int x = 0;
 	int y = 0;
@@ -341,6 +342,8 @@ void readState(QIODevice *device, State &currentState)
 			case 'x':
 			{
 				header = readHeader(device, currentState);
+				setSizeFromHeader(header, currentState.getCurrent());
+				setSizeFromHeader(header, currentState.getNext());
 				field = Field(header.x, header.y);
 				break;
 			}
