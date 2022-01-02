@@ -3,6 +3,7 @@
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QSpinBox>
+#include <QPushButton>
 
 
 namespace
@@ -24,6 +25,8 @@ SizeDialog::SizeDialog(const QPoint &size, QWidget *parent)
 	auto *heightLabel = new QLabel("Height:");
 	auto *widthLayout = new QHBoxLayout;
 	auto *heightLayout = new QHBoxLayout;
+	auto *okButton = new QPushButton("OK", this);
+	okButton->setDefault(true);
 
 	widthLayout->addWidget(widthLabel);
 	widthLayout->addWidget(widthSpinBox);
@@ -31,8 +34,12 @@ SizeDialog::SizeDialog(const QPoint &size, QWidget *parent)
 	heightLayout->addWidget(heightSpinBox);
 	mainLayout->addLayout(widthLayout);
 	mainLayout->addLayout(heightLayout);
+	mainLayout->addWidget(okButton);
+
+	connect(okButton, &QPushButton::clicked, this, &QDialog::close);
 
 	this->setLayout(mainLayout);
+	this->setModal(true);
 }
 
 QSpinBox *SizeDialog::createSpinBox(int value, SizeType type)

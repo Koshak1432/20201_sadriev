@@ -48,13 +48,6 @@ QScrollArea *Game::getScrollArea() noexcept
 	return scrollArea_;
 }
 
-void Game::setState(State state)
-{
-	state_ = std::move(state);
-	RenderArea render(state_.getCurrent());
-	scrollArea_->setWidget(new RenderArea(state_.getCurrent()));
-}
-
 void Game::changeSpeed(int newSpeed)
 {
 	timer_->setInterval(SEC / newSpeed);

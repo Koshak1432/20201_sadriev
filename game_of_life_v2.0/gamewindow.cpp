@@ -7,6 +7,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QSpinBox>
+#include <iostream>
 
 #include "renderarea.h"
 #include "io.h"
@@ -22,7 +23,7 @@ namespace
 
 GameWindow::GameWindow()
 						: game_(), rulesDialog_(new RulesDialog(game_.getState().getRules(),this)),
-						sizeDialog_(new SizeDialog(QPoint(game_.getState().getWidth(), game_.getState().getHeight())))
+						sizeDialog_(new SizeDialog(QPoint(game_.getState().getWidth(), game_.getState().getHeight()), this))
 {
 	createToolBar();
 	setCentralWidget(game_.getScrollArea());
@@ -68,8 +69,8 @@ void GameWindow::createToolBar()
 	connect(saveAction, &QAction::triggered, this, &GameWindow::saveAs);
 	connect(speedSpinBox, &QSpinBox::valueChanged, &game_, &Game::changeSpeed);
 	connect(clearAction, &QAction::triggered, &game_, &Game::clear);
-	connect(rulesAction, &QAction::triggered, rulesDialog_, &QDialog::open);
-	connect(sizeAction, &QAction::triggered, sizeDialog_, &QDialog::open);
+	connect(rulesAction, &QAction::triggered, rulesDialog_, &QDialog::show);
+	connect(sizeAction, &QAction::triggered, sizeDialog_, &QDialog::show);
 
 	connect(rulesDialog_, &RulesDialog::birthBoxChanged, &game_, &Game::changeBirthRule);
 	connect(rulesDialog_, &RulesDialog::survivalBoxChanged, &game_, &Game::changeSurvivalRule);
@@ -89,9 +90,13 @@ void GameWindow::open()
 void GameWindow::loadFile(const QString &fileName)
 {
 	QFile file(fileName);
+
+
 	if (!file.open(QFile::ReadOnly | QFile::Text))
 	{
-		QMessageBox::warning(this, "WARNING", QString("Can't open file %1:\n%2.").arg(QDir::toNativeSeparators(fileName), file.errorString()));
+		QMessageBox::warning(this, "WARNING",
+							 QString("Can't open file %1:\n%2.").arg(QDir::toNativeSeparators(fileName),
+																	 file.errorString()));
 		return;
 	}
 	if (0 == file.size())
@@ -99,7 +104,17 @@ void GameWindow::loadFile(const QString &fileName)
 		QMessageBox::warning(this, "WARNING", QString("An empty file"));
 		return;
 	}
-	readState(&file, game_.getState());
+
+	try
+	{
+		readState(&file, game_.getState());
+	}
+	catch(std::exception &e)
+	{
+		QMessageBox msg(QMessageBox::Warning, "ERROR", QString("Reading rle file error: %1\n%2\nField wasn't changed").arg(QDir::toNativeSeparators(fileName), e.what()));
+		msg.exec();
+		return;
+	}
 	rulesDialog_->changeBoxes(game_.getState().getRules());
 	sizeDialog_->changeSizeSpinBoxes(QPoint(game_.getState().getWidth(), game_.getState().getHeight()));
 	game_.getScrollArea()->setWidget(new RenderArea(game_.getState().getCurrent()));

@@ -3,22 +3,13 @@
 
 #include <vector>
 
+#include "Ifield.h"
+
 namespace
 {
 	constexpr int DEFAULT_WIDTH = 80;
 	constexpr int DEFAULT_HEIGHT = 40;
 }
-
-class IField
-{
-public:
-	virtual ~IField() = default;
-	virtual void setCell(int x, int y, bool cell) noexcept = 0;
-	[[nodiscard]] virtual bool getCell(int x, int y) const noexcept = 0;
-	[[nodiscard]] virtual int getHeight() const noexcept = 0;
-	[[nodiscard]] virtual int getWidth() const noexcept = 0;
-	[[nodiscard]] virtual std::size_t countNeighbours(int x, int y) const noexcept = 0;
-};
 
 class Field : public IField
 {
@@ -29,7 +20,7 @@ public:
 
 	[[nodiscard]] int getHeight() const noexcept override;
 	[[nodiscard]] int getWidth() const noexcept override;
-	[[nodiscard]] std::size_t countNeighbours(int x, int y) const noexcept override;
+	[[nodiscard]] std::size_t countNeighbours(int x, int y) const noexcept;
 	[[nodiscard]] bool getCell(int x, int y) const noexcept override;
 	void setCell(int x, int y, bool cell) noexcept override;
 

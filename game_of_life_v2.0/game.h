@@ -15,7 +15,6 @@ class Game : public QWidget
 public:
 	explicit Game(State state = State(), QWidget *parent = nullptr);
 	QScrollArea *getScrollArea() noexcept;
-	void setState(State state);
 
 	State &getState();
 	~Game() override = default;

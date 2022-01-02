@@ -18,6 +18,7 @@ public:
 private slots:
 	void saveAs();
 	void open();
+
 private:
 	Game game_;
 

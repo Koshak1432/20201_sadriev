@@ -3,6 +3,7 @@
 #include <QLayout>
 #include <QCheckBox>
 #include <QLabel>
+#include <QPushButton>
 
 RulesDialog::RulesDialog(const Rules &rules, QWidget *parent) : QDialog(parent)
 {
@@ -16,14 +17,19 @@ RulesDialog::RulesDialog(const Rules &rules, QWidget *parent) : QDialog(parent)
 	birthRules_ = initRulesList(BIRTH, birthLayout);
 	survivalRules_ = initRulesList(SURVIVAL, survivalLayout);
 
+	auto *okButton = new QPushButton("OK", this);
+	okButton->setDefault(true);
+
 	mainLayout->addWidget(birthLabel);
 	mainLayout->addLayout(birthLayout);
 	mainLayout->addWidget(survivalLabel);
 	mainLayout->addLayout(survivalLayout);
+	mainLayout->addWidget(okButton);
+	connect(okButton, &QPushButton::clicked, this, &QDialog::close);
 
 	changeBoxes(rules);
-
 	this->setLayout(mainLayout);
+	this->setModal(true);
 }
 
 QList<QCheckBox *> RulesDialog::initRulesList(RulesType type, QLayout *layout)
