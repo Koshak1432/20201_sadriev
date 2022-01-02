@@ -25,7 +25,7 @@ RulesDialog::RulesDialog(const Rules &rules, QWidget *parent) : QDialog(parent)
 	mainLayout->addWidget(survivalLabel);
 	mainLayout->addLayout(survivalLayout);
 	mainLayout->addWidget(okButton);
-	connect(okButton, &QPushButton::clicked, this, &QDialog::close);
+	connect(okButton, &QPushButton::clicked, this, &QDialog::accept);
 
 	changeBoxes(rules);
 	this->setLayout(mainLayout);

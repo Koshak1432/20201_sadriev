@@ -36,7 +36,7 @@ SizeDialog::SizeDialog(const QPoint &size, QWidget *parent)
 	mainLayout->addLayout(heightLayout);
 	mainLayout->addWidget(okButton);
 
-	connect(okButton, &QPushButton::clicked, this, &QDialog::close);
+	connect(okButton, &QPushButton::clicked, this, &QDialog::accept);
 
 	this->setLayout(mainLayout);
 	this->setModal(true);
