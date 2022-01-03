@@ -18,8 +18,10 @@ SizeDialog::SizeDialog(const QPoint &size, QWidget *parent)
 							: QDialog(parent), widthSpinBox(createSpinBox(size.x(), WIDTH)),
 							  heightSpinBox(createSpinBox(size.y(), HEIGHT))
 {
-	setWindowTitle("Choosing size");
+	setWindowTitle("Size");
 	auto *mainLayout = new QVBoxLayout;
+	auto *minSizeLabel = new QLabel(QString("Min size: %1").arg(MIN_SIZE));
+	auto *maxSizeLabel = new QLabel(QString("Max size: %1").arg(MAX_SIZE));
 
 	auto *widthLabel = new QLabel("Width:");
 	auto *heightLabel = new QLabel("Height:");
@@ -32,6 +34,8 @@ SizeDialog::SizeDialog(const QPoint &size, QWidget *parent)
 	widthLayout->addWidget(widthSpinBox);
 	heightLayout->addWidget(heightLabel);
 	heightLayout->addWidget(heightSpinBox);
+	mainLayout->addWidget(minSizeLabel);
+	mainLayout->addWidget(maxSizeLabel);
 	mainLayout->addLayout(widthLayout);
 	mainLayout->addLayout(heightLayout);
 	mainLayout->addWidget(okButton);
