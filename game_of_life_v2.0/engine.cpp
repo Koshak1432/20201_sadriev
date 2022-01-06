@@ -2,14 +2,20 @@
 
 #include <cassert>
 
-static std::size_t getToroidCoord(int i, std::size_t max) noexcept
+namespace
 {
-	assert(0 != max);
-	while (i < 0)
+	constexpr bool CELL_LIVE = true;
+	constexpr bool CELL_DEAD = false;
+
+	std::size_t getToroidCoord(int i, std::size_t max) noexcept
 	{
-		i += int(max);
+		assert(0 != max);
+		while (i < 0)
+		{
+			i += int(max);
+		}
+		return i % max;
 	}
-	return i % max;
 }
 
 bool Field::getCell(int x, int y) const noexcept
@@ -59,9 +65,9 @@ void Field::swap(Field &other) noexcept
 	field_.swap(other.field_);
 }
 
-Field::Field(int width, int height) : field_(height), width_(width), height_(height)
+Field::Field(int width, int height) noexcept : field_(height), width_(width), height_(height)
 {
-	std::fill(field_.begin(), field_.end(), std::vector<bool>(width, false));
+	std::fill(field_.begin(), field_.end(), std::vector<bool>(width, CELL_DEAD));
 }
 
 Field::Field(Field &&other) noexcept : field_(std::move(other.field_)), height_(other.height_), width_(other.width_)
@@ -78,16 +84,17 @@ Field &Field::operator =(Field &&other) noexcept
 	return *this;
 }
 
-void Field::resize(int newWidth, int newHeight)
+void Field::resize(int newWidth, int newHeight) noexcept
 {
 	Field tmpField(newWidth, newHeight);
 	tmpField.copyToCenterFrom(*this);
 	field_ = tmpField.field_;
+
 	width_ = newWidth;
 	height_ = newHeight;
 }
 
-void Field::copyToCenterFrom(const Field &other)
+void Field::copyToCenterFrom(const Field &other) noexcept
 {
 	int intersectionX = std::min(width_, other.width_);
 	int intersectionY = std::min(height_, other.height_);
@@ -107,7 +114,7 @@ void Field::copyToCenterFrom(const Field &other)
 	}
 }
 
-void State::makeNextField()
+void State::makeNextField() noexcept
 {
 	for (int x = 0; x < current_.getWidth(); ++x)
 	{
@@ -118,11 +125,11 @@ void State::makeNextField()
 			next_.setCell(x, y, cell);
 			if (rules_.birth_[neighbours] && !cell)
 			{
-				next_.setCell(x, y, true);
+				next_.setCell(x, y, CELL_LIVE);
 			}
 			else if (!rules_.survival_[neighbours] && cell)
 			{
-				next_.setCell(x, y, false);
+				next_.setCell(x, y, CELL_DEAD);
 			}
 		}
 	}
@@ -161,38 +168,38 @@ Field &State::getCurrent() noexcept
 	return current_;
 }
 
-Rules State::getRules() const
+Rules State::getRules() const noexcept
 {
 	return rules_;
 }
 
-void State::clear()
+void State::clear() noexcept
 {
 	for (int row = 0; row < current_.getHeight(); ++row)
 	{
 		for (int col = 0; col < current_.getWidth(); ++col)
 		{
-			current_.setCell(col, row, false);
+			current_.setCell(col, row, CELL_DEAD);
 		}
 	}
 }
 
-void State::setRules(Rules rules)
+void State::setRules(Rules rules) noexcept
 {
 	rules_ = std::move(rules);
 }
 
-void State::setBirthRule(int idx, bool checked)
+void State::setBirthRule(int idx, bool checked) noexcept
 {
 	rules_.birth_[idx] = checked;
 }
 
-void State::setSurvivalRule(int idx, bool checked)
+void State::setSurvivalRule(int idx, bool checked) noexcept
 {
 	rules_.survival_[idx] = checked;
 }
 
-void State::resize(int newWidth, int newHeight)
+void State::resize(int newWidth, int newHeight) noexcept
 {
 	current_.resize(newWidth, newHeight);
 	next_.resize(newWidth, newHeight);

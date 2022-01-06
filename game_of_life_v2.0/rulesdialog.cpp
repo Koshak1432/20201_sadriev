@@ -7,7 +7,7 @@
 
 RulesDialog::RulesDialog(const Rules &rules, QWidget *parent) : QDialog(parent)
 {
-	setWindowTitle("Choosing rules");
+	setWindowTitle("Rules options");
 	auto *mainLayout = new QVBoxLayout;
 
 	auto *birthLabel = new QLabel("Birth rules:");
@@ -56,4 +56,3 @@ void RulesDialog::changeBoxes(const Rules &rules)
 		rules.survival_[i] ? survivalRules_[i]->setCheckState(Qt::Checked) : survivalRules_[i]->setCheckState(Qt::Unchecked);
 	}
 }
-

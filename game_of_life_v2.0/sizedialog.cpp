@@ -5,7 +5,6 @@
 #include <QSpinBox>
 #include <QPushButton>
 
-
 namespace
 {
 	constexpr int MAX_SIZE = 120;
@@ -14,11 +13,11 @@ namespace
 }
 
 
-SizeDialog::SizeDialog(const QPoint &size, QWidget *parent)
-							: QDialog(parent), widthSpinBox(createSpinBox(size.x(), WIDTH)),
-							  heightSpinBox(createSpinBox(size.y(), HEIGHT))
+SizeDialog::SizeDialog(const QSize &size, QWidget *parent)
+							: QDialog(parent), widthSpinBox(createSpinBox(size.width(), WIDTH)),
+							  heightSpinBox(createSpinBox(size.height(), HEIGHT))
 {
-	setWindowTitle("Size");
+	setWindowTitle("Size options");
 	auto *mainLayout = new QVBoxLayout;
 	auto *minSizeLabel = new QLabel(QString("Min size: %1").arg(MIN_SIZE));
 	auto *maxSizeLabel = new QLabel(QString("Max size: %1").arg(MAX_SIZE));
@@ -59,8 +58,8 @@ QSpinBox *SizeDialog::createSpinBox(int value, SizeType type)
 	return spinBox;
 }
 
-void SizeDialog::changeSizeSpinBoxes(QPoint size)
+void SizeDialog::changeSizeSpinBoxes(QSize size)
 {
-	widthSpinBox->setValue(size.x());
-	heightSpinBox->setValue(size.y());
+	widthSpinBox->setValue(size.width());
+	heightSpinBox->setValue(size.height());
 }

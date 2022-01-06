@@ -43,7 +43,7 @@ void Game::gameUpdate()
 	scrollArea_->widget()->update();
 }
 
-QScrollArea *Game::getScrollArea() noexcept
+QScrollArea *Game::getScrollArea()
 {
 	return scrollArea_;
 }

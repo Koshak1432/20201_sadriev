@@ -14,7 +14,7 @@ namespace
 class Field : public IField
 {
 public:
-	explicit Field(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT);
+	explicit Field(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT) noexcept;
 	Field(Field &&other) noexcept;
 	Field(const Field &other) = default;
 
@@ -25,8 +25,8 @@ public:
 	void setCell(int x, int y, bool cell) noexcept override;
 
 	void swap(Field &other) noexcept;
-	void resize(int newWidth, int newHeight);
-	void copyToCenterFrom(const Field &other);
+	void resize(int newWidth, int newHeight) noexcept;
+	void copyToCenterFrom(const Field &other) noexcept;
 
 	Field &operator =(Field &&other) noexcept;
 	Field &operator =(const Field &other) = default;
@@ -62,13 +62,13 @@ public:
 	Field &getNext() noexcept;
 	[[nodiscard]] int getWidth() const noexcept;
 	[[nodiscard]] int getHeight() const noexcept;
-	[[nodiscard]] Rules getRules() const;
-	void setRules(Rules rules);
-	void setBirthRule(int idx, bool checked);
-	void setSurvivalRule(int idx, bool checked);
-	void clear();
-	void makeNextField();
-	void resize(int newWidth, int newHeight);
+	[[nodiscard]] Rules getRules() const noexcept;
+	void setRules(Rules rules) noexcept;
+	void setBirthRule(int idx, bool checked) noexcept;
+	void setSurvivalRule(int idx, bool checked) noexcept;
+	void clear() noexcept;
+	void makeNextField() noexcept;
+	void resize(int newWidth, int newHeight) noexcept;
 
 	State &operator =(State &&other) noexcept;
 	State &operator =(const State &other) = default;

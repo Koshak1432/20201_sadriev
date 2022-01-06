@@ -23,7 +23,7 @@ namespace
 
 GameWindow::GameWindow()
 						: game_(), rulesDialog_(new RulesDialog(game_.getState().getRules(),this)),
-						sizeDialog_(new SizeDialog(QPoint(game_.getState().getWidth(), game_.getState().getHeight()), this))
+						sizeDialog_(new SizeDialog(QSize(game_.getState().getWidth(), game_.getState().getHeight()), this))
 {
 	createToolBar();
 	setCentralWidget(game_.getScrollArea());
@@ -80,17 +80,18 @@ void GameWindow::createToolBar()
 
 void GameWindow::open()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, QString("Open file"), QString(), QString("RLE (*.rle)"));
+	QString fileName = QFileDialog::getOpenFileName(this, QString("Open file"),
+													QString(), QString("RLE (*.rle)"));
 	if (!fileName.isEmpty())
 	{
 		loadFile(fileName);
+		return;
 	}
 }
 
 void GameWindow::loadFile(const QString &fileName)
 {
 	QFile file(fileName);
-
 
 	if (!file.open(QFile::ReadOnly | QFile::Text))
 	{
@@ -116,7 +117,7 @@ void GameWindow::loadFile(const QString &fileName)
 		return;
 	}
 	rulesDialog_->changeBoxes(game_.getState().getRules());
-	sizeDialog_->changeSizeSpinBoxes(QPoint(game_.getState().getWidth(), game_.getState().getHeight()));
+	sizeDialog_->changeSizeSpinBoxes(QSize(game_.getState().getWidth(), game_.getState().getHeight()));
 	game_.getScrollArea()->setWidget(new RenderArea(game_.getState().getCurrent()));
 }
 
@@ -126,6 +127,7 @@ void GameWindow::saveAs()
 	if (!fileName.isEmpty())
 	{
 		saveFile(fileName);
+		return;
 	}
 }
 

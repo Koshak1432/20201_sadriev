@@ -10,8 +10,8 @@ class SizeDialog : public QDialog
 
 public:
 
-	explicit SizeDialog(const QPoint &size, QWidget *parent = nullptr);
-	void changeSizeSpinBoxes(QPoint size);
+	explicit SizeDialog(const QSize &size, QWidget *parent = nullptr);
+	void changeSizeSpinBoxes(QSize size);
 
 signals:
 	void widthChanged(int width);

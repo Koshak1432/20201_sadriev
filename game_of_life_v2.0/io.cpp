@@ -60,17 +60,17 @@ namespace
 
 	void skipWhiteSpaces(QIODevice *device)
 	{
-		char ch {};
+		char ch;
 		if (sizeof(char) != device->peek(&ch, sizeof(char)))
 		{
-			throw std::invalid_argument("error in skip spaces");
+			throw std::invalid_argument("Skip white spaces error");
 		}
 		while (' ' == ch)
 		{
 			device->skip(sizeof(char));
 			if (sizeof(char) != device->peek(&ch, sizeof(char)))
 			{
-				throw std::invalid_argument("error in skip spaces");
+				throw std::invalid_argument("Skip white spaces error");
 			}
 		}
 	}
@@ -141,7 +141,7 @@ namespace
 		int headerHeight = stringNumbers[1].toInt(&ok);
 		if (!ok)
 		{
-			throw std::invalid_argument("can't convert width and height from header info");
+			throw std::invalid_argument("Can't convert width and height from header info");
 		}
 
 		header.x = headerWidth;
@@ -158,7 +158,7 @@ namespace
 		{
 			int runCount = 0;
 			QString stringRunCount;
-			char tag {};
+			char tag;
 			bool ok = true;
 
 			stringRunCount = readNumber(device);
@@ -171,13 +171,13 @@ namespace
 				runCount = stringRunCount.toInt(&ok);
 				if (!ok)
 				{
-					throw std::invalid_argument("can't read rle");
+					throw std::invalid_argument("Can't read rle");
 				}
 			}
 			skipWhiteSpaces(device);
 			if (!device->getChar(&tag))
 			{
-				throw std::invalid_argument("can't read rle");
+				throw std::invalid_argument("Can't read rle");
 			}
 			if ('$' == tag)
 			{
@@ -188,7 +188,7 @@ namespace
 			{
 				if (!stringRunCount.isEmpty())
 				{
-					throw std::invalid_argument("new line after run count is forbidden");
+					throw std::invalid_argument("New line after run count is forbidden");
 				}
 				else
 				{
@@ -206,12 +206,12 @@ namespace
 				{
 					if (x < field.getWidth() && y < field.getHeight())
 					{
-						field.setCell(x, y, 'b' != tag);
+						field.setCell(x, y, DEAD_CELL != tag);
 						++x;
 					}
 					else
 					{
-						throw std::invalid_argument("invalid info in rle");
+						throw std::invalid_argument("Invalid info in rle");
 					}
 				}
 			}
@@ -241,7 +241,7 @@ namespace
 		out << "\n";
 	}
 
-	QString getRowData(Field &field, int row)
+	QString getRowData(const Field &field, int row)
 	{
 		QString rowString;
 		rowString.reserve(field.getWidth());
@@ -292,7 +292,7 @@ namespace
 		return encoding;
 	}
 
-	void writeRLE(QTextStream &out, Field &field)
+	void writeRLE(QTextStream &out, const Field &field)
 	{
 		for (int row = 0; row < field.getHeight(); ++row)
 		{
@@ -316,9 +316,10 @@ namespace
 
 void readState(QIODevice *device, State &currentState)
 {
-	char ch{};
+	char ch;
 	Field field(currentState.getWidth(), currentState.getHeight());
 	RLEHeader header;
+	bool begin = false;
 	int x = 0;
 	int y = 0;
 
@@ -326,13 +327,13 @@ void readState(QIODevice *device, State &currentState)
 	{
 		if (sizeof(ch) != device->peek(&ch, sizeof(ch)))
 		{
-			throw std::invalid_argument("can't peek char");
+			throw std::invalid_argument("Can't peek char");
 		}
 		switch (ch)
 		{
 			case ' ':
 			{
-				throw std::invalid_argument("space in the beginning of line is forbidden");
+				throw std::invalid_argument("Space in the beginning of line is forbidden");
 			}
 			case '#':
 			{
@@ -341,6 +342,11 @@ void readState(QIODevice *device, State &currentState)
 			}
 			case 'x':
 			{
+				if (begin)
+				{
+					throw std::invalid_argument("Another beginning of rle info");
+				}
+				begin = true;
 				header = readHeader(device, currentState);
 				setSizeFromHeader(header, currentState.getCurrent());
 				setSizeFromHeader(header, currentState.getNext());

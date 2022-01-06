@@ -6,7 +6,6 @@
 #include "engine.h"
 
 class QScrollArea;
-class RenderArea;
 
 class Game : public QWidget
 {
@@ -14,7 +13,7 @@ class Game : public QWidget
 
 public:
 	explicit Game(State state = State(), QWidget *parent = nullptr);
-	QScrollArea *getScrollArea() noexcept;
+	QScrollArea *getScrollArea();
 
 	State &getState();
 	~Game() override = default;
