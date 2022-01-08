@@ -12,7 +12,6 @@ namespace
 	constexpr int DEFAULT_STEP = 1;
 }
 
-
 SizeDialog::SizeDialog(const QSize &size, QWidget *parent)
 							: QDialog(parent), widthSpinBox(createSpinBox(size.width(), WIDTH)),
 							  heightSpinBox(createSpinBox(size.height(), HEIGHT))

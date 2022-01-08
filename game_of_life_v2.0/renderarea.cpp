@@ -142,6 +142,7 @@ void RenderArea::scaleArea(double scaleFactor)
 	{
 		return;
 	}
+	drawing = false;
 	scaleFactor_ = attemptedScale;
 	resize(sizeHint());
 }
