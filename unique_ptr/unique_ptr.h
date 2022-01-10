@@ -19,8 +19,8 @@ public:
 	void reset(T *new_p) noexcept;
 	void swap(uni_ptr<T> &other) noexcept;
 
-	T *operator ->();
-	uni_ptr<T> &operator *() const;
+	T *operator ->() const;
+	T &operator *() const;
 	explicit operator bool() const noexcept;
 	uni_ptr<T> &operator =(uni_ptr<T> &&other) noexcept;
 	uni_ptr<T> &operator =(uni_ptr<T> &other) = delete;
@@ -50,13 +50,13 @@ T *uni_ptr<T>::release() noexcept
 }
 
 template<class T>
-uni_ptr<T> &uni_ptr<T>::operator *() const
+T &uni_ptr<T>::operator *() const
 {
 	return *p_;
 }
 
 template<class T>
-T *uni_ptr<T>::operator ->()
+T *uni_ptr<T>::operator ->() const
 {
 	return p_;
 }
