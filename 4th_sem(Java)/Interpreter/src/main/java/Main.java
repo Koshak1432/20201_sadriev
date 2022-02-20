@@ -2,6 +2,7 @@ import java.lang.reflect.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {
+
         System.out.println("Hell world!!");
         Class<?> c = null;
         try {
@@ -36,7 +37,7 @@ public class Main {
     }
 }
 
-//сделать кэш комманд, чтобы каждый раз не дёргать (в образовательных целях)
+//сделать кэш комманд, чтобы каждый раз не дёргать
 //мапу комманд
 //class Factory {
 //    Object createCmdByChar(char c) {

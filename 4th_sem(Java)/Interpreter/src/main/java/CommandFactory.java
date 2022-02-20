@@ -1,4 +1,5 @@
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 public class CommandFactory implements ICommandFactory {
@@ -23,6 +24,6 @@ public class CommandFactory implements ICommandFactory {
         commandMap_.putIfAbsent(cmdName, className);
     }
 
-    private final HashMap<Character, String> commandMap_ = new HashMap<Character, String>();
-    private final Cache<Character, Class<?>> cache_ = new Cache<Character, Class<?>>();
+    private final Map<Character, String> commandMap_ = new HashMap<>();
+    private final ICache<Character, Class<?>> cache_ = new Cache<>();
 }
