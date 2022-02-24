@@ -1,10 +1,10 @@
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collection;
+import java.util.Map;
 
 public interface IIOController {
-    void parseArguments(InputStream stream);
-    Collection<Character> readCommands(InputStream stream);
+    Map<String, String> parseArguments(String[] args);
+    String readCommands(InputStream stream);
     byte readByte(InputStream stream);
     void print(OutputStream stream, Character symbol);
 }

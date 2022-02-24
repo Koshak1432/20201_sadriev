@@ -1,10 +1,13 @@
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Context {
-    Context(InputStream inStream, OutputStream outStream) {
+    Context(InputStream inStream, OutputStream outStream, IIOController ioController) {
         inStream_ = inStream;
         outStream_ = outStream;
+        ioController_ = ioController;
     }
 
     public void setInStream(InputStream inStream) {
@@ -18,8 +21,9 @@ public class Context {
     }
 
     public IPointer pointer_ = new Pointer();
-    public IIOController ioController_ = new IOController();
-    private InputStream inStream_ = null;
-    private OutputStream outStream_ = null; //get and set организовать для них
+
+    public IIOController ioController_;
+    private InputStream inStream_;
+    private OutputStream outStream_;
 }
 
