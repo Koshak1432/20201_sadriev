@@ -27,7 +27,7 @@ public class Pointer implements IPointer {
     }
 
     @Override
-    public int getPointer() {
+    public int getIdx() {
         return idx_;
     }
 

@@ -1,29 +1,38 @@
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Context {
-    Context(InputStream inStream, OutputStream outStream, IIOController ioController) {
+    Context(InputStream inStream, OutputStream outStream, IIOController ioController, IProgram program) {
         inStream_ = inStream;
         outStream_ = outStream;
         ioController_ = ioController;
+        program_ = program;
     }
 
-    public void setInStream(InputStream inStream) {
-        inStream_ = inStream;
-    }
     public InputStream getInStream() {
         return inStream_;
     }
+
     public OutputStream getOutStream() {
         return outStream_;
     }
 
-    public IPointer pointer_ = new Pointer();
+    public IIOController getIoController() {
+        return ioController_;
+    }
 
-    public IIOController ioController_;
-    private InputStream inStream_;
-    private OutputStream outStream_;
+    public IProgram getProgram() {
+        return program_;
+    }
+
+    public IPointer getPointer() {
+        return pointer_;
+    }
+
+    private final IPointer pointer_ = new Pointer();
+    private final IProgram program_;
+    private final IIOController ioController_;
+    private final InputStream inStream_;
+    private final OutputStream outStream_;
 }
 

@@ -4,7 +4,7 @@ import java.util.Optional;
 
 public class CommandFactory implements ICommandFactory {
     @Override
-    public Optional<Object> createCommandByChar(char ch) throws Exception {
+    public Optional<Object> createCommandByChar(char ch) {
         try {
             Class<?> commandClass = cache_.get(ch);
             if (null == commandClass) {

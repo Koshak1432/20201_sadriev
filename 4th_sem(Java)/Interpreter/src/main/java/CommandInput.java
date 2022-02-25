@@ -1,6 +1,8 @@
+import java.io.IOException;
+
 public class CommandInput implements ICommand {
     @Override
-    public void execute(Context ctx) {
-        ctx.pointer_.setPointer(ctx.ioController_.readByte(ctx.getInStream()));
+    public void execute(Context ctx) throws IOException {
+        ctx.getPointer().setPointer(ctx.getIoController().readByte(ctx.getInStream()));
     }
 }

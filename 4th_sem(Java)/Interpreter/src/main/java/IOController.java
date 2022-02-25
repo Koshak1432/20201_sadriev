@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.*;
@@ -11,32 +12,25 @@ public class IOController implements IIOController {
             if (argument.startsWith(Main.CONFIG_PREFIX)) {
                 map.put(Main.CONFIG_PREFIX, argument.substring((Main.CONFIG_PREFIX + "=").length()));
             }
-            else if (argument.startsWith(Main.PROG_PREFIX)) {
-                map.put(Main.PROG_PREFIX, argument.substring((Main.PROG_PREFIX + "=").length()));
+            else if (argument.startsWith(Main.PROGRAM_PREFIX)) {
+                map.put(Main.PROGRAM_PREFIX, argument.substring((Main.PROGRAM_PREFIX + "=").length()));
             }
         }
         return map;
     }
 
     @Override
-    public String readCommands(InputStream stream) {
-        String result = "";
-        Scanner scanner = new Scanner(stream); //todo mb use delimiter("");
-        StringBuilder sb = new StringBuilder(result);
-        
-        while(scanner.hasNextLine()) {
-            sb.append(scanner.nextLine());
-        }
-        return sb.toString();
+    public String readCommands(InputStream stream) throws IOException {
+        return new String(stream.readAllBytes());
     }
 
     @Override
-    public byte readByte(InputStream stream) {
-        return 0;
+    public byte readByte(InputStream stream) throws IOException {
+        return (byte)stream.read();
     }
 
     @Override
-    public void print(OutputStream stream, Character symbol) {
-
+    public void print(OutputStream stream, Character symbol) throws IOException {
+        stream.write((int)symbol);
     }
 }
