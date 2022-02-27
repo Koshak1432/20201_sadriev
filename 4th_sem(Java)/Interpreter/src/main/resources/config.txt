@@ -1,0 +1,10 @@
+left=[
+right=]
++=brainfuck.command.CommandIncreaseValue
+-=brainfuck.command.CommandDecreaseValue
+>=brainfuck.command.CommandMoveRight
+<=brainfuck.command.CommandMoveLeft
+[=brainfuck.command.CommandStartLoop
+]=brainfuck.command.CommandEndLoop
+.=brainfuck.command.CommandOutput
+,=brainfuck.command.CommandInput

@@ -1,3 +1,5 @@
+package brainfuck;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -31,6 +33,6 @@ public class IOController implements IIOController {
 
     @Override
     public void print(OutputStream stream, Character symbol) throws IOException {
-        stream.write((int)symbol);
+        stream.write(symbol);
     }
 }

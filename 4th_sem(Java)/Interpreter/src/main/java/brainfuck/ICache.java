@@ -1,3 +1,5 @@
+package brainfuck;
+
 import java.security.InvalidKeyException;
 
 public interface ICache<K, V> {

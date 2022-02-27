@@ -1,3 +1,7 @@
+package brainfuck.command;
+
+import brainfuck.Context;
+
 import java.io.IOException;
 
 public class CommandOutput implements ICommand {

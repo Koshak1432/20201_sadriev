@@ -16,5 +16,5 @@ test {
 }
 
 application {
-    mainClass = 'Main'
+    mainClass = 'brainfuck.Main'
 }

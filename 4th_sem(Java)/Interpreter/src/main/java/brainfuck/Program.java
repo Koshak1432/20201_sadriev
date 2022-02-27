@@ -1,3 +1,4 @@
+package brainfuck;
 
 public class Program implements IProgram {
 
@@ -17,8 +18,12 @@ public class Program implements IProgram {
         return commandIdx_;
     }
 
-    public char getChar() {
-        return commands_.charAt(commandIdx_);
+    public char getSymbolAt(int idx) {
+        if (idx < commands_.length()) {
+            return commands_.charAt(idx);
+        }
+        else throw new IllegalArgumentException();
+
     }
 
     private final String commands_;
