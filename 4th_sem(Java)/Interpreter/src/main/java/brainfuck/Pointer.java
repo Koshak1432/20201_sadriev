@@ -7,7 +7,7 @@ public class Pointer implements IPointer {
         if (idx < 0) {
             idx_ = MAX_SIZE - 1;
         }
-        else if (MAX_SIZE - 1 == idx) {
+        else if (idx >= MAX_SIZE - 1) {
             idx_ = 0;
         }
         else {

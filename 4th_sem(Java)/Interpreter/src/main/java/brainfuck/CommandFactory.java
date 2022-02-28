@@ -1,5 +1,6 @@
 package brainfuck;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -16,7 +17,6 @@ public class CommandFactory implements ICommandFactory {
             }
             return Optional.of(commandClass.getConstructor().newInstance());
         } catch (Exception e) {
-            System.out.println("Caught an exception!");
             e.printStackTrace();
             return Optional.empty();
         }

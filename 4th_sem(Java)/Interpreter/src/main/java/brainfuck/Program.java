@@ -7,10 +7,13 @@ public class Program implements IProgram {
     }
 
     public boolean isEnd() {
-        return commandIdx_ == commands_.length();
+        return commandIdx_ >= commands_.length();
     }
 
-    public void jumpTo(int idxToJump) {
+    public void jumpTo(int idxToJump) throws IllegalArgumentException {
+        if (idxToJump < 0 || idxToJump >= commands_.length()) {
+            throw new IllegalArgumentException("Tried to jump over the commands string");
+        }
         commandIdx_ = idxToJump;
     }
 
@@ -18,12 +21,11 @@ public class Program implements IProgram {
         return commandIdx_;
     }
 
-    public char getSymbolAt(int idx) {
-        if (idx < commands_.length()) {
-            return commands_.charAt(idx);
+    public char getSymbolAt(int idx) throws IllegalArgumentException {
+        if (idx < 0 || idx >= commands_.length()) {
+            throw new IllegalArgumentException("Tried to get symbol at illegal idx");
         }
-        else throw new IllegalArgumentException();
-
+        return commands_.charAt(idx);
     }
 
     private final String commands_;

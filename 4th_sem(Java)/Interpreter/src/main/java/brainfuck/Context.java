@@ -42,11 +42,14 @@ public class Context {
         return endLoop_;
     }
 
-    public int findMatchingBracket(Context ctx, char bracketToMatch, boolean forward) {
+    public int findMatchingBracket(Context ctx, boolean forward) {
         int count = 1;
         int idx = ctx.getProgram().getIdx();
 
-        while (count > 0 && !ctx.getProgram().isEnd()) {
+        while (count > 0) {
+            if (ctx.getProgram().isEnd()) {
+                throw new IllegalStateException("Couldn't find matching bracket");
+            }
             idx = (forward) ? idx + 1 : idx - 1;
             char symbol = ctx.getProgram().getSymbolAt(idx);
             if (ctx.getStartLoop() == symbol) {
