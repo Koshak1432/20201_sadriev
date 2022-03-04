@@ -39,13 +39,14 @@ public class Main {
                     System.in, oStream, ioController, new Program(commands),
                     props.getProperty(START_LOOP).charAt(0), props.getProperty(END_LOOP).charAt(0));
 
-            reinterpret(factory, context);
+            interpret(factory, context);
         } catch (IllegalArgumentException | IllegalStateException | IOException e) {
+            System.err.println("Interpretation failed");
             e.printStackTrace();
         }
     }
 
-    private static void reinterpret(CommandFactory factory, Context context) throws IOException {
+    private static void interpret(CommandFactory factory, Context context) throws IOException {
         while (! context.getProgram().isEnd()) {
             char c = context.getProgram().getSymbolAt(context.getProgram().getIdx());
             ICommand cmd;
