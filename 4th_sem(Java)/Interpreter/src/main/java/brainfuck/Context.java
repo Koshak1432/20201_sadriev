@@ -4,7 +4,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public class Context {
-    Context(InputStream inStream, OutputStream outStream, IIOController ioController, IProgram program) {
+    public Context(InputStream inStream, OutputStream outStream, IIOController ioController, IProgram program) {
         inStream_ = inStream;
         outStream_ = outStream;
         ioController_ = ioController;

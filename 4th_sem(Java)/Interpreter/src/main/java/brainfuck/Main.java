@@ -47,13 +47,12 @@ public class Main {
     }
 
     private static void interpret(CommandFactory factory, Context context) throws IOException {
-        while (! context.getProgram().isEnd()) {
+        while (!context.getProgram().isEnd()) {
             char c = context.getProgram().getSymbolAt(context.getProgram().getIdx());
             ICommand cmd;
             if (factory.createCommandByChar(c).isPresent()) {
                 cmd = (ICommand) factory.createCommandByChar(c).get();
-            }
-            else {
+            } else {
                 throw new IllegalArgumentException("Couldn't handle the symbol [%c]".formatted(c));
             }
             cmd.execute(context);

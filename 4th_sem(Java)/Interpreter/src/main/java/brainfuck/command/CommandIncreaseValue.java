@@ -5,6 +5,10 @@ import brainfuck.Context;
 public class CommandIncreaseValue implements ICommand {
     @Override
     public void execute(Context ctx) {
-        ctx.getPointer().setPointer((byte)(ctx.getPointer().getValue() + 1));
+        byte value = ctx.getPointer().getValue();
+        if (Byte.MAX_VALUE == value) {
+            value = -1;
+        }
+        ctx.getPointer().setPointer((byte)(value + 1));
     }
 }

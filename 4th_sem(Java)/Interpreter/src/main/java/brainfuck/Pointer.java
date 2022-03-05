@@ -6,24 +6,25 @@ public class Pointer implements IPointer {
     public void movePointer(int idx) {
         if (idx < 0) {
             idx_ = MAX_SIZE - 1;
-        }
-        else if (idx >= MAX_SIZE - 1) {
+        } else if (idx >= MAX_SIZE - 1) {
             idx_ = 0;
-        }
-        else {
+        } else {
             idx_ = idx;
         }
     }
 
     @Override
     public void setPointer(byte value) {
-        assert (idx_ < MAX_SIZE);
+        assert (idx_ < MAX_SIZE && idx_ >= 0);
+        if (value < 0) {
+            value = Byte.MAX_VALUE;
+        }
         tape_[idx_] = value;
     }
 
     @Override
     public byte getValue() {
-        assert (idx_ < MAX_SIZE);
+        assert (idx_ < MAX_SIZE && idx_ >= 0);
         return tape_[idx_];
     }
 

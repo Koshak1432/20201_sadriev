@@ -2,7 +2,7 @@ package brainfuck;
 
 public class Program implements IProgram {
 
-    Program(String commands, char startLoop, char endLoop) {
+    public Program(String commands, char startLoop, char endLoop) {
         commands_ = commands;
         startLoop_ = startLoop;
         endLoop_ = endLoop;
