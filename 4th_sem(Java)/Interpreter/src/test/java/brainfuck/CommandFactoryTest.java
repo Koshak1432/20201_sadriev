@@ -26,10 +26,6 @@ class CommandFactoryTest {
         assertTrue(factory.createCommandByChar(registeredChar).isPresent());
         char unregisteredChar = '+';
         assertFalse(factory.createCommandByChar(unregisteredChar).isPresent());
-
-
-
-
     }
 
     CommandFactory factory = new CommandFactory();

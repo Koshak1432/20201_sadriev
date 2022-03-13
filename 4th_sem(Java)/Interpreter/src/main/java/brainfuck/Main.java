@@ -52,7 +52,7 @@ public class Main {
             if (factory.createCommandByChar(c).isPresent()) {
                 cmd = (ICommand) factory.createCommandByChar(c).get();
             } else {
-                throw new IllegalArgumentException("Couldn't handle the symbol [%c]".formatted(c));
+                throw new IllegalArgumentException("Couldn't handle the symbol:%c".formatted(c));
             }
             cmd.execute(context);
             context.getProgram().jumpTo(context.getProgram().getIdx() + 1);

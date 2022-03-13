@@ -13,8 +13,8 @@ public class Program implements IProgram {
     }
 
     public void jumpTo(int idxToJump) throws IllegalArgumentException {
-        if (idxToJump < 0 || idxToJump >= commands_.length()) {
-            throw new IllegalArgumentException("Tried to jump over the commands string");
+        if (idxToJump < 0) {
+            throw new IllegalArgumentException("Tried to jump over(before) the commands string");
         }
         commandIdx_ = idxToJump;
     }
