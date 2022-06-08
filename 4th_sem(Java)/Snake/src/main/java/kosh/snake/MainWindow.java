@@ -2,6 +2,9 @@ package kosh.snake;
 
 import javafx.application.Application;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.stage.Stage;
 
@@ -15,23 +18,26 @@ public class MainWindow extends Application {
 
     @Override
     public void start(Stage primaryStage) throws IOException {
-        Util.changeStage("MainScene.fxml", primaryStage);
-        primaryStage.show();
+        stage = primaryStage;
+        stage.setTitle("Snake");
+        Util.changeStage("MainScene.fxml", stage);
     }
 
     @FXML
     void initialize() {
-        startButton.setOnAction(event -> Util.changeStage("LevelsScene.fxml", (Stage) startButton.getScene().getWindow()));
-        recordsButton.setOnAction(event -> Util.changeStage("RecordsScene.fxml", (Stage) recordsButton.getScene().getWindow()));
+        startButton.setOnAction(event -> {
+            LevelsController levelsController = new LevelsController();
+            levelsController.start(stage);
+        });
+        recordsButton.setOnAction(event -> Util.changeStage("RecordsScene.fxml", stage));
         exitButton.setOnAction(event -> System.exit(0));
     }
 
+    private static Stage stage;
     @FXML
     private Button exitButton;
-
     @FXML
     private Button recordsButton;
-
     @FXML
     private Button startButton;
 }

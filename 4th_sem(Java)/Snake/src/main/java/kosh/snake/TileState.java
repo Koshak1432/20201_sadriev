@@ -1,6 +1,6 @@
 package kosh.snake;
 
-public enum CellState {
+public enum TileState {
     EMPTY,
     FOOD,
     SNAKE,

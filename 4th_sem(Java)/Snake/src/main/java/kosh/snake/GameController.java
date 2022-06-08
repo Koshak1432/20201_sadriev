@@ -1,51 +1,50 @@
 package kosh.snake;
 
 import javafx.animation.AnimationTimer;
-import javafx.event.EventHandler;
+import javafx.application.Application;
 import javafx.scene.control.Label;
-import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 
 public class GameController {
 
-    public void start(Stage primaryStage) {
+    public void start(Stage primaryStage, int levelNum) {
         stage = primaryStage;
+        engine = new Engine(new Coordinates(5,1), painter.getWidth(), painter.getHeight());
+        engine.addSubscriber(painter);
+        painter.drawInitialField(engine.getField());
+        painter.start(stage);
         timer.start();
     }
 
-    public GameController(Coordinates startPos, int width, int height) {
-        engine = new Engine(startPos, width, height);
-
-    }
-
     private void keyControl() {
-        stage.getScene().setOnKeyPressed(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent event) {
-                switch (event.getCode()) {
-                    case W, UP -> engine.makeStep(Direction.UP);
-                    case A, LEFT -> engine.makeStep(Direction.LEFT);
-                    case S, DOWN -> engine.makeStep(Direction.DOWN);
-                    case D, RIGHT -> engine.makeStep(Direction.RIGHT);
-                }
+        stage.getScene().setOnKeyPressed(event -> {
+            System.out.println("event code: " + event.getCode());
+            switch (event.getCode()) {
+                case W, UP -> engine.getSnake().setDirection(Direction.UP);
+                case A, LEFT -> engine.getSnake().setDirection(Direction.LEFT);
+                case S, DOWN -> engine.getSnake().setDirection(Direction.DOWN);
+                case D, RIGHT -> engine.getSnake().setDirection(Direction.RIGHT);
             }
         });
     }
 
     public void loadLevel(int levelNum) {
+        engine = new Engine(new Coordinates(5,1), painter.getWidth(), painter.getHeight());
+//        engine.loadField("/level" + levelNum + ".txt");
 
     }
 
     private final AnimationTimer timer = new AnimationTimer() {
         @Override
         public void handle(long now) {
+            keyControl();
             if (now - lastActivated > timeout) {
                 lastActivated = now;
                 scoreLabel.setText(String.valueOf(engine.getScore()));
-                keyControl();
-                if (!engine.snakeIsAlive()) {
+                if (!engine.makeStep()) {
                     timer.stop();
-                    //gameover
+                    System.out.println("GAME OVER");
+//                    //gameover
                 }
             }
         }
@@ -61,9 +60,9 @@ public class GameController {
 
 
     private final GamePainter painter = new GamePainter();
-    private Stage stage;
-    private final Engine engine;
+    private Engine engine;
+    private static Stage stage;
     private Label scoreLabel = new Label("Score: ");
     private long lastActivated = 0;
-    private final int timeout = 500000000;
+    private final int timeout = 200000000;
 }

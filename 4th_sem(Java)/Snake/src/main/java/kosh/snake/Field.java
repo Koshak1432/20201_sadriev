@@ -1,5 +1,7 @@
 package kosh.snake;
 
+import javafx.beans.property.adapter.JavaBeanProperty;
+
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -7,10 +9,7 @@ public class Field {
     public Field(int width, int height) {
         this.width = width;
         this.height = height;
-        field = new CellState[height][width];
-        emptyCells = new ArrayList<>();
-        wallCells = new ArrayList<>();
-        random = new Random();
+        field = new TileState[height][width];
 
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
@@ -20,12 +19,12 @@ public class Field {
     }
 
     public void setEmpty(Coordinates coords) {
-        field[coords.y()][coords.x()] = CellState.EMPTY;
+        field[coords.y()][coords.x()] = TileState.EMPTY;
         emptyCells.add(coords);
     }
 
     public void setFood(Coordinates coords) {
-        field[coords.y()][coords.x()] = CellState.FOOD;
+        field[coords.y()][coords.x()] = TileState.FOOD;
         emptyCells.remove(coords);
     }
 
@@ -34,27 +33,27 @@ public class Field {
     }
 
     public void setSnake(Coordinates coords) {
-        field[coords.y()][coords.x()] = CellState.SNAKE;
+        field[coords.y()][coords.x()] = TileState.SNAKE;
         emptyCells.remove(coords);
     }
 
     public void setWall(Coordinates coords) {
-        field[coords.y()][coords.x()] = CellState.WALL;
+        field[coords.y()][coords.x()] = TileState.WALL;
         emptyCells.remove(coords);
         wallCells.add(coords);
     }
 
-    public CellState getCell(Coordinates coords) {
+    public TileState getCell(Coordinates coords) {
         return field[coords.y()][coords.x()];
     }
 
     public boolean isValidPosition(Coordinates coords) {
-        CellState state = getCell(coords);
-        return state == CellState.EMPTY ||  state == CellState.FOOD;
+        TileState state = getCell(coords);
+        return state == TileState.EMPTY ||  state == TileState.FOOD;
     }
 
     public boolean isFood(Coordinates coords) {
-        return getCell(coords) == CellState.FOOD;
+        return getCell(coords) == TileState.FOOD;
     }
 
     public int getWidth() {
@@ -65,10 +64,10 @@ public class Field {
         return height;
     }
 
-    private final CellState[][] field;
-    private ArrayList<Coordinates> emptyCells;
-    private ArrayList<Coordinates> wallCells;
+    private final TileState[][] field;
+    private ArrayList<Coordinates> emptyCells = new ArrayList<>();;
+    private ArrayList<Coordinates> wallCells = new ArrayList<>();;
     private final int width;
     private final int height;
-    private final Random random;
+    private final Random random = new Random();;
 }

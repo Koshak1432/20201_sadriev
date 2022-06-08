@@ -10,7 +10,9 @@ public class Snake {
 
     public void growTo(Coordinates coords) {
         snakeParts.add(coords);
+//        System.out.println("Prev head: " + headCoords);
         headCoords = coords;
+//        System.out.println("new head: " + headCoords);
     }
 
     public void setDirection(Direction direction) {
@@ -23,6 +25,8 @@ public class Snake {
     }
 
     public Coordinates loseTail() {
+        System.out.println("LOSE AT" + snakeParts.getLast());
+
         return snakeParts.poll();
     }
 
@@ -36,6 +40,12 @@ public class Snake {
                     } else {
                         nextCoords = new Coordinates(currentCoords.x(), currentCoords.y() - 1);
                     }
+                } else {
+                    if (currentCoords.y() + 1 > height - 1) {
+                        nextCoords = new Coordinates(currentCoords.x(), 0);
+                    } else {
+                        nextCoords = new Coordinates(currentCoords.x(), currentCoords.y() + 1);
+                    }
                 }
             }
             case DOWN -> {
@@ -44,6 +54,12 @@ public class Snake {
                         nextCoords = new Coordinates(currentCoords.x(), 0);
                     } else {
                         nextCoords = new Coordinates(currentCoords.x(), currentCoords.y() + 1);
+                    }
+                } else {
+                    if (currentCoords.y() - 1 < 0) {
+                        nextCoords = new Coordinates(currentCoords.x(), height - 1);
+                    } else {
+                        nextCoords = new Coordinates(currentCoords.x(), currentCoords.y() - 1);
                     }
                 }
             }
@@ -54,6 +70,12 @@ public class Snake {
                     } else {
                         nextCoords = new Coordinates(currentCoords.x() + 1, currentCoords.y());
                     }
+                } else {
+                    if (currentCoords.x() - 1 < 0) {
+                        nextCoords =  new Coordinates(width - 1, currentCoords.y());
+                    } else {
+                        nextCoords = new Coordinates(currentCoords.x() - 1, currentCoords.y());
+                    }
                 }
             }
             case LEFT -> {
@@ -62,6 +84,12 @@ public class Snake {
                         nextCoords =  new Coordinates(width - 1, currentCoords.y());
                     } else {
                         nextCoords = new Coordinates(currentCoords.x() - 1, currentCoords.y());
+                    }
+                } else {
+                    if (currentCoords.x() + 1 > width - 1) {
+                        nextCoords = new Coordinates(0, currentCoords.y());
+                    } else {
+                        nextCoords = new Coordinates(currentCoords.x() + 1, currentCoords.y());
                     }
                 }
             }
