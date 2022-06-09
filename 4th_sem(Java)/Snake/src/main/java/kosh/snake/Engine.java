@@ -7,12 +7,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Engine implements Publisher{
-    public Engine(Coordinates startPos, int width, int height) {
-        field = new Field(width, height);
+    public Engine(Coordinates startPos) {
+        field = new Field();
         snake = new Snake(startPos);
         field.setSnake(startPos);
         addWalls(field);
         addFood(field);
+
     }
 
     public void addWalls(Field field) {
@@ -29,17 +30,19 @@ public class Engine implements Publisher{
     public boolean makeStep() {
         boolean alive = true;
         Coordinates nextCoords = snake.getNextCoords(snake.getHeadCoords(), field.getWidth(), field.getHeight());
-//        System.out.println("next coords: " + nextCoords);
         if (field.isFood(nextCoords)) {
-            field.setRandomFood();
+            coordsToRedraw.add(field.setRandomFood());
             ++score;
+            System.out.println("SCORE: " + score);
         } else {
-            field.setEmpty(snake.loseTail());
+            Coordinates tail = snake.loseTail();
+            coordsToRedraw.add(tail);
+            field.setEmpty(tail);
         }
-
         if (field.isValidPosition(nextCoords)) {
             snake.growTo(nextCoords);
             field.setSnake(nextCoords);
+            coordsToRedraw.add(nextCoords);
         } else {
             alive = false;
         }
@@ -48,7 +51,6 @@ public class Engine implements Publisher{
     }
 
     public boolean snakeIsAlive() {
-//        System.out.println("HEAD COORDS: " + snake.getHeadCoords());
         return field.isValidPosition(snake.getHeadCoords());
     }
 
@@ -76,7 +78,7 @@ public class Engine implements Publisher{
     @Override
     public void notifySubscribers() {
         for (Subscriber sub : subscribers) {
-            sub.handleEvent(field);
+            sub.handleEvent(field, coordsToRedraw);
         }
     }
     private final Field field;
@@ -84,5 +86,6 @@ public class Engine implements Publisher{
     private int score = 0;
 
     private final List<Subscriber> subscribers = new ArrayList<>();
+    private final List<Coordinates> coordsToRedraw = new ArrayList<>();
 
 }

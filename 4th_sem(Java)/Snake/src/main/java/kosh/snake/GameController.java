@@ -1,7 +1,6 @@
 package kosh.snake;
 
 import javafx.animation.AnimationTimer;
-import javafx.application.Application;
 import javafx.scene.control.Label;
 import javafx.stage.Stage;
 
@@ -9,7 +8,7 @@ public class GameController {
 
     public void start(Stage primaryStage, int levelNum) {
         stage = primaryStage;
-        engine = new Engine(new Coordinates(5,1), painter.getWidth(), painter.getHeight());
+        engine = new Engine(new Coordinates(5,1));
         engine.addSubscriber(painter);
         painter.drawInitialField(engine.getField());
         painter.start(stage);
@@ -18,7 +17,6 @@ public class GameController {
 
     private void keyControl() {
         stage.getScene().setOnKeyPressed(event -> {
-            System.out.println("event code: " + event.getCode());
             switch (event.getCode()) {
                 case W, UP -> engine.getSnake().setDirection(Direction.UP);
                 case A, LEFT -> engine.getSnake().setDirection(Direction.LEFT);
@@ -29,7 +27,7 @@ public class GameController {
     }
 
     public void loadLevel(int levelNum) {
-        engine = new Engine(new Coordinates(5,1), painter.getWidth(), painter.getHeight());
+        engine = new Engine(new Coordinates(5,1));
 //        engine.loadField("/level" + levelNum + ".txt");
 
     }

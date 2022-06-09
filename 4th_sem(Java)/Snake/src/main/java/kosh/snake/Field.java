@@ -1,14 +1,10 @@
 package kosh.snake;
 
-import javafx.beans.property.adapter.JavaBeanProperty;
-
 import java.util.ArrayList;
 import java.util.Random;
 
 public class Field {
-    public Field(int width, int height) {
-        this.width = width;
-        this.height = height;
+    public Field() {
         field = new TileState[height][width];
 
         for (int y = 0; y < height; ++y) {
@@ -28,8 +24,10 @@ public class Field {
         emptyCells.remove(coords);
     }
 
-    public void setRandomFood() {
-        setFood(emptyCells.get(random.nextInt(emptyCells.size())));
+    public Coordinates setRandomFood() {
+        Coordinates foodCoords = emptyCells.get(random.nextInt(emptyCells.size()));
+        setFood(foodCoords);
+        return foodCoords;
     }
 
     public void setSnake(Coordinates coords) {
@@ -65,9 +63,9 @@ public class Field {
     }
 
     private final TileState[][] field;
-    private ArrayList<Coordinates> emptyCells = new ArrayList<>();;
-    private ArrayList<Coordinates> wallCells = new ArrayList<>();;
-    private final int width;
-    private final int height;
-    private final Random random = new Random();;
+    private final ArrayList<Coordinates> emptyCells = new ArrayList<>();
+    private final ArrayList<Coordinates> wallCells = new ArrayList<>();
+    private final int width = Constatns.TILES_NUM_X;
+    private final int height = Constatns.TILES_NUM_Y;
+    private final Random random = new Random();
 }

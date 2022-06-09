@@ -1,6 +1,5 @@
 package kosh.snake;
 
-import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -25,6 +24,8 @@ public class GamePainter implements Subscriber{
         }
         Pane root = loader.getRoot();
         primaryStage.setScene(new Scene(root));
+        primaryStage.setWidth(Constatns.WINDOW_WIDTH + Constatns.TILE_WIDTH);
+        primaryStage.setHeight(Constatns.WINDOW_HEIGHT + 2 * Constatns.TILE_HEIGHT);
         primaryStage.show();
         root.getChildren().add(canvas);
     }
@@ -34,7 +35,8 @@ public class GamePainter implements Subscriber{
         try (InputStream in = getClass().getResourceAsStream(fileName)) {
             properties.load(in);
             for (var entry : properties.entrySet()) {
-                images.put(entry.getKey().toString(), new Image(getClass().getResource((String) entry.getValue()).toString()));
+                images.put(entry.getKey().toString(), new Image(getClass().getResource((String) entry.getValue()).toString(), Constatns.TILE_WIDTH,
+                                                                Constatns.TILE_HEIGHT, false, false));
             }
         }
         catch (IOException e) {
@@ -42,62 +44,50 @@ public class GamePainter implements Subscriber{
         }
     }
 
+    private void drawByCoords(Field field, Coordinates coords) {
+        switch (field.getCell(coords)) {
+            case FOOD -> graphicsContext.drawImage(images.get("Food"), coords.x() * Constatns.TILE_WIDTH, coords.y() * Constatns.TILE_HEIGHT);
+            case WALL -> graphicsContext.drawImage(images.get("Wall"), coords.x() * Constatns.TILE_WIDTH, coords.y() * Constatns.TILE_HEIGHT);
+            case SNAKE -> graphicsContext.drawImage(images.get("Snake"), coords.x() * Constatns.TILE_WIDTH, coords.y() * Constatns.TILE_HEIGHT);
+            case EMPTY -> graphicsContext.drawImage(grassCoordsImages.get(coords), coords.x() * Constatns.TILE_WIDTH, coords.y() * Constatns.TILE_HEIGHT);
+        }
+    }
+
     GamePainter() {
         loadImages("images.properties", images);
+        loadImages("grass.properties", grassImages);
     }
-
-    public int getWidth() {
-        return width;
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
-    private void drawBackground(Field field) {
-        Random random = new Random();
-        for (int y = 0; y < height; ++y) {
-            for (int x = 0; x < width; ++x) {
-                Image image = images.get("Grass" + random.nextInt(countGrassSprites));
-                grassImages.put(new Coordinates(x, y), image);
-                graphicsContext.drawImage(image, tileSize * x, tileSize * y);
-            }
-        }
+    private void putToGrassCoords(Coordinates coords, Random random) {
+        Image image = grassImages.get("Grass" + random.nextInt(grassImages.size()));
+        grassCoordsImages.put(coords, image);
     }
 
     public void drawInitialField(Field field) {
-//        Random random = new Random();
-        drawBackground(field);
-        update(field);
-    }
-
-    public void update(Field field) {
-        for (int y = 0; y < height; ++y) {
-            for (int x = 0; x < width; ++x) {
+        Random random = new Random();
+        for (int y = 0; y < field.getHeight(); ++y) {
+            for (int x = 0; x < field.getWidth(); ++x) {
                 Coordinates coords = new Coordinates(x, y);
-                switch (field.getCell(coords)) {
-                    case FOOD -> graphicsContext.drawImage(images.get("Food"), tileSize * x, tileSize * y);
-                    case WALL -> graphicsContext.drawImage(images.get("Wall"), tileSize * x, tileSize * y);
-                    case SNAKE -> graphicsContext.drawImage(images.get("Snake"), tileSize * x, tileSize * y);
-                    case EMPTY -> graphicsContext.drawImage(grassImages.get(coords), tileSize * x, tileSize * y);
-                }
+                putToGrassCoords(coords, random);
+                drawByCoords(field, coords);
             }
         }
     }
 
-    @Override
-    public void handleEvent(Field field) {
-        update(field);
+    public void update(Field field, List<Coordinates> coordsToRedraw) {
+        for (Coordinates coords : coordsToRedraw) {
+            drawByCoords(field, coords);
+        }
+        coordsToRedraw.clear();
     }
 
-    private final int tileSize = 20;
-    private final int tilesX = 30;
-    private final int tilesY = 30;
-    private final int width = tilesX * tileSize;
-    private final int height = tilesY * tileSize;
-    private final Canvas canvas = new Canvas(width, height);
+    @Override
+    public void handleEvent(Field field, List<Coordinates> coordsToRedraw) {
+        update(field, coordsToRedraw);
+    }
+
+    private final Canvas canvas = new Canvas(Constatns.WINDOW_WIDTH, Constatns.WINDOW_HEIGHT);
     private final GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
     private final Map<String, Image> images = new HashMap<>();
-    private final Map<Coordinates, Image> grassImages = new HashMap<>();
-    private final int countGrassSprites = 6;
+    private final Map<String, Image> grassImages = new HashMap<>();
+    private final Map<Coordinates, Image> grassCoordsImages = new HashMap<>();
 }

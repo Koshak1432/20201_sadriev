@@ -10,9 +10,7 @@ public class Snake {
 
     public void growTo(Coordinates coords) {
         snakeParts.add(coords);
-//        System.out.println("Prev head: " + headCoords);
         headCoords = coords;
-//        System.out.println("new head: " + headCoords);
     }
 
     public void setDirection(Direction direction) {
@@ -25,8 +23,6 @@ public class Snake {
     }
 
     public Coordinates loseTail() {
-        System.out.println("LOSE AT" + snakeParts.getLast());
-
         return snakeParts.poll();
     }
 
