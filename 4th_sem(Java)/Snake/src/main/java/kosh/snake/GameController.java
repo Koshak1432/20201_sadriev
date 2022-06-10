@@ -18,11 +18,19 @@ public class GameController {
     private void keyControl() {
         stage.getScene().setOnKeyPressed(event -> {
             switch (event.getCode()) {
-                case W, UP -> engine.getSnake().setDirection(Direction.UP);
-                case A, LEFT -> engine.getSnake().setDirection(Direction.LEFT);
-                case S, DOWN -> engine.getSnake().setDirection(Direction.DOWN);
-                case D, RIGHT -> engine.getSnake().setDirection(Direction.RIGHT);
-//                case ESCAPE -> pause todo
+                case W, UP -> {
+                    engine.getSnake().setDirection(Direction.UP);
+                }
+                case A, LEFT -> {
+                    engine.getSnake().setDirection(Direction.LEFT);
+                }
+                case S, DOWN -> {
+                    engine.getSnake().setDirection(Direction.DOWN);
+                }
+                case D, RIGHT -> {
+                    engine.getSnake().setDirection(Direction.RIGHT);
+                }
+                case ESCAPE, SPACE -> paused = !paused;
             }
         });
     }
@@ -37,13 +45,16 @@ public class GameController {
         @Override
         public void handle(long now) {
             keyControl();
-            if (now - lastActivated > Constatns.TIMEOUT / engine.getSnake().getSpeed()) {
-                lastActivated = now;
-                scoreLabel.setText(String.valueOf(engine.getScore()));
-                if (!engine.makeStep()) {
-                    timer.stop();
-                    System.out.println("GAME OVER");
+            if (!paused) {
+                if (now - lastActivated > Constatns.TIMEOUT / engine.getSnake().getSpeed()) {
+                    engine.getSnake().updatePrevDirection();
+                    lastActivated = now;
+                    scoreLabel.setText(String.valueOf(engine.getScore()));
+                    if (!engine.makeStep()) {
+                        timer.stop();
+                        System.out.println("GAME OVER");
 //                    //gameover
+                    }
                 }
             }
         }
@@ -62,4 +73,5 @@ public class GameController {
     private static Stage stage;
     private final Label scoreLabel = new Label("Score: ");
     private long lastActivated = 0;
+    private boolean paused = false;
 }

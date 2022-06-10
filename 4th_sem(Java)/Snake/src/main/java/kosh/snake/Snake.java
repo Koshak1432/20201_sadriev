@@ -23,10 +23,12 @@ public class Snake {
         headCoords = coords;
     }
 
-    public void setDirection(Direction direction) {
-        if (oppositeDirections.get(direction) != this.direction) {
-            this.direction = direction;
+    public void setDirection(Direction newDirection) {
+        if (newDirection != oppositeDirections.get(direction) && previousDirection != oppositeDirections.get(newDirection)) {
+            previousDirection = this.direction;
+            direction = newDirection;
         }
+//        previousDirection = this.direction;
     }
 
     public Coordinates getHeadCoords() {
@@ -79,10 +81,14 @@ public class Snake {
     public void setSpeed(int speed) {
         this.speed = speed;
     }
+    public void updatePrevDirection() {
+        previousDirection = direction;
+    }
 
     private final ArrayDeque<Coordinates> snakeParts = new ArrayDeque<>();
     private final Map<Direction, Direction> oppositeDirections = new HashMap<>();
     private Coordinates headCoords;
     private int speed = 3;
     private Direction direction = Direction.RIGHT;
+    private Direction previousDirection = Direction.RIGHT;
 }

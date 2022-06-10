@@ -37,7 +37,6 @@ public class Engine implements Publisher{
             coordsToRedraw.add(field.setRandomFood());
             ++score;
             snake.setSpeed(snake.getSpeed() + 1);
-            System.out.println("SCORE: " + score);
         } else {
             Coordinates tail = snake.loseTail();
             coordsToRedraw.add(tail);
