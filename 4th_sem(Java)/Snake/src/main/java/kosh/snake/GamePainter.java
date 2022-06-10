@@ -4,8 +4,12 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -23,11 +27,12 @@ public class GamePainter implements Subscriber{
             e.printStackTrace();
         }
         Pane root = loader.getRoot();
+        VBox layout = new VBox(scoreLabel, canvas);
         primaryStage.setScene(new Scene(root));
         primaryStage.setWidth(Constatns.WINDOW_WIDTH + Constatns.TILE_WIDTH);
         primaryStage.setHeight(Constatns.WINDOW_HEIGHT + 2 * Constatns.TILE_HEIGHT);
         primaryStage.show();
-        root.getChildren().add(canvas);
+        root.getChildren().add(layout);
     }
 
     private void loadImages(String fileName, Map<String, Image> images) {
@@ -58,8 +63,7 @@ public class GamePainter implements Subscriber{
         loadImages("grass.properties", grassImages);
     }
     private void putToGrassCoords(Coordinates coords, Random random) {
-        Image image = grassImages.get("Grass" + random.nextInt(grassImages.size()));
-        grassCoordsImages.put(coords, image);
+        grassCoordsImages.put(coords, grassImages.get("Grass" + random.nextInt(grassImages.size())));
     }
 
     public void drawInitialField(Field field) {
@@ -73,16 +77,21 @@ public class GamePainter implements Subscriber{
         }
     }
 
-    public void update(Field field, List<Coordinates> coordsToRedraw) {
+    private void drawScore(int score) {
+        scoreLabel.setText("Score: " + score);
+    }
+
+    public void update(Field field, List<Coordinates> coordsToRedraw, int score) {
         for (Coordinates coords : coordsToRedraw) {
             drawByCoords(field, coords);
         }
+        drawScore(score);
         coordsToRedraw.clear();
     }
 
     @Override
-    public void handleEvent(Field field, List<Coordinates> coordsToRedraw) {
-        update(field, coordsToRedraw);
+    public void handleEvent(Field field, List<Coordinates> coordsToRedraw, int score) {
+        update(field, coordsToRedraw, score);
     }
 
     private final Canvas canvas = new Canvas(Constatns.WINDOW_WIDTH, Constatns.WINDOW_HEIGHT);
@@ -90,4 +99,5 @@ public class GamePainter implements Subscriber{
     private final Map<String, Image> images = new HashMap<>();
     private final Map<String, Image> grassImages = new HashMap<>();
     private final Map<Coordinates, Image> grassCoordsImages = new HashMap<>();
+    private final Label scoreLabel = new Label();
 }

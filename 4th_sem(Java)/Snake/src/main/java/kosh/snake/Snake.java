@@ -1,11 +1,21 @@
 package kosh.snake;
 
 import java.util.ArrayDeque;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Snake {
     public Snake(Coordinates headCoords) {
         this.headCoords = headCoords;
         snakeParts.add(headCoords);
+        fillOppositeDirections();
+    }
+
+    private void fillOppositeDirections() {
+        oppositeDirections.put(Direction.UP, Direction.DOWN);
+        oppositeDirections.put(Direction.DOWN, Direction.UP);
+        oppositeDirections.put(Direction.LEFT, Direction.RIGHT);
+        oppositeDirections.put(Direction.RIGHT, Direction.LEFT);
     }
 
     public void growTo(Coordinates coords) {
@@ -14,8 +24,9 @@ public class Snake {
     }
 
     public void setDirection(Direction direction) {
-        previousDirection = this.direction;
-        this.direction = direction;
+        if (oppositeDirections.get(direction) != this.direction) {
+            this.direction = direction;
+        }
     }
 
     public Coordinates getHeadCoords() {
@@ -30,71 +41,48 @@ public class Snake {
         Coordinates nextCoords = new Coordinates(currentCoords.x(), currentCoords.y());
         switch (direction) {
             case UP -> {
-                if (previousDirection != Direction.DOWN) {
-                    if (currentCoords.y() - 1 < 0) {
-                        nextCoords = new Coordinates(currentCoords.x(), height - 1);
-                    } else {
-                        nextCoords = new Coordinates(currentCoords.x(), currentCoords.y() - 1);
-                    }
+                if (currentCoords.y() - 1 < 0) {
+                    nextCoords = new Coordinates(currentCoords.x(), height - 1);
                 } else {
-                    if (currentCoords.y() + 1 > height - 1) {
-                        nextCoords = new Coordinates(currentCoords.x(), 0);
-                    } else {
-                        nextCoords = new Coordinates(currentCoords.x(), currentCoords.y() + 1);
-                    }
+                    nextCoords = new Coordinates(currentCoords.x(), currentCoords.y() - 1);
                 }
             }
             case DOWN -> {
-                if (previousDirection != Direction.UP) {
-                    if (currentCoords.y() + 1 > height - 1) {
-                        nextCoords = new Coordinates(currentCoords.x(), 0);
-                    } else {
-                        nextCoords = new Coordinates(currentCoords.x(), currentCoords.y() + 1);
-                    }
+                if (currentCoords.y() + 1 > height - 1) {
+                    nextCoords = new Coordinates(currentCoords.x(), 0);
                 } else {
-                    if (currentCoords.y() - 1 < 0) {
-                        nextCoords = new Coordinates(currentCoords.x(), height - 1);
-                    } else {
-                        nextCoords = new Coordinates(currentCoords.x(), currentCoords.y() - 1);
-                    }
+                    nextCoords = new Coordinates(currentCoords.x(), currentCoords.y() + 1);
                 }
             }
             case RIGHT -> {
-                if (previousDirection != Direction.LEFT) {
-                    if (currentCoords.x() + 1 > width - 1) {
-                        nextCoords = new Coordinates(0, currentCoords.y());
-                    } else {
-                        nextCoords = new Coordinates(currentCoords.x() + 1, currentCoords.y());
-                    }
+                if (currentCoords.x() + 1 > width - 1) {
+                    nextCoords = new Coordinates(0, currentCoords.y());
                 } else {
-                    if (currentCoords.x() - 1 < 0) {
-                        nextCoords =  new Coordinates(width - 1, currentCoords.y());
-                    } else {
-                        nextCoords = new Coordinates(currentCoords.x() - 1, currentCoords.y());
-                    }
+                    nextCoords = new Coordinates(currentCoords.x() + 1, currentCoords.y());
                 }
             }
             case LEFT -> {
-                if (previousDirection != Direction.RIGHT) {
-                    if (currentCoords.x() - 1 < 0) {
-                        nextCoords =  new Coordinates(width - 1, currentCoords.y());
-                    } else {
-                        nextCoords = new Coordinates(currentCoords.x() - 1, currentCoords.y());
-                    }
+                if (currentCoords.x() - 1 < 0) {
+                    nextCoords =  new Coordinates(width - 1, currentCoords.y());
                 } else {
-                    if (currentCoords.x() + 1 > width - 1) {
-                        nextCoords = new Coordinates(0, currentCoords.y());
-                    } else {
-                        nextCoords = new Coordinates(currentCoords.x() + 1, currentCoords.y());
-                    }
+                    nextCoords = new Coordinates(currentCoords.x() - 1, currentCoords.y());
                 }
             }
         }
         return nextCoords;
     }
 
+    public int getSpeed() {
+        return speed;
+    }
+
+    public void setSpeed(int speed) {
+        this.speed = speed;
+    }
+
     private final ArrayDeque<Coordinates> snakeParts = new ArrayDeque<>();
+    private final Map<Direction, Direction> oppositeDirections = new HashMap<>();
     private Coordinates headCoords;
+    private int speed = 3;
     private Direction direction = Direction.RIGHT;
-    private Direction previousDirection = Direction.DOWN;
 }

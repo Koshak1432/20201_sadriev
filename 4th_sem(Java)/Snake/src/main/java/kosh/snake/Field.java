@@ -38,7 +38,6 @@ public class Field {
     public void setWall(Coordinates coords) {
         field[coords.y()][coords.x()] = TileState.WALL;
         emptyCells.remove(coords);
-        wallCells.add(coords);
     }
 
     public TileState getCell(Coordinates coords) {
@@ -64,7 +63,6 @@ public class Field {
 
     private final TileState[][] field;
     private final ArrayList<Coordinates> emptyCells = new ArrayList<>();
-    private final ArrayList<Coordinates> wallCells = new ArrayList<>();
     private final int width = Constatns.TILES_NUM_X;
     private final int height = Constatns.TILES_NUM_Y;
     private final Random random = new Random();

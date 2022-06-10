@@ -1,8 +1,5 @@
 package kosh.snake;
 
-import javafx.beans.property.ObjectProperty;
-import javafx.collections.ArrayChangeListener;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,11 +10,17 @@ public class Engine implements Publisher{
         field.setSnake(startPos);
         addWalls(field);
         addFood(field);
-
     }
 
+    //todo
     public void addWalls(Field field) {
-        //todo
+        for (int y = 0; y < field.getHeight(); ++y) {
+            for (int x = 0; x < field.getWidth(); ++x) {
+                if (y == 4) {
+                    field.setWall(new Coordinates(x, y));
+                }
+            }
+        }
     }
     public void addFood(Field field) {
         int countOfFoodOnField = 5;
@@ -33,6 +36,7 @@ public class Engine implements Publisher{
         if (field.isFood(nextCoords)) {
             coordsToRedraw.add(field.setRandomFood());
             ++score;
+            snake.setSpeed(snake.getSpeed() + 1);
             System.out.println("SCORE: " + score);
         } else {
             Coordinates tail = snake.loseTail();
@@ -48,10 +52,6 @@ public class Engine implements Publisher{
         }
         notifySubscribers();
         return alive;
-    }
-
-    public boolean snakeIsAlive() {
-        return field.isValidPosition(snake.getHeadCoords());
     }
 
     public int getScore() {
@@ -78,13 +78,13 @@ public class Engine implements Publisher{
     @Override
     public void notifySubscribers() {
         for (Subscriber sub : subscribers) {
-            sub.handleEvent(field, coordsToRedraw);
+            sub.handleEvent(field, coordsToRedraw, score);
         }
     }
+
     private final Field field;
     private final Snake snake;
     private int score = 0;
-
     private final List<Subscriber> subscribers = new ArrayList<>();
     private final List<Coordinates> coordsToRedraw = new ArrayList<>();
 

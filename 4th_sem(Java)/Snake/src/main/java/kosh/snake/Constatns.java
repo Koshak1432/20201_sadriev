@@ -9,4 +9,6 @@ public class Constatns {
     public static final int WINDOW_WIDTH = TILES_NUM_X * TILE_WIDTH * SCALE;
     public static final int WINDOW_HEIGHT = TILES_NUM_Y * TILE_HEIGHT * SCALE;
 
+    public static final int TIMEOUT = 1000000000;
+
 }

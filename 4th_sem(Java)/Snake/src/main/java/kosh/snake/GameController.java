@@ -22,6 +22,7 @@ public class GameController {
                 case A, LEFT -> engine.getSnake().setDirection(Direction.LEFT);
                 case S, DOWN -> engine.getSnake().setDirection(Direction.DOWN);
                 case D, RIGHT -> engine.getSnake().setDirection(Direction.RIGHT);
+//                case ESCAPE -> pause todo
             }
         });
     }
@@ -36,7 +37,7 @@ public class GameController {
         @Override
         public void handle(long now) {
             keyControl();
-            if (now - lastActivated > timeout) {
+            if (now - lastActivated > Constatns.TIMEOUT / engine.getSnake().getSpeed()) {
                 lastActivated = now;
                 scoreLabel.setText(String.valueOf(engine.getScore()));
                 if (!engine.makeStep()) {
@@ -56,11 +57,9 @@ public class GameController {
         }
     }
 
-
     private final GamePainter painter = new GamePainter();
     private Engine engine;
     private static Stage stage;
-    private Label scoreLabel = new Label("Score: ");
+    private final Label scoreLabel = new Label("Score: ");
     private long lastActivated = 0;
-    private final int timeout = 200000000;
 }
