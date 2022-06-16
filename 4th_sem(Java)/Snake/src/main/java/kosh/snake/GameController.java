@@ -1,7 +1,6 @@
 package kosh.snake;
 
 import javafx.animation.AnimationTimer;
-import javafx.scene.control.Label;
 import javafx.stage.Stage;
 
 public class GameController {
@@ -46,13 +45,16 @@ public class GameController {
         public void handle(long now) {
             keyControl();
             if (!paused) {
-                if (now - lastActivated > Constatns.TIMEOUT / engine.getSnake().getSpeed()) {
+                if (now - lastTick > Constants.TIMEOUT / engine.getSnake().getSpeed()) {
                     engine.getSnake().updatePrevDirection();
-                    lastActivated = now;
-                    scoreLabel.setText(String.valueOf(engine.getScore()));
+                    lastTick = now;
                     if (!engine.makeStep()) {
                         timer.stop();
                         System.out.println("GAME OVER");
+                        GameOverController overController = new GameOverController();
+                        overController.start(stage, engine.getScore());
+                        //fill score table(output to file)
+                        //restart
 //                    //gameover
                     }
                 }
@@ -71,7 +73,6 @@ public class GameController {
     private final GamePainter painter = new GamePainter();
     private Engine engine;
     private static Stage stage;
-    private final Label scoreLabel = new Label("Score: ");
-    private long lastActivated = 0;
+    private long lastTick = 0;
     private boolean paused = false;
 }

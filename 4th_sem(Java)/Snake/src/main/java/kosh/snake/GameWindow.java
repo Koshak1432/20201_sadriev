@@ -1,36 +1,30 @@
 package kosh.snake;
 
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-public class GamePainter implements Subscriber{
+public class GameWindow implements Subscriber{
+    public GameWindow() {
+//        gameStage.setScene(gameScene);
+        loadImages("images.properties", images);
+        loadImages("grass.properties", grassImages);
+    }
 
-    public void start(Stage primaryStage) {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("GameWindow.fxml"));
-        try {
-            loader.load();
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        Pane root = loader.getRoot();
-        VBox layout = new VBox(scoreLabel, canvas);
-        primaryStage.setScene(new Scene(root));
-        primaryStage.setWidth(Constants.WINDOW_WIDTH + Constants.TILE_WIDTH);
-        primaryStage.setHeight(Constants.WINDOW_HEIGHT + 2 * Constants.TILE_HEIGHT);
-        primaryStage.show();
-        root.getChildren().add(layout);
+    public void createNewGame(Stage menuStage) {
+//        this.menuStage = menuStage;
+//        this.menuStage.hide();
+        gameStage = MainWindow.getMenuStage();
+        gameStage.setScene(gameScene);
+        gameStage.show();
     }
 
     private void loadImages(String fileName, Map<String, Image> images) {
@@ -56,10 +50,6 @@ public class GamePainter implements Subscriber{
         }
     }
 
-    GamePainter() {
-        loadImages("images.properties", images);
-        loadImages("grass.properties", grassImages);
-    }
     private void putToGrassCoords(Coordinates coords, Random random) {
         grassCoordsImages.put(coords, grassImages.get("Grass" + random.nextInt(grassImages.size())));
     }
@@ -92,10 +82,15 @@ public class GamePainter implements Subscriber{
         update(field, coordsToRedraw, score);
     }
 
+    private GameController gameController;
     private final Canvas canvas = new Canvas(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
     private final GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
     private final Map<String, Image> images = new HashMap<>();
     private final Map<String, Image> grassImages = new HashMap<>();
     private final Map<Coordinates, Image> grassCoordsImages = new HashMap<>();
     private final Label scoreLabel = new Label();
+    private Pane gamePane = new Pane();
+    private Stage gameStage;
+    private Scene gameScene = new Scene(gamePane, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
+    private Stage menuStage;
 }

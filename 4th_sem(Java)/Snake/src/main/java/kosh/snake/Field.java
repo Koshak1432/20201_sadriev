@@ -63,7 +63,7 @@ public class Field {
 
     private final TileState[][] field;
     private final ArrayList<Coordinates> emptyCells = new ArrayList<>();
-    private final int width = Constatns.TILES_NUM_X;
-    private final int height = Constatns.TILES_NUM_Y;
+    private final int width = Constants.TILES_NUM_X;
+    private final int height = Constants.TILES_NUM_Y;
     private final Random random = new Random();
 }

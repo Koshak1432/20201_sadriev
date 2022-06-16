@@ -1,0 +1,8 @@
+.button {
+    -fx-background-color: #885257;
+    -fx-background-image: url("kosh/snake/freeButton.png");
+}
+
+.button:pressed {
+    -fx-background-image: url("kosh/snake/pressedButton.png");
+}
