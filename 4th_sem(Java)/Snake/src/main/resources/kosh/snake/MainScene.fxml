@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.text.Font?>
 
-<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kosh.snake.MainWindow">
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kosh.snake.MainMenuWindow">
    <children>
       <Button fx:id="startButton" alignment="CENTER" layoutX="257.0" layoutY="186.0" mnemonicParsing="false" prefHeight="43.0" prefWidth="146.0" stylesheets="@stylesheets/button.css" text="Start" textAlignment="CENTER" />
       <Button fx:id="recordsButton" layoutX="300.0" layoutY="250.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="60.0" text="Records" />

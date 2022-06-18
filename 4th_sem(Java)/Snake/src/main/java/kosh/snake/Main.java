@@ -12,7 +12,7 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) {
         try {
-            MainWindow view = new MainWindow();
+            MainMenuWindow view = new MainMenuWindow();
             primaryStage = view.getMenuStage();
             primaryStage.show();
         } catch (Exception e) {

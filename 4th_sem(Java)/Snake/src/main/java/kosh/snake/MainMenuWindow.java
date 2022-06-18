@@ -12,21 +12,23 @@ import javafx.stage.Stage;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MainWindow {
+public class MainMenuWindow {
 
-    public MainWindow() {
+    public MainMenuWindow() {
         menuStage.setTitle("Snake");
         menuStage.setScene(menuScene);
-        createBackground();
+        createBackground(Constants.MAIN_MENU_BACK);
         createButtons();
         controlButtons();
     }
 
     private void controlButtons() {
         menuButtons.get("start").setOnAction(event -> {
-//            LevelsWindow levelsWindow = new LevelsWindow();
-            GameWindow gameWindow = new GameWindow();
-            gameWindow.createNewGame(menuStage);
+            LevelsWindow levelsWindow = new LevelsWindow();
+            levelsWindow.showLevelsStage(menuStage);
+
+//            GameWindow gameWindow = new GameWindow();
+//            gameWindow.createNewGame(menuStage);
 
         });
 
@@ -39,11 +41,8 @@ public class MainWindow {
         menuButtons.get("exit").setOnAction(event -> menuStage.close());
     }
 
-    private void createBackground() {
-        Image image = new Image(getClass().getResource("snakeBack.jpg").toString(), Constants.WINDOW_WIDTH,
-                                Constants.WINDOW_HEIGHT, false, true);
-        BackgroundImage backImage = new BackgroundImage(image, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, null, null);
-        menuPane.setBackground(new Background(backImage));
+    private void createBackground(String backName) {
+        menuPane.setBackground(new Background(Util.createBackImage(backName)));
     }
 
     public static Stage getMenuStage() {
@@ -96,16 +95,8 @@ public class MainWindow {
         addButtonToMenu("exit", exitButton);
     }
 
-//    @FXML
-//    private Button exitButton;
-//    @FXML
-//    private Button recordsButton;
-//    @FXML
-//    private Button startButton;
-
     private Pane menuPane = new Pane();
     private Scene menuScene = new Scene(menuPane, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
     private static final Stage menuStage = new Stage();
     private Map<String, Button> menuButtons = new HashMap<>();
-
 }

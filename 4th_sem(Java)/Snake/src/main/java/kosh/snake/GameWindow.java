@@ -1,30 +1,32 @@
 package kosh.snake;
 
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-public class GameWindow implements Subscriber{
+public class GameWindow implements Subscriber {
     public GameWindow() {
-//        gameStage.setScene(gameScene);
         loadImages("images.properties", images);
         loadImages("grass.properties", grassImages);
+        VBox layout = new VBox(scoreLabel, canvas);
+        gameScene = new Scene(gamePane, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT + Constants.HEIGHT_OFFSET_GAME_WINDOW);
+        gamePane.getChildren().add(layout);
     }
 
-    public void createNewGame(Stage menuStage) {
-//        this.menuStage = menuStage;
-//        this.menuStage.hide();
-        gameStage = MainWindow.getMenuStage();
-        gameStage.setScene(gameScene);
-        gameStage.show();
+    public void showGame(Stage menuStage) {
+        menuStage.setScene(gameScene);
+        menuStage.show();
+        System.out.println("SHOWN game stage");
     }
 
     private void loadImages(String fileName, Map<String, Image> images) {
@@ -82,15 +84,14 @@ public class GameWindow implements Subscriber{
         update(field, coordsToRedraw, score);
     }
 
-    private GameController gameController;
     private final Canvas canvas = new Canvas(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
     private final GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
     private final Map<String, Image> images = new HashMap<>();
     private final Map<String, Image> grassImages = new HashMap<>();
     private final Map<Coordinates, Image> grassCoordsImages = new HashMap<>();
+//    VBox layout = new VBox(scoreLabel, canvas);
+
     private final Label scoreLabel = new Label();
-    private Pane gamePane = new Pane();
-    private Stage gameStage;
-    private Scene gameScene = new Scene(gamePane, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
-    private Stage menuStage;
+    private final Pane gamePane = new Pane();
+    private final Scene gameScene;
 }

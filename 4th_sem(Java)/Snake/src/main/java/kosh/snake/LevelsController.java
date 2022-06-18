@@ -23,12 +23,12 @@ public class LevelsController {
         backButton.setOnAction(event -> Util.changeStage("MainScene.fxml", stage));
         level1Button.setOnAction(event -> {
 //            gameController.loadLevel(1);
-            gameController.start(stage, 1);
+            gameController.startGame(stage, 1);
         });
 
         level2Button.setOnAction(event -> {
 //            gameController.loadLevel(1); //2
-            gameController.start(stage, 2);
+            gameController.startGame(stage, 2);
         });
     }
 

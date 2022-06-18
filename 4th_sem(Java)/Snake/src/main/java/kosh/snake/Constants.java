@@ -14,4 +14,9 @@ public class Constants {
     public static final int MENU_START_X = 50;
     public static final int MENU_START_Y = 100;
     public static final int MENU_BUTTONS_OFFSET = 80;
+    public static final int HEIGHT_OFFSET_GAME_WINDOW = 17; //height of score label in vbox
+
+
+    public static final String MAIN_MENU_BACK = "snakeBack.jpg";
+    public static final String LEVELS_MENU_BACK = "snakeGreenBack.jpg";
 }

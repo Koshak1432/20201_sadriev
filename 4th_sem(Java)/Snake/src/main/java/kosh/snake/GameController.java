@@ -5,12 +5,12 @@ import javafx.stage.Stage;
 
 public class GameController {
 
-    public void start(Stage primaryStage, int levelNum) {
+    public void startGame(Stage primaryStage, int levelNum) {
         stage = primaryStage;
-        engine = new Engine(new Coordinates(5,1));
-        engine.addSubscriber(painter);
-        painter.drawInitialField(engine.getField());
-        painter.start(stage);
+        loadLevel(levelNum);
+        engine.addSubscriber(gameView);
+        gameView.drawInitialField(engine.getField());
+        gameView.showGame(stage);
         timer.start();
     }
 
@@ -34,7 +34,7 @@ public class GameController {
         });
     }
 
-    public void loadLevel(int levelNum) {
+    private void loadLevel(int levelNum) {
         engine = new Engine(new Coordinates(5,1));
 //        engine.loadField("/level" + levelNum + ".txt");
 
@@ -51,8 +51,9 @@ public class GameController {
                     if (!engine.makeStep()) {
                         timer.stop();
                         System.out.println("GAME OVER");
-                        GameOverController overController = new GameOverController();
-                        overController.start(stage, engine.getScore());
+                        MainMenuWindow menuWindow = new MainMenuWindow();
+//                        GameOverController overController = new GameOverController();
+//                        overController.start(stage, engine.getScore());
                         //fill score table(output to file)
                         //restart
 //                    //gameover
@@ -70,7 +71,8 @@ public class GameController {
         }
     }
 
-    private final GamePainter painter = new GamePainter();
+//    private final GamePainter painter = new GamePainter();
+    private final GameWindow gameView = new GameWindow();
     private Engine engine;
     private static Stage stage;
     private long lastTick = 0;
