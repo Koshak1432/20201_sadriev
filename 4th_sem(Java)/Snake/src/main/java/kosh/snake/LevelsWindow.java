@@ -23,7 +23,7 @@ public class LevelsWindow {
         });
 
         buttons.get("level2").setOnAction(event -> {
-
+            gameController.startGame(levelsStage, 2);
         });
 
         buttons.get("back").setOnAction(event -> {
@@ -36,8 +36,8 @@ public class LevelsWindow {
     }
 
     private void addButtonToMenu(String name, Button button) {
-        button.setLayoutX(Constants.MENU_START_X);
-        button.setLayoutY(Constants.MENU_START_Y + buttons.size() * Constants.MENU_BUTTONS_OFFSET);
+        button.setLayoutX(Constants.MENU_BUTTONS_START_X);
+        button.setLayoutY(Constants.MENU_BUTTONS_START_Y + buttons.size() * Constants.MENU_BUTTONS_OFFSET);
         buttons.put(name, button);
         levelsPane.getChildren().add(button);
     }
@@ -61,5 +61,5 @@ public class LevelsWindow {
     private final Map<String, Button> buttons = new HashMap<>();
     private final Pane levelsPane = new Pane();
     private Stage levelsStage;
-    private final Scene levelsScene = new Scene(levelsPane, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
+    private final Scene levelsScene = new Scene(levelsPane, Constants.INIT_WINDOW_WIDTH, Constants.INIT_WINDOW_HEIGHT);
 }

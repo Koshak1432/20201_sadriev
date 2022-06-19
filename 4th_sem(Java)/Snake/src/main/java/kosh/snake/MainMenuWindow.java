@@ -13,7 +13,7 @@ public class MainMenuWindow {
 
     public MainMenuWindow() {
         menuStage.setTitle("Snake");
-        Scene menuScene = new Scene(menuPane, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
+        Scene menuScene = new Scene(menuPane, Constants.INIT_WINDOW_WIDTH, Constants.INIT_WINDOW_HEIGHT);
         menuStage.setScene(menuScene);
         createBackground(Constants.MAIN_MENU_BACK);
         createButtons();
@@ -24,10 +24,6 @@ public class MainMenuWindow {
         menuButtons.get("start").setOnAction(event -> {
             LevelsWindow levelsWindow = new LevelsWindow();
             levelsWindow.showLevelsStage(menuStage);
-
-//            GameWindow gameWindow = new GameWindow();
-//            gameWindow.createNewGame(menuStage);
-
         });
 
         menuButtons.get("records").setOnAction(event -> {
@@ -48,8 +44,8 @@ public class MainMenuWindow {
     }
 
     private void addButtonToMenu(String name, Button button) {
-        button.setLayoutX(Constants.MENU_START_X);
-        button.setLayoutY(Constants.MENU_START_Y + menuButtons.size() * Constants.MENU_BUTTONS_OFFSET);
+        button.setLayoutX(Constants.MENU_BUTTONS_START_X);
+        button.setLayoutY(Constants.MENU_BUTTONS_START_Y + menuButtons.size() * Constants.MENU_BUTTONS_OFFSET);
         menuButtons.put(name, button);
         menuPane.getChildren().add(button);
     }

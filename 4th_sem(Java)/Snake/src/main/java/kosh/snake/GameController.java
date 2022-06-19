@@ -1,13 +1,22 @@
 package kosh.snake;
 
 import javafx.animation.AnimationTimer;
+import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 
 public class GameController {
 
     public void startGame(Stage primaryStage, int levelNum) {
         stage = primaryStage;
-        loadLevel(levelNum);
+        if (!loadLevel(levelNum)) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setHeaderText("Can't load level" + levelNum);
+            alert.setContentText("Check levels files");
+            alert.showAndWait();
+            MainMenuWindow mainMenuWindow = new MainMenuWindow();
+            return;
+        }
+        gameView = new GameWindow(engine.getField().getWidth(), engine.getField().getHeight());
         engine.addSubscriber(gameView);
         gameView.drawInitialField(engine.getField());
         gameView.showGame(stage);
@@ -34,10 +43,12 @@ public class GameController {
         });
     }
 
-    private void loadLevel(int levelNum) {
-        engine = new Engine(new Coordinates(5,1));
-//        engine.loadField("/level" + levelNum + ".txt");
-
+    private boolean loadLevel(int levelNum) {
+        if (!engine.loadField("level" + levelNum + ".txt")) {
+            System.err.println("Can't load field, check levels files");
+            return false;
+        }
+        return true;
     }
 
     private final AnimationTimer timer = new AnimationTimer() {
@@ -50,32 +61,17 @@ public class GameController {
                     lastTick = now;
                     if (!engine.makeStep()) {
                         timer.stop();
-                        System.out.println("GAME OVER");
                         GameOverWindow gameOverWindow = new GameOverWindow();
                         gameOverWindow.showGameOver(stage, engine.getScore());
-//                        MainMenuWindow menuWindow = new MainMenuWindow();
-//                        GameOverController overController = new GameOverController();
-//                        overController.start(stage, engine.getScore());
                         //fill score table(output to file)
-                        //restart
-//                    //gameover
                     }
                 }
             }
         }
     };
 
-    public void setTimer(boolean run) {
-        if (run) {
-            timer.start();
-        } else {
-            timer.stop();
-        }
-    }
-
-//    private final GamePainter painter = new GamePainter();
-    private final GameWindow gameView = new GameWindow();
-    private Engine engine;
+    private GameWindow gameView;
+    private final Engine engine = new Engine();
     private static Stage stage;
     private long lastTick = 0;
     private boolean paused = false;

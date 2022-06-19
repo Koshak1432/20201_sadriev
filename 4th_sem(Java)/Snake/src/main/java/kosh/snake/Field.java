@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.Random;
 
 public class Field {
-    public Field() {
+    public Field(int width, int height) {
+        this.width = width;
+        this.height = height;
         field = new TileState[height][width];
 
         for (int y = 0; y < height; ++y) {
@@ -63,7 +65,7 @@ public class Field {
 
     private final TileState[][] field;
     private final ArrayList<Coordinates> emptyCells = new ArrayList<>();
-    private final int width = Constants.TILES_NUM_X;
-    private final int height = Constants.TILES_NUM_Y;
+    private final int width;
+    private final int height;
     private final Random random = new Random();
 }

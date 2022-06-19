@@ -15,23 +15,28 @@ import java.io.InputStream;
 import java.util.*;
 
 public class GameWindow implements Subscriber {
-    public GameWindow() {
+    public GameWindow(int fieldWidth, int fieldHeight) {
         loadImages("images.properties", images);
         loadImages("grass.properties", grassImages);
-        initWindow();
+        int windowWidth = fieldWidth * Constants.TILE_WIDTH;
+        int windowHeight = fieldHeight * Constants.TILE_HEIGHT;
+        initWindow(windowWidth, windowHeight);
     }
 
-    private void initWindow() {
+    private void initWindow(int windowWidth, int windowHeight) {
         scoreLabel = new Label();
         scoreLabel.setFont(new Font(Constants.LABEL_FONT_FAMILY, Constants.LABEL_FONT_SIZE));
+        Canvas canvas = new Canvas(windowWidth, windowHeight);
+        graphicsContext = canvas.getGraphicsContext2D();
         VBox layout = new VBox(scoreLabel, canvas);
         Pane gamePane = new Pane();
-        gameScene = new Scene(gamePane, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT + Constants.HEIGHT_OFFSET_GAME_WINDOW);
+        gameScene = new Scene(gamePane, windowWidth, windowHeight + Constants.HEIGHT_OFFSET_GAME_WINDOW);
         gamePane.getChildren().add(layout);
     }
 
     public void showGame(Stage menuStage) {
         menuStage.setScene(gameScene);
+        menuStage.setResizable(false);
         menuStage.show();
     }
 
@@ -90,8 +95,7 @@ public class GameWindow implements Subscriber {
         update(field, coordsToRedraw, score);
     }
 
-    private final Canvas canvas = new Canvas(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
-    private final GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
+    private GraphicsContext graphicsContext;
     private final Map<String, Image> images = new HashMap<>();
     private final Map<String, Image> grassImages = new HashMap<>();
     private final Map<Coordinates, Image> grassCoordsImages = new HashMap<>();

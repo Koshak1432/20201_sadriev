@@ -13,7 +13,7 @@ public class Main extends Application {
     public void start(Stage primaryStage) {
         try {
             MainMenuWindow view = new MainMenuWindow();
-            primaryStage = view.getMenuStage();
+            primaryStage = MainMenuWindow.getMenuStage();
             primaryStage.show();
         } catch (Exception e) {
             e.printStackTrace();

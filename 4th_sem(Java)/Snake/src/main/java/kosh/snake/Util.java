@@ -9,7 +9,6 @@ import javafx.scene.layout.BackgroundRepeat;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 public class Util {
     public static void changeStage(String sceneName, Stage stage) {
@@ -26,8 +25,8 @@ public class Util {
     }
 
     public static BackgroundImage createBackImage(String backName) {
-        Image image = new Image(Util.class.getResource(backName).toString(), Constants.WINDOW_WIDTH,
-                                Constants.WINDOW_HEIGHT, false, true);
+        Image image = new Image(Util.class.getResource(backName).toString(), Constants.INIT_WINDOW_WIDTH,
+                                Constants.INIT_WINDOW_HEIGHT, false, true);
         return new BackgroundImage(image, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, null, null);
     }
 }

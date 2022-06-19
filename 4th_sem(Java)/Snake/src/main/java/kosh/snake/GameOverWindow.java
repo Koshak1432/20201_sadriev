@@ -22,14 +22,14 @@ public class GameOverWindow {
     private void initScoreLabel() {
         scoreLabel = new Label();
         scoreLabel.setFont(new Font(Constants.LABEL_FONT_FAMILY, Constants.LABEL_FONT_SIZE));
-        scoreLabel.setLayoutX(Constants.MENU_START_X);
-        scoreLabel.setLayoutY(Constants.MENU_START_Y / 2.);
+        scoreLabel.setLayoutX(Constants.MENU_BUTTONS_START_X);
+        scoreLabel.setLayoutY(Constants.MENU_BUTTONS_START_Y / 2.);
         gameOverPane.getChildren().add(scoreLabel);
     }
 
     public void showGameOver(Stage stage, int score) {
         scoreLabel.setText("Your score: " + score);
-        stage.setScene(gameOverScene);
+        stage.setScene(new Scene(gameOverPane, Constants.INIT_WINDOW_WIDTH, Constants.INIT_WINDOW_HEIGHT));
         stage.show();
     }
 
@@ -45,8 +45,8 @@ public class GameOverWindow {
     }
 
     private void addButtonToMenu(String name, Button button) {
-        button.setLayoutX(Constants.MENU_START_X);
-        button.setLayoutY(Constants.MENU_START_Y + buttons.size() * Constants.MENU_BUTTONS_OFFSET);
+        button.setLayoutX(Constants.MENU_BUTTONS_START_X);
+        button.setLayoutY(Constants.MENU_BUTTONS_START_Y + buttons.size() * Constants.MENU_BUTTONS_OFFSET);
         buttons.put(name, button);
         gameOverPane.getChildren().add(button);
     }
@@ -60,5 +60,4 @@ public class GameOverWindow {
     private final Map<String, Button> buttons = new HashMap<>();
     private final Pane gameOverPane = new Pane();
     private Label scoreLabel;
-    private final Scene gameOverScene = new Scene(gameOverPane, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
 }
