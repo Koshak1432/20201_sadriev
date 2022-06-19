@@ -2,10 +2,7 @@ package kosh.snake;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.image.Image;
 import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundImage;
-import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
@@ -16,6 +13,7 @@ public class MainMenuWindow {
 
     public MainMenuWindow() {
         menuStage.setTitle("Snake");
+        Scene menuScene = new Scene(menuPane, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
         menuStage.setScene(menuScene);
         createBackground(Constants.MAIN_MENU_BACK);
         createButtons();
@@ -49,36 +47,6 @@ public class MainMenuWindow {
         return menuStage;
     }
 
-//    @Override
-//    public void start(Stage primaryStage) throws IOException {
-//        stage = primaryStage;
-//        stage.setTitle("Snake");
-//        FXMLLoader loader = new FXMLLoader(Util.class.getResource("MainScene.fxml"));
-//        try {
-//            loader.load();
-//        }
-//        catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        Pane root = (Pane) loader.getRoot();
-//        Image backgroundImage = new Image(getClass().getResource("snakeBack.jpg").toString(), Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT, true, false);
-//        BackgroundImage background = new BackgroundImage(backgroundImage, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT,
-//                                                         null, null);
-//        root.setBackground(new Background(background));
-//        stage.setScene(new Scene(root));
-//        stage.show();
-////        Util.changeStage("MainScene.fxml", stage);
-//    }
-
-//    @FXML
-//    void initialize() {
-//        startButton.setOnAction(event -> {
-//            LevelsController levelsController = new LevelsController();
-//            levelsController.start(stage);
-//        });
-//        recordsButton.setOnAction(event -> Util.changeStage("RecordsScene.fxml", stage));
-//        exitButton.setOnAction(event -> stage.close());
-//    }
     private void addButtonToMenu(String name, Button button) {
         button.setLayoutX(Constants.MENU_START_X);
         button.setLayoutY(Constants.MENU_START_Y + menuButtons.size() * Constants.MENU_BUTTONS_OFFSET);
@@ -95,8 +63,7 @@ public class MainMenuWindow {
         addButtonToMenu("exit", exitButton);
     }
 
-    private Pane menuPane = new Pane();
-    private Scene menuScene = new Scene(menuPane, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
+    private final Pane menuPane = new Pane();
     private static final Stage menuStage = new Stage();
-    private Map<String, Button> menuButtons = new HashMap<>();
+    private final Map<String, Button> menuButtons = new HashMap<>();
 }

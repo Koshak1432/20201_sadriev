@@ -12,7 +12,6 @@ import java.util.Map;
 public class LevelsWindow {
 
     public LevelsWindow() {
-        levelsStage.setScene(levelsScene);
         createBackground(Constants.LEVELS_MENU_BACK);
         createButtons();
         controlButtons();
@@ -61,6 +60,6 @@ public class LevelsWindow {
     GameController gameController = new GameController();
     private final Map<String, Button> buttons = new HashMap<>();
     private final Pane levelsPane = new Pane();
-    private Stage levelsStage = new Stage();
+    private Stage levelsStage;
     private final Scene levelsScene = new Scene(levelsPane, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
 }

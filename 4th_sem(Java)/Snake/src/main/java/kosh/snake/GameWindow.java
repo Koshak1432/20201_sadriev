@@ -1,6 +1,5 @@
 package kosh.snake;
 
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -8,6 +7,7 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -18,7 +18,14 @@ public class GameWindow implements Subscriber {
     public GameWindow() {
         loadImages("images.properties", images);
         loadImages("grass.properties", grassImages);
+        initWindow();
+    }
+
+    private void initWindow() {
+        scoreLabel = new Label();
+        scoreLabel.setFont(new Font(Constants.LABEL_FONT_FAMILY, Constants.LABEL_FONT_SIZE));
         VBox layout = new VBox(scoreLabel, canvas);
+        Pane gamePane = new Pane();
         gameScene = new Scene(gamePane, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT + Constants.HEIGHT_OFFSET_GAME_WINDOW);
         gamePane.getChildren().add(layout);
     }
@@ -26,7 +33,6 @@ public class GameWindow implements Subscriber {
     public void showGame(Stage menuStage) {
         menuStage.setScene(gameScene);
         menuStage.show();
-        System.out.println("SHOWN game stage");
     }
 
     private void loadImages(String fileName, Map<String, Image> images) {
@@ -89,9 +95,6 @@ public class GameWindow implements Subscriber {
     private final Map<String, Image> images = new HashMap<>();
     private final Map<String, Image> grassImages = new HashMap<>();
     private final Map<Coordinates, Image> grassCoordsImages = new HashMap<>();
-//    VBox layout = new VBox(scoreLabel, canvas);
-
-    private final Label scoreLabel = new Label();
-    private final Pane gamePane = new Pane();
-    private final Scene gameScene;
+    private Label scoreLabel;
+    private Scene gameScene;
 }

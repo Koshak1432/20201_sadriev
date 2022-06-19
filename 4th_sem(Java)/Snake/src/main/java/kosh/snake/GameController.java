@@ -51,7 +51,9 @@ public class GameController {
                     if (!engine.makeStep()) {
                         timer.stop();
                         System.out.println("GAME OVER");
-                        MainMenuWindow menuWindow = new MainMenuWindow();
+                        GameOverWindow gameOverWindow = new GameOverWindow();
+                        gameOverWindow.showGameOver(stage, engine.getScore());
+//                        MainMenuWindow menuWindow = new MainMenuWindow();
 //                        GameOverController overController = new GameOverController();
 //                        overController.start(stage, engine.getScore());
                         //fill score table(output to file)
