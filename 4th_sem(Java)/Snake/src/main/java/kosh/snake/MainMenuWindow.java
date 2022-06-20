@@ -15,7 +15,7 @@ public class MainMenuWindow {
         menuStage.setTitle("Snake");
         Scene menuScene = new Scene(menuPane, Constants.INIT_WINDOW_WIDTH, Constants.INIT_WINDOW_HEIGHT);
         menuStage.setScene(menuScene);
-        createBackground(Constants.MAIN_MENU_BACK);
+        Util.setBackground(Constants.MAIN_MENU_BACK, menuPane);
         createButtons();
         controlButtons();
     }
@@ -27,36 +27,24 @@ public class MainMenuWindow {
         });
 
         menuButtons.get("records").setOnAction(event -> {
-            //todo
-//            RecordsWindow recordsWindow = new RecordsWindow();
-//            recordsWindow.showRecords();
+            RecordsWindow recordsWindow = new RecordsWindow();
+            recordsWindow.showRecordsWindow(menuStage);
         });
 
         menuButtons.get("exit").setOnAction(event -> menuStage.close());
-    }
-
-    private void createBackground(String backName) {
-        menuPane.setBackground(new Background(Util.createBackImage(backName)));
     }
 
     public static Stage getMenuStage() {
         return menuStage;
     }
 
-    private void addButtonToMenu(String name, Button button) {
-        button.setLayoutX(Constants.MENU_BUTTONS_START_X);
-        button.setLayoutY(Constants.MENU_BUTTONS_START_Y + menuButtons.size() * Constants.MENU_BUTTONS_OFFSET);
-        menuButtons.put(name, button);
-        menuPane.getChildren().add(button);
-    }
-
     private void createButtons() {
         SnakeButton startButton = new SnakeButton("Start");
         SnakeButton recordsButton = new SnakeButton("Records");
         SnakeButton exitButton = new SnakeButton("Exit");
-        addButtonToMenu("start", startButton);
-        addButtonToMenu("records", recordsButton);
-        addButtonToMenu("exit", exitButton);
+        Util.addButtonToMenu("start", startButton, menuPane, menuButtons);
+        Util.addButtonToMenu("records", recordsButton, menuPane, menuButtons);
+        Util.addButtonToMenu("exit", exitButton, menuPane, menuButtons);
     }
 
     private final Pane menuPane = new Pane();

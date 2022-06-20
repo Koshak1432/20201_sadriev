@@ -99,8 +99,11 @@ public class Engine implements Publisher {
                     case 's' -> {
                         if (snake == null) {
                             snake = new Snake(coords);
+                            field.setSnake(coords);
+                        } else {
+                            System.err.println("Invalid fileInfo: several snake coordinates, only 1 coordinate is for snake head");
+                            return false;
                         }
-                        field.setSnake(coords);
                     }
                     case 'g' -> field.setEmpty(coords);
                     case 'f' -> field.setFood(coords);

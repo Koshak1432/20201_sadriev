@@ -2,7 +2,6 @@ package kosh.snake;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
@@ -12,7 +11,7 @@ import java.util.Map;
 public class LevelsWindow {
 
     public LevelsWindow() {
-        createBackground(Constants.LEVELS_MENU_BACK);
+        Util.setBackground(Constants.LEVELS_MENU_BACK, levelsPane);
         createButtons();
         controlButtons();
     }
@@ -29,10 +28,6 @@ public class LevelsWindow {
         buttons.get("back").setOnAction(event -> {
             MainMenuWindow mainWindow = new MainMenuWindow();
         });
-    }
-
-    private void createBackground(String backName) {
-        levelsPane.setBackground(new Background(Util.createBackImage(backName)));
     }
 
     private void addButtonToMenu(String name, Button button) {
