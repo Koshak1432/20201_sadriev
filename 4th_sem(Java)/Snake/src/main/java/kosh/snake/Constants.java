@@ -17,4 +17,9 @@ public class Constants {
     public static final String GAME_OVER_MENU_BACK = "gameOverBack.jpg";
     public static final String RECORDS_MENU_BACK = "recordsBack.jpg";
     public static final int NUM_RECORDS = 3;
+    public static final String RECORDS_DELIMITER = ":";
+    public static final String ABS_PATH_TO_RESOURCES = "C:\\Users\\sadri\\20201_sadriev\\4th_sem(Java)" +
+            "\\Snake\\src\\main\\resources\\kosh\\snake\\";
+
+    public static final int NUM_LEVELS = 2;
 }

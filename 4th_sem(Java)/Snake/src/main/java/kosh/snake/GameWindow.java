@@ -45,8 +45,9 @@ public class GameWindow implements Subscriber {
         try (InputStream in = getClass().getResourceAsStream(fileName)) {
             properties.load(in);
             for (var entry : properties.entrySet()) {
-                images.put(entry.getKey().toString(), new Image(getClass().getResource((String) entry.getValue()).toString(), Constants.TILE_WIDTH,
-                                                                Constants.TILE_HEIGHT, false, false));
+                images.put(entry.getKey().toString(), new Image(
+                        Objects.requireNonNull(getClass().getResource((String) entry.getValue())).toString(), Constants.TILE_WIDTH,
+                        Constants.TILE_HEIGHT, false, false));
             }
         }
         catch (IOException e) {

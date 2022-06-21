@@ -17,13 +17,9 @@ public class LevelsWindow {
     }
 
     private void controlButtons() {
-        buttons.get("level1").setOnAction(event -> {
-            gameController.startGame(levelsStage, 1);
-        });
+        buttons.get("level1").setOnAction(event -> gameController.startGame(levelsStage, 1));
 
-        buttons.get("level2").setOnAction(event -> {
-            gameController.startGame(levelsStage, 2);
-        });
+        buttons.get("level2").setOnAction(event -> gameController.startGame(levelsStage, 2));
 
         buttons.get("back").setOnAction(event -> {
             MainMenuWindow mainWindow = new MainMenuWindow();

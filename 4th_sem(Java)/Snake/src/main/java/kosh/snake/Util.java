@@ -8,10 +8,11 @@ import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.Pane;
 
 import java.util.Map;
+import java.util.Objects;
 
 public class Util {
     private static BackgroundImage createBackImage(String backName) {
-        Image image = new Image(Util.class.getResource(backName).toString(), Constants.INIT_WINDOW_WIDTH,
+        Image image = new Image(Objects.requireNonNull(Util.class.getResource(backName)).toString(), Constants.INIT_WINDOW_WIDTH,
                                 Constants.INIT_WINDOW_HEIGHT, false, true);
         return new BackgroundImage(image, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, null, null);
     }

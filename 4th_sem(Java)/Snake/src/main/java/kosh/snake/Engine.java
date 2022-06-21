@@ -35,22 +35,19 @@ public class Engine implements Publisher {
     }
 
     private boolean readFieldParams(String levelFile) {
-        try (InputStream in = getClass().getResourceAsStream(levelFile)) {
-            assert in != null;
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
-                String string = reader.readLine();
-                String[] params = string.split(",");
-                for (String param : params) {
-                    int value = Integer.parseInt(param.substring(param.indexOf('=') + 1));
-                    if (param.contains("x=")) {
-                        fieldWidth = value;
-                    } else if (param.contains("y=")) {
-                        fieldHeight = value;
-                    }
-                    else {
-                        System.err.println("Can't read params for field");
-                        return false;
-                    }
+        try (BufferedReader reader = new BufferedReader(new FileReader(Constants.ABS_PATH_TO_RESOURCES + levelFile))) {
+            String string = reader.readLine();
+            String[] params = string.split(",");
+            for (String param : params) {
+                int value = Integer.parseInt(param.substring(param.indexOf('=') + 1));
+                if (param.contains("x=")) {
+                    fieldWidth = value;
+                } else if (param.contains("y=")) {
+                    fieldHeight = value;
+                }
+                else {
+                    System.err.println("Can't read params for field");
+                    return false;
                 }
             }
         }
@@ -64,21 +61,18 @@ public class Engine implements Publisher {
         char[][] levelToParse = new char[fieldHeight][fieldWidth];
         String string;
         int countLine = 0;
-        try (InputStream in = getClass().getResourceAsStream(levelFile)) {
-            assert in != null;
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
-                reader.readLine(); //first line is for field params
-                while ((string = reader.readLine()) != null) {
-                    if (string.length() != fieldWidth || countLine == fieldHeight) {
-                        System.err.println("Invalid file to load");
-                        return null;
-                    }
-                    levelToParse[countLine++] = string.toCharArray();
-                }
-                if (countLine != fieldHeight) {
-                    System.err.println("Read lines don't equal y field param");
+        try (BufferedReader reader = new BufferedReader(new FileReader(Constants.ABS_PATH_TO_RESOURCES + levelFile))) {
+            reader.readLine(); //first line is for field params
+            while ((string = reader.readLine()) != null) {
+                if (string.length() != fieldWidth || countLine == fieldHeight) {
+                    System.err.println("Invalid file to load");
                     return null;
                 }
+                levelToParse[countLine++] = string.toCharArray();
+            }
+            if (countLine != fieldHeight) {
+                System.err.println("Read lines don't equal y field param");
+                return null;
             }
         }
         catch (IOException e) {

@@ -16,7 +16,7 @@ public class GameController {
             MainMenuWindow mainMenuWindow = new MainMenuWindow();
             return;
         }
-        gameView = new GameWindow(engine.getField().getWidth(), engine.getField().getHeight());
+        GameWindow gameView = new GameWindow(engine.getField().getWidth(), engine.getField().getHeight());
         engine.addSubscriber(gameView);
         gameView.drawInitialField(engine.getField());
         gameView.showGame(stage);
@@ -26,24 +26,17 @@ public class GameController {
     private void keyControl() {
         stage.getScene().setOnKeyPressed(event -> {
             switch (event.getCode()) {
-                case W, UP -> {
-                    engine.getSnake().setDirection(Direction.UP);
-                }
-                case A, LEFT -> {
-                    engine.getSnake().setDirection(Direction.LEFT);
-                }
-                case S, DOWN -> {
-                    engine.getSnake().setDirection(Direction.DOWN);
-                }
-                case D, RIGHT -> {
-                    engine.getSnake().setDirection(Direction.RIGHT);
-                }
+                case W, UP -> engine.getSnake().setDirection(Direction.UP);
+                case A, LEFT -> engine.getSnake().setDirection(Direction.LEFT);
+                case S, DOWN -> engine.getSnake().setDirection(Direction.DOWN);
+                case D, RIGHT -> engine.getSnake().setDirection(Direction.RIGHT);
                 case ESCAPE, SPACE -> paused = !paused;
             }
         });
     }
 
     private boolean loadLevel(int levelNum) {
+        this.levelNum = levelNum;
         if (!engine.loadField("level" + levelNum + ".txt")) {
             System.err.println("Can't load field, check levels files");
             return false;
@@ -62,7 +55,7 @@ public class GameController {
                     if (!engine.makeStep()) {
                         timer.stop();
                         GameOverWindow gameOverWindow = new GameOverWindow();
-                        gameOverWindow.showGameOver(stage, engine.getScore());
+                        gameOverWindow.showGameOver(stage, levelNum, engine.getScore());
                         //fill score table(output to file)
                     }
                 }
@@ -70,9 +63,9 @@ public class GameController {
         }
     };
 
-    private GameWindow gameView;
     private final Engine engine = new Engine();
-    private static Stage stage;
+    private Stage stage;
     private long lastTick = 0;
     private boolean paused = false;
+    private int levelNum;
 }

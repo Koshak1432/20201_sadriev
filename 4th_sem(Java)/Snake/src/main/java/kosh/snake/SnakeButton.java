@@ -7,6 +7,8 @@ import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BackgroundRepeat;
 
+import java.util.Objects;
+
 public class SnakeButton extends Button {
 
     public SnakeButton(String text) {
@@ -38,8 +40,8 @@ public class SnakeButton extends Button {
     }
 
     private void initBackImages() {
-        Image releasedImage = new Image(getClass().getResource("freeButton.png").toString());
-        Image pressedImage = new Image(getClass().getResource("pressedButton.png").toString());
+        Image releasedImage = new Image(Objects.requireNonNull(getClass().getResource("freeButton.png")).toString());
+        Image pressedImage = new Image(Objects.requireNonNull(getClass().getResource("pressedButton.png")).toString());
         BackgroundImage backgroundImageReleased = new BackgroundImage(releasedImage, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, null, null);
         BackgroundImage backgroundImagePressed = new BackgroundImage(pressedImage, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, null, null);
         buttonReleasedBackground = new Background(backgroundImageReleased);
