@@ -35,6 +35,11 @@ public class GameController {
         });
     }
 
+    /*
+    * Calls engine to load level
+    * @param levelNum integer number of level to load
+    * @return true if successfully loaded, else false
+    * */
     private boolean loadLevel(int levelNum) {
         this.levelNum = levelNum;
         if (!engine.loadField("level" + levelNum + ".txt")) {
@@ -44,6 +49,9 @@ public class GameController {
         return true;
     }
 
+    /*
+    * Timer that triggers the game engine to make step
+    * */
     private final AnimationTimer timer = new AnimationTimer() {
         @Override
         public void handle(long now) {
@@ -56,7 +64,6 @@ public class GameController {
                         timer.stop();
                         GameOverWindow gameOverWindow = new GameOverWindow();
                         gameOverWindow.showGameOver(stage, levelNum, engine.getScore());
-                        //fill score table(output to file)
                     }
                 }
             }

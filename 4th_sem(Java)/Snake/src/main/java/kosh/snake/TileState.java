@@ -1,7 +1,7 @@
 package kosh.snake;
 
 public enum TileState {
-    EMPTY,
+    GRASS,
     FOOD,
     SNAKE,
     WALL

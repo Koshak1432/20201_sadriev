@@ -40,6 +40,11 @@ public class GameWindow implements Subscriber {
         menuStage.show();
     }
 
+    /*
+    * Loads field's images to map
+    * @param fileName name of property file
+    * @param images a Map<String, Image> where to load images
+    * */
     private void loadImages(String fileName, Map<String, Image> images) {
         Properties properties = new Properties();
         try (InputStream in = getClass().getResourceAsStream(fileName)) {
@@ -60,10 +65,14 @@ public class GameWindow implements Subscriber {
             case FOOD -> graphicsContext.drawImage(images.get("Food"), coords.x() * Constants.TILE_WIDTH, coords.y() * Constants.TILE_HEIGHT);
             case WALL -> graphicsContext.drawImage(images.get("Wall"), coords.x() * Constants.TILE_WIDTH, coords.y() * Constants.TILE_HEIGHT);
             case SNAKE -> graphicsContext.drawImage(images.get("Snake"), coords.x() * Constants.TILE_WIDTH, coords.y() * Constants.TILE_HEIGHT);
-            case EMPTY -> graphicsContext.drawImage(grassCoordsImages.get(coords), coords.x() * Constants.TILE_WIDTH, coords.y() * Constants.TILE_HEIGHT);
+            case GRASS -> graphicsContext.drawImage(grassCoordsImages.get(coords), coords.x() * Constants.TILE_WIDTH, coords.y() * Constants.TILE_HEIGHT);
         }
     }
 
+    /*
+    * Assigns to coordinates random grass sprite and put it to grass map
+    * @param coords coordinates to assign
+    * */
     private void putToGrassCoords(Coordinates coords, Random random) {
         grassCoordsImages.put(coords, grassImages.get("Grass" + random.nextInt(grassImages.size())));
     }
@@ -83,6 +92,9 @@ public class GameWindow implements Subscriber {
         scoreLabel.setText("Score: " + score);
     }
 
+    /*
+    * Updates field
+    * */
     public void update(Field field, List<Coordinates> coordsToRedraw, int score) {
         for (Coordinates coords : coordsToRedraw) {
             drawByCoords(field, coords);

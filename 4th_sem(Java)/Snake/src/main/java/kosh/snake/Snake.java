@@ -28,7 +28,6 @@ public class Snake {
             previousDirection = this.direction;
             direction = newDirection;
         }
-//        previousDirection = this.direction;
     }
 
     public Coordinates getHeadCoords() {

@@ -5,8 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Engine implements Publisher {
-
-    //true if ok, false if died
+    /*
+    * Makes game step
+    * @return true if snake is alive, else false
+    * */
     public boolean makeStep() {
         boolean alive = true;
         Coordinates nextCoords = snake.getNextCoords(snake.getHeadCoords(), field.getWidth(), field.getHeight());
@@ -17,7 +19,7 @@ public class Engine implements Publisher {
         } else {
             Coordinates tail = snake.loseTail();
             coordsToRedraw.add(tail);
-            field.setEmpty(tail);
+            field.setGrass(tail);
         }
         if (field.isValidPosition(nextCoords)) {
             snake.growTo(nextCoords);
@@ -34,6 +36,11 @@ public class Engine implements Publisher {
         return score;
     }
 
+    /*
+    * Reads field params: x, y
+    * @param levelFile the name of level file to load
+    * @return true if successfully read, else false
+    * */
     private boolean readFieldParams(String levelFile) {
         try (BufferedReader reader = new BufferedReader(new FileReader(Constants.ABS_PATH_TO_RESOURCES + levelFile))) {
             String string = reader.readLine();
@@ -57,6 +64,11 @@ public class Engine implements Publisher {
         return true;
     }
 
+    /*
+    * Reads level information from file into 2D char array
+    * @param levelFile the name of level file to load
+    * @return levelToParse 2D char array
+    * */
     private char[][] convertLevelInfoToArray(String levelFile) {
         char[][] levelToParse = new char[fieldHeight][fieldWidth];
         String string;
@@ -81,6 +93,11 @@ public class Engine implements Publisher {
         return levelToParse;
     }
 
+    /*
+    * Parses 2D char array level information
+    * @param levelInfo 2D char array to parse
+    * @return true if successfully parsed
+    * */
     private boolean parseInfoLevel(char[][] levelInfo) {
         if (levelInfo == null) {
             return false;
@@ -99,7 +116,7 @@ public class Engine implements Publisher {
                             return false;
                         }
                     }
-                    case 'g' -> field.setEmpty(coords);
+                    case 'g' -> field.setGrass(coords);
                     case 'f' -> field.setFood(coords);
                     default -> {
                         System.err.println("Unknown symbol");
@@ -111,6 +128,18 @@ public class Engine implements Publisher {
         return true;
     }
 
+    /*
+    * Loads game level
+    * @param levelFile the name of level to load
+    * First line define width(x) and height(y) of the game field
+    * example: x=10,y=20
+    * Only one tile in the field is for snake
+    * w - WALL
+    * g - GRASS
+    * f - FOOD
+    * s - SNAKE
+    * @return true if successfully loaded, else false
+    * */
     public boolean loadField(String levelFile) {
         if (!readFieldParams(levelFile)) {
             System.err.println("Can't read field's params");
@@ -144,6 +173,9 @@ public class Engine implements Publisher {
         subscribers.add(subscriber);
     }
 
+    /*
+    * Notifies the view about updating
+    * */
     @Override
     public void notifySubscribers() {
         for (Subscriber sub : subscribers) {
@@ -158,5 +190,4 @@ public class Engine implements Publisher {
     private int fieldHeight;
     private final List<Subscriber> subscribers = new ArrayList<>();
     private final List<Coordinates> coordsToRedraw = new ArrayList<>();
-
 }

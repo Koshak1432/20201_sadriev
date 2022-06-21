@@ -24,7 +24,7 @@ public class RecordsWindow {
         initRecordsTable(highScores);
     }
 
-    private void fillTable(ListView<String> table) {
+    private void fillRecordsTable(ListView<String> recordsTable) {
         List<String> records = new ArrayList<>();
         String line;
         for (int i = 1; i <= Constants.NUM_LEVELS; ++i) {
@@ -42,14 +42,14 @@ public class RecordsWindow {
             }
             records.add("");
         }
-        table.getItems().addAll(records);
+        recordsTable.getItems().addAll(records);
     }
 
-    private void initRecordsTable(ListView<String> table) {
-        table.setLayoutX(Constants.MENU_BUTTONS_START_X);
-        table.setLayoutY(Constants.MENU_BUTTONS_START_Y + buttons.size() * Constants.MENU_BUTTONS_OFFSET);
-        fillTable(table);
-        recordsPane.getChildren().add(table);
+    private void initRecordsTable(ListView<String> recordsTable) {
+        recordsTable.setLayoutX(Constants.MENU_BUTTONS_START_X);
+        recordsTable.setLayoutY(Constants.MENU_BUTTONS_START_Y + buttons.size() * Constants.MENU_BUTTONS_OFFSET);
+        fillRecordsTable(recordsTable);
+        recordsPane.getChildren().add(recordsTable);
     }
 
     public void showRecordsWindow(Stage stage) {

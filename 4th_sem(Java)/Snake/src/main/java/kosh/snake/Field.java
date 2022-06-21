@@ -11,13 +11,13 @@ public class Field {
 
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
-                setEmpty(new Coordinates(x, y));
+                setGrass(new Coordinates(x, y));
             }
         }
     }
 
-    public void setEmpty(Coordinates coords) {
-        field[coords.y()][coords.x()] = TileState.EMPTY;
+    public void setGrass(Coordinates coords) {
+        field[coords.y()][coords.x()] = TileState.GRASS;
         emptyCells.add(coords);
     }
 
@@ -48,7 +48,7 @@ public class Field {
 
     public boolean isValidPosition(Coordinates coords) {
         TileState state = getCell(coords);
-        return state == TileState.EMPTY ||  state == TileState.FOOD;
+        return state == TileState.GRASS ||  state == TileState.FOOD;
     }
 
     public boolean isFood(Coordinates coords) {

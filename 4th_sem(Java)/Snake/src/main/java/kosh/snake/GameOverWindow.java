@@ -48,6 +48,11 @@ public class GameOverWindow {
         Util.addButtonToMenu("back", backButton, gameOverPane, buttons);
     }
 
+    /*
+    * Writes to records file of specified level number
+    * Records file must be as follows: "recordsX.txt", where X is level number
+    * Lines in file as follows: USERNAME:SCORE , where ":" is a delimiter specified in Constant class and SCORE is an integer
+    * */
     private void fillRecordsTable(int levelNum, int score) {
         String recordsFileName = "records" + levelNum + ".txt";
         File recordsFile = new File(Constants.ABS_PATH_TO_RESOURCES + recordsFileName);
@@ -56,10 +61,7 @@ public class GameOverWindow {
         int lineCount = 0;
         StringBuilder buffer = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(new FileReader(recordsFile))) {
-            while ((recordLine = reader.readLine()) != null) {
-                if (lineCount >= Constants.NUM_RECORDS) {
-                    break;
-                }
+            while ((recordLine = reader.readLine()) != null && lineCount < Constants.NUM_RECORDS) {
                 String[] recordData = recordLine.split(Constants.RECORDS_DELIMITER);
                 if (score > Integer.parseInt(recordData[recordData.length - 1]) && !writtenNewRecord) {
                     writtenNewRecord = true;
@@ -91,6 +93,10 @@ public class GameOverWindow {
         }
     }
 
+    /*
+    * Init text input dialog asking username
+    * @return recordLine the new records
+    * */
     private String getNewRecord(int score) {
         String recordLine;
         TextInputDialog inputDialog = new TextInputDialog();
