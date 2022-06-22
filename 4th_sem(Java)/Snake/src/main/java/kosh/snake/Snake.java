@@ -1,11 +1,12 @@
 package kosh.snake;
 
 import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Snake {
-    public Snake(Coordinates headCoords) {
+    public Snake(ICoordinates headCoords) {
         this.headCoords = headCoords;
         snakeParts.add(headCoords);
         fillOppositeDirections();
@@ -18,7 +19,7 @@ public class Snake {
         oppositeDirections.put(Direction.RIGHT, Direction.LEFT);
     }
 
-    public void growTo(Coordinates coords) {
+    public void growTo(ICoordinates coords) {
         snakeParts.add(coords);
         headCoords = coords;
     }
@@ -30,16 +31,16 @@ public class Snake {
         }
     }
 
-    public Coordinates getHeadCoords() {
+    public ICoordinates getHeadCoords() {
         return headCoords;
     }
 
-    public Coordinates loseTail() {
+    public ICoordinates loseTail() {
         return snakeParts.poll();
     }
 
-    public Coordinates getNextCoords(Coordinates currentCoords, int width, int height) {
-        Coordinates nextCoords = new Coordinates(currentCoords.x(), currentCoords.y());
+    public ICoordinates getNextCoords(ICoordinates currentCoords, int width, int height) {
+        ICoordinates nextCoords = new Coordinates(currentCoords.x(), currentCoords.y());
         switch (direction) {
             case UP -> {
                 if (currentCoords.y() - 1 < 0) {
@@ -84,9 +85,9 @@ public class Snake {
         previousDirection = direction;
     }
 
-    private final ArrayDeque<Coordinates> snakeParts = new ArrayDeque<>();
+    private final Deque<ICoordinates> snakeParts = new ArrayDeque<>();
     private final Map<Direction, Direction> oppositeDirections = new HashMap<>();
-    private Coordinates headCoords;
+    private ICoordinates headCoords;
     private int speed = 3;
     private Direction direction = Direction.RIGHT;
     private Direction previousDirection = Direction.RIGHT;

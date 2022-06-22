@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MainMenuWindow {
-
     public MainMenuWindow() {
         menuStage.setTitle("Snake");
         Scene menuScene = new Scene(menuPane, Constants.INIT_WINDOW_WIDTH, Constants.INIT_WINDOW_HEIGHT);

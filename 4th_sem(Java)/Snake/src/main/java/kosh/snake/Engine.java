@@ -11,13 +11,13 @@ public class Engine implements Publisher {
     * */
     public boolean makeStep() {
         boolean alive = true;
-        Coordinates nextCoords = snake.getNextCoords(snake.getHeadCoords(), field.getWidth(), field.getHeight());
+        ICoordinates nextCoords = snake.getNextCoords(snake.getHeadCoords(), field.getWidth(), field.getHeight());
         if (field.isFood(nextCoords)) {
             coordsToRedraw.add(field.setRandomFood());
             ++score;
             snake.setSpeed(snake.getSpeed() + 1);
         } else {
-            Coordinates tail = snake.loseTail();
+            ICoordinates tail = snake.loseTail();
             coordsToRedraw.add(tail);
             field.setGrass(tail);
         }
@@ -94,9 +94,9 @@ public class Engine implements Publisher {
     }
 
     /*
-    * Parses 2D char array level information
+    * Parses 2D char array representing level
     * @param levelInfo 2D char array to parse
-    * @return true if successfully parsed
+    * @return true if successfully parsed, else false
     * */
     private boolean parseInfoLevel(char[][] levelInfo) {
         if (levelInfo == null) {
@@ -160,7 +160,7 @@ public class Engine implements Publisher {
         return true;
     }
 
-    public Field getField() {
+    public IField getField() {
         return field;
     }
 
@@ -183,11 +183,11 @@ public class Engine implements Publisher {
         }
     }
 
-    private Field field;
+    private IField field;
     private Snake snake;
     private int score = 0;
     private int fieldWidth;
     private int fieldHeight;
     private final List<Subscriber> subscribers = new ArrayList<>();
-    private final List<Coordinates> coordsToRedraw = new ArrayList<>();
+    private final List<ICoordinates> coordsToRedraw = new ArrayList<>();
 }

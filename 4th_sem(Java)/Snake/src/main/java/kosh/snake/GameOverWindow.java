@@ -96,15 +96,28 @@ public class GameOverWindow {
     /*
     * Init text input dialog asking username
     * @return recordLine the new records
+    * @throws IOException if dialog return null
     * */
-    private String getNewRecord(int score) {
+    private String getNewRecord(int score) throws IOException {
         String recordLine;
         TextInputDialog inputDialog = new TextInputDialog();
         inputDialog.setTitle("New record!!!");
         inputDialog.setHeaderText("You're have set a new record!");
         inputDialog.setContentText("Please, enter your name:");
         Optional<String> name = inputDialog.showAndWait();
-        recordLine = name.orElse("Unknown") + Constants.RECORDS_DELIMITER + score;
+        if (name.isPresent()) {
+            if (name.get().isEmpty()) {
+                System.out.println("IS EMPTY");
+                recordLine = "Unknown" + Constants.RECORDS_DELIMITER + score;
+            } else {
+                System.out.println("NOT EMPTY:" + name.get());
+                recordLine = name.get() + Constants.RECORDS_DELIMITER + score;
+            }
+        } else {
+            throw new IOException("Input dialog returns null");
+        }
+
+        System.out.println(recordLine);
         return recordLine;
     }
 

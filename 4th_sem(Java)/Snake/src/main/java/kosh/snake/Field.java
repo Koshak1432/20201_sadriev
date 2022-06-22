@@ -3,7 +3,7 @@ package kosh.snake;
 import java.util.ArrayList;
 import java.util.Random;
 
-public class Field {
+public class Field implements IField {
     public Field(int width, int height) {
         this.width = width;
         this.height = height;
@@ -16,55 +16,61 @@ public class Field {
         }
     }
 
-    public void setGrass(Coordinates coords) {
+    @Override
+    public void setGrass(ICoordinates coords) {
         field[coords.y()][coords.x()] = TileState.GRASS;
         emptyCells.add(coords);
     }
-
-    public void setFood(Coordinates coords) {
+    @Override
+    public void setFood(ICoordinates coords) {
         field[coords.y()][coords.x()] = TileState.FOOD;
         emptyCells.remove(coords);
     }
-
-    public Coordinates setRandomFood() {
-        Coordinates foodCoords = emptyCells.get(random.nextInt(emptyCells.size()));
+    @Override
+    public ICoordinates setRandomFood() {
+        ICoordinates foodCoords = emptyCells.get(random.nextInt(emptyCells.size()));
         setFood(foodCoords);
         return foodCoords;
     }
-
-    public void setSnake(Coordinates coords) {
+    @Override
+    public void setSnake(ICoordinates coords) {
         field[coords.y()][coords.x()] = TileState.SNAKE;
         emptyCells.remove(coords);
     }
 
-    public void setWall(Coordinates coords) {
+    @Override
+    public void setWall(ICoordinates coords) {
         field[coords.y()][coords.x()] = TileState.WALL;
         emptyCells.remove(coords);
     }
-
-    public TileState getCell(Coordinates coords) {
+    @Override
+    public TileState getCell(ICoordinates coords) {
         return field[coords.y()][coords.x()];
     }
 
-    public boolean isValidPosition(Coordinates coords) {
+    @Override
+    public boolean isValidPosition(ICoordinates coords) {
         TileState state = getCell(coords);
         return state == TileState.GRASS ||  state == TileState.FOOD;
     }
 
-    public boolean isFood(Coordinates coords) {
+    @Override
+    public boolean isFood(ICoordinates coords) {
         return getCell(coords) == TileState.FOOD;
     }
 
+    @Override
     public int getWidth() {
         return width;
     }
 
+    @Override
     public int getHeight() {
         return height;
     }
 
     private final TileState[][] field;
-    private final ArrayList<Coordinates> emptyCells = new ArrayList<>();
+    private final ArrayList<ICoordinates> emptyCells = new ArrayList<>();
     private final int width;
     private final int height;
     private final Random random = new Random();

@@ -60,7 +60,7 @@ public class GameWindow implements Subscriber {
         }
     }
 
-    private void drawByCoords(Field field, Coordinates coords) {
+    private void drawByCoords(IField field, ICoordinates coords) {
         switch (field.getCell(coords)) {
             case FOOD -> graphicsContext.drawImage(images.get("Food"), coords.x() * Constants.TILE_WIDTH, coords.y() * Constants.TILE_HEIGHT);
             case WALL -> graphicsContext.drawImage(images.get("Wall"), coords.x() * Constants.TILE_WIDTH, coords.y() * Constants.TILE_HEIGHT);
@@ -70,14 +70,14 @@ public class GameWindow implements Subscriber {
     }
 
     /*
-    * Assigns to coordinates random grass sprite and put it to grass map
+    * Assigns random grass sprite to coordinates and put it to grass map
     * @param coords coordinates to assign
     * */
-    private void putToGrassCoords(Coordinates coords, Random random) {
+    private void putToGrassCoords(ICoordinates coords, Random random) {
         grassCoordsImages.put(coords, grassImages.get("Grass" + random.nextInt(grassImages.size())));
     }
 
-    public void drawInitialField(Field field) {
+    public void drawInitialField(IField field) {
         Random random = new Random();
         for (int y = 0; y < field.getHeight(); ++y) {
             for (int x = 0; x < field.getWidth(); ++x) {
@@ -95,8 +95,8 @@ public class GameWindow implements Subscriber {
     /*
     * Updates field
     * */
-    public void update(Field field, List<Coordinates> coordsToRedraw, int score) {
-        for (Coordinates coords : coordsToRedraw) {
+    public void update(IField field, List<ICoordinates> coordsToRedraw, int score) {
+        for (ICoordinates coords : coordsToRedraw) {
             drawByCoords(field, coords);
         }
         drawScore(score);
@@ -104,14 +104,14 @@ public class GameWindow implements Subscriber {
     }
 
     @Override
-    public void handleEvent(Field field, List<Coordinates> coordsToRedraw, int score) {
+    public void handleEvent(IField field, List<ICoordinates> coordsToRedraw, int score) {
         update(field, coordsToRedraw, score);
     }
 
     private GraphicsContext graphicsContext;
     private final Map<String, Image> images = new HashMap<>();
     private final Map<String, Image> grassImages = new HashMap<>();
-    private final Map<Coordinates, Image> grassCoordsImages = new HashMap<>();
+    private final Map<ICoordinates, Image> grassCoordsImages = new HashMap<>();
     private Label scoreLabel;
     private Scene gameScene;
 }

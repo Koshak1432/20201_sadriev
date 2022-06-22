@@ -1,3 +1,3 @@
 package kosh.snake;
 
-public record Coordinates(int x, int y) {}
+public record Coordinates(int x, int y) implements ICoordinates{}
