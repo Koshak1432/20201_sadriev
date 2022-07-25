@@ -7,12 +7,11 @@ import java.util.Random;
 public class Util {
     /*
     * if there is only one block of data, use digest without update
-    * if there are several block of data, use update for all blocks and then digest
+    * if there are several blocks of data, use update for all blocks and then digest
     * (habr)
      */
     public static byte[] generateHash(byte[] inputToHash) {
         try {
-            byte[] hash = new byte[20];
             MessageDigest md = MessageDigest.getInstance("SHA-1");
 //            md.update(inputToHash);
             return md.digest();
@@ -21,6 +20,12 @@ public class Util {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public static byte[] subArray(byte[] src, int offset, int length){
+        byte[] sub = new byte[length];
+        System.arraycopy(src, offset, sub, 0, length);
+        return sub;
     }
 
     public static byte[] generateId() {
