@@ -12,9 +12,9 @@ public class Piece {
         int offset = 0;
         int numberOfBlocks = (int)Math.ceil((double)data.length / Constants.blockSize);
         for (int i = 0; i < numberOfBlocks; ++i) {
-            int blockSize = (i == numberOfBlocks - 1) ? data.length % Constants.blockSize : Constants.blockSize;
+            int blockSize = ((i == numberOfBlocks - 1) && data.length % Constants.blockSize != 0) ? data.length % Constants.blockSize : Constants.blockSize;
             byte[] blockData = new byte[blockSize];
-            System.arraycopy(data, offset, blockData, 0, Constants.blockSize);
+            System.arraycopy(data, offset, blockData, 0, blockSize);
             Block block = new Block(offset, blockData); //also there is a size calculated inside a block
             blocks.add(block);
             offset += blockSize;
