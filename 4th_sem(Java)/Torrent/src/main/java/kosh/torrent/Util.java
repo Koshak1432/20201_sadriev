@@ -41,4 +41,17 @@ public class Util {
         System.arraycopy(a2, 0, result, a1.length, a2.length);
         return result;
     }
+
+    public static boolean[] convertToBits(byte[] bytes) {
+        int bitsLen = bytes.length * 8;
+        boolean[] bits = new boolean[bitsLen];
+        for (int i = 0; i < bitsLen; ++i) {
+            int curByte = i / 8;
+            int curBit = i % 8;
+            if (((bytes[curByte] >> (7 - curBit)) & 1) > 0) {
+                bits[i] = true;
+            }
+        }
+        return bits;
+    }
 }

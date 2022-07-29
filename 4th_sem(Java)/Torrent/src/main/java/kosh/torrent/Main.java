@@ -1,6 +1,9 @@
 package kosh.torrent;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
 public class Main {
     public static void main(String[] args) {
@@ -15,6 +18,12 @@ public class Main {
             } else {
                 System.out.println("File doesn't exists");
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            Seeder seeder = new Seeder("localhost", 2020);
+            seeder.start();
         } catch (IOException e) {
             e.printStackTrace();
         }
