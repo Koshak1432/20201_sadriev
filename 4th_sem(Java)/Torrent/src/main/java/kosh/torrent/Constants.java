@@ -1,8 +1,6 @@
 package kosh.torrent;
 
 public class Constants {
-    public final static int blockSize = 16 * 1024;
-    public static final int pieceLength = 256 * 1024;
-
-    public static final int handshakeId = -1;
+    public final static int BLOCK_SIZE = 16 * 1024;
+    public static final int PIECE_LENGTH = 256 * 1024;
 }

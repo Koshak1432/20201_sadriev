@@ -1,14 +1,14 @@
 package kosh.torrent;
 
 abstract public class Message {
-    public Message(int id) {
-        this.id = id;
+    public Message(int type) {
+        this.type = type;
     }
     abstract public byte[] createMessage();
 
-    public int getId() {
-        return id;
+    public int getType() {
+        return type;
     }
 
-    private final int id;
+    private final int type;
 }

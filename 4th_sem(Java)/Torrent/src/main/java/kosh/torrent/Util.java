@@ -1,5 +1,7 @@
 package kosh.torrent;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
@@ -53,5 +55,13 @@ public class Util {
             }
         }
         return bits;
+    }
+
+    public static byte[] convertToByteArr(int value) {
+        int bytesInInt = 4;
+        ByteBuffer buffer = ByteBuffer.allocate(bytesInInt);
+        buffer.order(ByteOrder.BIG_ENDIAN);
+        buffer.putInt(value);
+        return buffer.array();
     }
 }

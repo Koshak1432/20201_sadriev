@@ -92,6 +92,6 @@ public class Peer {
     private int downloaded = 0;
     private int uploaded = 0;
 
-    private BitSet pieces = new BitSet();
+    private final BitSet pieces = new BitSet();
 
 }

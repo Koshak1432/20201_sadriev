@@ -2,7 +2,7 @@ package kosh.torrent;
 
 public class Handshake extends Message {
     public Handshake(byte[] infoHash, byte[] peerId) {
-        super(Constants.handshakeId);
+        super(MessagesTypes.HANDSHAKE);
         this.infoHash = infoHash;
         this.peerId = peerId;
     }
