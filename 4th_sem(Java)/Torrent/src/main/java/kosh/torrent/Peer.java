@@ -82,6 +82,7 @@ public class Peer {
     public String toString() {
         return ip + ":" + port;
     }
+
     private final byte[] id;
     private boolean interested = false;
     private boolean interesting = false;

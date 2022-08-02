@@ -1,16 +1,18 @@
 package kosh.torrent;
 
+//<length prefix><message ID><payload>
+
 public class ProtocolMessage extends Message {
-    //<length prefix><message ID><payload>
     public ProtocolMessage(int type) {
         super(type);
         this.type = type;
+        setInfo(type);
     }
 
     public ProtocolMessage(int type, byte[] payload) {
         super(type);
         this.type = type;
-
+        setInfo(type, payload);
     }
 
     //for messages without payload
@@ -28,20 +30,24 @@ public class ProtocolMessage extends Message {
         id[0] = (byte) type;
         switch (type) {
             case MessagesTypes.HAVE -> len = new byte[] {0, 0, 0, 5};
-            case MessagesTypes.BITFIELD -> len = Util.convertToByteArr(1 + payload.length);
+            case MessagesTypes.BITFIELD, MessagesTypes.PIECE -> len = Util.convertToByteArr(1 + payload.length);
             case MessagesTypes.REQUEST, MessagesTypes.CANCEL -> len = new byte[] {0, 0, 0, 13};
-            case MessagesTypes.PIECE -> len = ????
-                    //piece: <len=0009+X><id=7><index><begin><block>, where x is the length of the block
         }
     }
 
     @Override
     public byte[] createMessage() {
-        return new byte[0];
+        if (type > MessagesTypes.NOT_INTERESTED) {
+            return Util.concatByteArrays(Util.concatByteArrays(len, id), payload);
+        }
+        if (type >= MessagesTypes.CHOKE) {
+            return Util.concatByteArrays(len, id);
+        }
+        return len;
     }
 
     private byte[] len; //msg with len == 0 is keep-alive
-    private byte[] id = new byte[1];
+    private final byte[] id = new byte[1];
     private byte[] payload;
     private final int type;
 

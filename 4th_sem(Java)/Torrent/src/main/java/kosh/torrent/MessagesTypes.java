@@ -6,7 +6,7 @@ public class MessagesTypes {
     public static final int KEEP_ALIVE = -2;
     public static final int HANDSHAKE = -1;
 
-    //DO NOT CHANGE THIS CONSTANTS, IT WILL AFFECT PROTOCOL MESSAGE METHODS!!!
+    //DO NOT CHANGE THESE CONSTANTS, IT WILL AFFECT PROTOCOL MESSAGE METHODS!!!
     public static final int CHOKE = 0;
     public static final int UNCHOKE = 1;
     public static final int INTERESTED = 2;

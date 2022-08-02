@@ -19,6 +19,8 @@ public class Main {
         return peersId;
     }
     public static void main(String[] args) {
+        ConnectionManager connectionManager = new ConnectionManager("localhost", 2020);
+        connectionManager.run();
 
 //        try (OutputStream out = new FileOutputStream("test" + ".torrent")) {
 //            File file = new File("D:\\20201_sadriev\\4th_sem(Java)\\Torrent\\src\\main\\resources\\the art of loving.pdf");
@@ -41,15 +43,17 @@ public class Main {
 //            e.printStackTrace();
 //        }
 
-        System.out.println("Before parsing");
-        for (String arg : args) {
-            System.out.println(arg);
-        }
-        System.out.println("");
-        System.out.println("After parsing map");
-        Map<String, Integer> parsed = parseArgs(args);
-        for (Map.Entry<String, Integer> entry : parsed.entrySet()) {
-            System.out.println("ip = " + entry.getKey() + ", port = " + entry.getValue());
-        }
+        //PARSER
+
+//        System.out.println("Before parsing");
+//        for (String arg : args) {
+//            System.out.println(arg);
+//        }
+//        System.out.println("");
+//        System.out.println("After parsing map");
+//        Map<String, Integer> parsed = parseArgs(args);
+//        for (Map.Entry<String, Integer> entry : parsed.entrySet()) {
+//            System.out.println("ip = " + entry.getKey() + ", port = " + entry.getValue());
+//        }
     }
 }

@@ -4,7 +4,7 @@ public class Handshake extends Message {
     public Handshake(byte[] infoHash, byte[] peerId) {
         super(MessagesTypes.HANDSHAKE);
         this.infoHash = infoHash;
-        this.peerId = peerId;
+        this.peerId = peerId; //who is sending the message
     }
 
     public byte[] createMessage() {
