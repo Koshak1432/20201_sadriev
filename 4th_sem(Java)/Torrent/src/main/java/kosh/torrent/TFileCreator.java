@@ -29,6 +29,7 @@ public class TFileCreator {
         }
 
         piecesHashes = joinHashes();
+        piecesBuffer = ByteBuffer.wrap(piecesHashes);
     }
 
     private byte[] joinHashes() {
@@ -42,12 +43,13 @@ public class TFileCreator {
     private Map<String, Object> createInfoMap() {
         SortedMap<String, Object> info = new TreeMap<>();
         info.put("piece length", Constants.PIECE_LENGTH);
-        info.put("pieces", piecesHashes);
+        info.put("pieces", piecesBuffer);
         info.put("name", file.getName());
         info.put("length", file.length());
         System.out.println("DEBUG");
         System.out.println(file.length());
         System.out.println("PiecesHashes len:" + piecesHashes.length);
+        System.out.println("pieces hashes after encoding: " + Arrays.toString(piecesHashes));
         System.out.println("number of pieces:" + pieces.size());
         return info;
     }
@@ -56,11 +58,12 @@ public class TFileCreator {
         SortedMap<String, Object> metaInfo = new TreeMap<>();
         metaInfo.put("announce", announceURL);
         metaInfo.put("info", createInfoMap());
-        Bencode bencode = new Bencode();
+        Bencode bencode = new Bencode(true);
         return bencode.encode(metaInfo);
     }
 
     private final byte[] piecesHashes; //it's the concat of all 20-byte hashes
+    private final ByteBuffer piecesBuffer;
     private final ArrayList<Piece> pieces = new ArrayList<>();
     private final File file;
 }

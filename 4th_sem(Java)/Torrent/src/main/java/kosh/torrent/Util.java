@@ -15,8 +15,7 @@ public class Util {
     public static byte[] generateHash(byte[] inputToHash) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-1");
-            md.update(inputToHash);
-            return md.digest();
+            return md.digest(inputToHash);
         } catch (NoSuchAlgorithmException e) {
             System.err.println("Can't generate hash");
             e.printStackTrace();
