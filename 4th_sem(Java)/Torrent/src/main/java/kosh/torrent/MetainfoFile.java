@@ -1,17 +1,10 @@
 package kosh.torrent;
 
-import com.dampcake.bencode.Bencode;
 import com.dampcake.bencode.BencodeInputStream;
-import com.dampcake.bencode.Type;
 
-import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,7 +19,7 @@ public class MetainfoFile {
         }
     }
 
-    public byte[] getPieces() {
+    public  byte[] getPieces() {
         ByteBuffer buffer = (ByteBuffer) info.get("pieces");
         return buffer.array();
     }
@@ -43,5 +36,22 @@ public class MetainfoFile {
         return new String(buffer.array());
     }
 
-    private HashMap<String, Object> info = new HashMap<>();
+    public byte[] getInfoHash() {
+        byte[] infoBytes = serialize(info);
+        return Util.generateHash(infoBytes);
+    }
+
+    private byte[] serialize(Object o) {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+            oos.writeObject(info);
+            return baos.toByteArray();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private Map<String, Object> info;
 }

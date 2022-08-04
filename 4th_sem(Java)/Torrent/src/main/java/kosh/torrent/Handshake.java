@@ -7,8 +7,16 @@ public class Handshake extends Message {
         this.peerId = peerId; //who is sending the message
     }
 
-    public byte[] createMessage() {
+    public byte[] getMessage() {
         return Util.concatByteArrays(pLength, Util.concatByteArrays(protocol, Util.concatByteArrays(reserved, Util.concatByteArrays(infoHash, peerId))));
+    }
+
+    public byte[] getInfoHash() {
+        return infoHash;
+    }
+
+    public byte[] getPeerId() {
+        return peerId;
     }
 
     private final byte[] protocol = "BitTorrent protocol".getBytes();

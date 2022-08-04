@@ -4,7 +4,7 @@ abstract public class Message {
     public Message(int type) {
         this.type = type;
     }
-    abstract public byte[] createMessage();
+    abstract public byte[] getMessage();
 
     public int getType() {
         return type;

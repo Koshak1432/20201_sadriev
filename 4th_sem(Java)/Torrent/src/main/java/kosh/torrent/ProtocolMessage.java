@@ -36,7 +36,7 @@ public class ProtocolMessage extends Message {
     }
 
     @Override
-    public byte[] createMessage() {
+    public byte[] getMessage() {
         if (type > MessagesTypes.NOT_INTERESTED) {
             return Util.concatByteArrays(Util.concatByteArrays(len, id), payload);
         }
