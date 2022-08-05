@@ -1,18 +1,26 @@
 package kosh.torrent;
 
 import java.io.IOException;
+import java.nio.channels.SocketChannel;
 import java.util.BitSet;
 
 //client
 public class Peer {
-    public Peer(String hostname, int port) throws IOException {
-        this.ip = hostname;
-        this.port = port;
+    public Peer(SocketChannel channel) throws IOException {
+        this.channel = channel;
         this.id = Util.generateId(); //maybe move it here
     }
 
     public byte[] getId() {
         return id;
+    }
+
+    public void setId(byte[] id) {
+        this.id = id;
+    }
+
+    public SocketChannel getChannel() {
+        return channel;
     }
 
     public int getDownloaded() {
@@ -80,16 +88,15 @@ public class Peer {
 
     @Override
     public String toString() {
-        return ip + ":" + port;
+        return channel.socket().getRemoteSocketAddress().toString();
     }
 
-    private final byte[] id;
+    private byte[] id;
     private boolean interested = false;
     private boolean interesting = false;
     private boolean choked = true;
     private boolean choking = true;
-    private final String ip;
-    private final int port;
+    private final SocketChannel channel;
     private int downloaded = 0;
     private int uploaded = 0;
 

@@ -78,18 +78,19 @@ public class ConnectionManager implements Runnable {
     //пусть тут будет мапа очередей, засовывать туда буду то, что вернёт команда из messageManager
     private void accept(SelectionKey key) {
         try {
+            //завести ещё и свой Peer и его обновлять? ага 100 проц нужно
             ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
             SocketChannel channel = serverSocketChannel.accept();
             channel.configureBlocking(false);
-            Socket client = channel.socket();
-            if (!messagesManager.checkHS(channel)) {
-                channel.close();
-                client.close();
-                System.out.println("info hashes are different, closed connection with " + client.getRemoteSocketAddress());
+            Peer peer = new Peer(channel);
+            if (!messagesManager.checkHS(peer)) {
+                closeConnection(channel);
+                System.out.println("info hashes are different, closed connection with " + peer);
             }
-            System.out.println("Connect from " + client.getRemoteSocketAddress());
-            messagesToPeer.put(client, new LinkedList<>());
-            messagesToPeer.get(client).add(messagesManager.getMyHS());
+            System.out.println("Connect from " + peer);
+            peers.add(peer);
+            messagesToPeer.put(peer, new LinkedList<>());
+            messagesToPeer.get(peer).add(messagesManager.getMyHS());
             channel.register(selector, SelectionKey.OP_READ); //to read from remote socket
             channel.register(selector, SelectionKey.OP_WRITE); //to write to remote socket
         }
@@ -98,14 +99,27 @@ public class ConnectionManager implements Runnable {
         }
     }
 
+    private Peer findPeer(SocketChannel peerChannel) {
+        for (Peer peer : peers) {
+            if (peer.getChannel().equals(peerChannel)) {
+                return peer;
+            }
+        }
+        return null;
+    }
+
     //прочитать сообщение от remotePeer и обработать, потом закинуть в какую-нибудь очедерь сообщений для этого remotePeer, чтобы потом отправить
     private void readFromPeer(SelectionKey key) {
-        SocketChannel client = (SocketChannel) key.channel();
-        Message respond = messagesManager.readMsg(client);
-        if (respond == null) {
+        SocketChannel channel = (SocketChannel) key.channel();
+        Peer peer = findPeer(channel);
+        if (peer == null) {
+            closeConnection(channel);
+        }
+        Message response = messagesManager.readMsg(peer);
+        if (response == null) {
             try {
-                System.out.println("Connection closed by " + client.socket().getRemoteSocketAddress());
-                client.close();
+                System.out.println("Connection closed by " + peer);
+                channel.close();
                 //мб как-то ещё обработать, закинуть его в неактивные коннекты, чтобы потом рестартнуть если что
                 return;
             } catch (IOException e) {
@@ -113,37 +127,50 @@ public class ConnectionManager implements Runnable {
             }
         }
 
-        if (messagesToPeer.containsKey(client.socket())) {
-            messagesToPeer.get(client.socket()).add(respond);
+        if (messagesToPeer.containsKey(peer)) {
+            messagesToPeer.get(peer).add(response);
         } else {
             Queue<Message> messages = new LinkedList<>();
-            messages.add(respond);
-            messagesToPeer.put(client.socket(), messages);
+            messages.add(response);
+            messagesToPeer.put(peer, messages);
+        }
+    }
+
+    private void closeConnection(SocketChannel channel) {
+        try {
+            channel.socket().close();
+            channel.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
     //тут отправить сообщение из очереди
     private void sendToPeer(SelectionKey key) {
-        SocketChannel client = (SocketChannel) key.channel();
-        Queue<Message> messages = messagesToPeer.get(client.socket());
+        SocketChannel channel = (SocketChannel) key.channel();
+        Peer peer = findPeer(channel);
+        if (peer == null) {
+            closeConnection(channel);
+        }
+        Queue<Message> messages = messagesToPeer.get(peer);
         if (!messages.isEmpty()) {
             Message msgToSend = messages.poll();
             ByteBuffer buffer = ByteBuffer.wrap(msgToSend.getMessage());
-            System.out.println("Wrote to " + client.socket().getRemoteSocketAddress() + ", type of msg(int): " + msgToSend.getType());
+            System.out.println("Wrote to " + peer + ", type of msg(int): " + msgToSend.getType());
             try {
-                client.write(buffer);
+                channel.write(buffer);
             } catch (IOException e) {
                 e.printStackTrace();
             }
             return;
         }
-        System.out.println("No more messages to " + client.socket().getRemoteSocketAddress());
+        System.out.println("No more messages to " + peer);
     }
 
-    //ключи -- сокеты или Peer???
-    //если Peer, то как?
-    //todo как и где юзать Peer
-    private final Map<Socket, Queue<Message>> messagesToPeer = new HashMap<>();
+    private final Map<Peer, Queue<Message>> messagesToPeer = new HashMap<>();
+
+    //он не должен тут лежать, потом перенести куда-нибудь, отдельный класс мб
+    private final List<Peer> peers = new ArrayList<>();
     private Selector selector;
     private final MessagesManager messagesManager;
 }

@@ -35,6 +35,10 @@ public class ProtocolMessage extends Message {
         }
     }
 
+    public void setPayload(byte[] payload) {
+        this.payload = payload;
+    }
+
     @Override
     public byte[] getMessage() {
         if (type > MessagesTypes.NOT_INTERESTED) {

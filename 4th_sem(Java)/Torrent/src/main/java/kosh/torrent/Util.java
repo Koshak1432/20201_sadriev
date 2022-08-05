@@ -56,11 +56,23 @@ public class Util {
         return bits;
     }
 
+
     public static byte[] convertToByteArr(int value) {
-        int bytesInInt = 4;
-        ByteBuffer buffer = ByteBuffer.allocate(bytesInInt);
-        buffer.order(ByteOrder.BIG_ENDIAN);
-        buffer.putInt(value);
-        return buffer.array();
+        byte[] result = new byte[4];
+        for (int i = result.length - 1; i >= 0; --i) {
+            result[i] = (byte) (value % 10);
+            value /= 10;
+        }
+        return result;
+    }
+
+    public static int convertToInt(byte[] value) {
+        int result = 0;
+        int mult = (int) Math.pow(10, value.length - 1);
+        for (byte b : value) {
+            result += b * mult;
+            mult /= 10;
+        }
+        return result;
     }
 }

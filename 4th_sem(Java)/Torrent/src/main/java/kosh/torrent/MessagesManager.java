@@ -18,9 +18,9 @@ public class MessagesManager {
         return myHS;
     }
 
-    public boolean checkHS(SocketChannel remoteChannel) {
+    public boolean checkHS(Peer peer) {
         boolean equals = false;
-        Message remotePeerHS = getRemoteHS(remoteChannel);
+        Message remotePeerHS = getRemoteHS(peer);
         //мб сделать мапу для каждого пира с его хэндшейком? зачем?
         equals = checkHS(remotePeerHS, this.myHS);
         return equals;
@@ -34,12 +34,35 @@ public class MessagesManager {
     //для этого есть класс Peer
     //здесь или в cm завести мапу, где ключи -- Peer, а проверять на наличие -- пробегом всей мапы в поисках remoteChannel?
     //
-    public Message readMsg(SocketChannel remoteChannel) {
+    public Message readMsg(Peer peer) {
+        Message peerMsg = constructPeerMsg(peer);
+        //handle msg(construct response)
+        Message response = handleMsg(peerMsg);
+
+
+    }
+
+    //нужно завести мапу? кусков(мб блоков), которые доступны пирам и мапу блоков, которые уже запросил
+    private Message handleMsg(Message msg) {
+        switch (msg.getType()) {
+            case MessagesTypes.CHOKE -> //choke my peer
+            case MessagesTypes.UNCHOKE -> //unchoke
+            case MessagesTypes.INTERESTED -> //set interested
+            case MessagesTypes.NOT_INTERESTED -> //set not interested
+            case MessagesTypes.HAVE -> //this means remote peer has a full piece
+            case MessagesTypes.BITFIELD -> //means remote peer send us a bitfield
+            case MessagesTypes.REQUEST -> //means remote peer is requesting a piece
+            case MessagesTypes.PIECE -> //means remote peer send us a block of data
+            case MessagesTypes.CANCEL -> //means remote peer want us to cancel last request from him
+        }
+    }
+
+    private Message constructPeerMsg(Peer peer) {
         int bytesToAllocate = 1024;
         ByteBuffer buffer = ByteBuffer.allocate(bytesToAllocate);
         int read = -1;
         try {
-            read = remoteChannel.read(buffer);
+            read = peer.getChannel().read(buffer);
             if (read == -1) {
                 return null;
             }
@@ -50,13 +73,21 @@ public class MessagesManager {
         byte[] length = new byte[4];
         byte[] id = new byte[1];
         byte[] payload = new byte[read - id.length - length.length];
-
+        int len = Util.convertToInt(length);
+        int idInt;
         buffer.get(0, length, 0, length.length);
-        buffer.get(length.length, id, 0, id.length);
-        buffer.get(length.length + id.length, payload, 0, payload.length);
+        if (read > length.length) {
+            buffer.get(length.length, id, 0, id.length);
+            buffer.get(length.length + id.length, payload, 0, payload.length);
+            idInt = Util.convertToInt(id);
+        } else {
+            idInt = MessagesTypes.KEEP_ALIVE;
+        }
+        return (payload.length > 0) ? new ProtocolMessage(idInt, payload) :
+                new ProtocolMessage(idInt);
     }
 
-    private Message getRemoteHS(SocketChannel remoteChannel) {
+    private Message getRemoteHS(Peer peer) {
         int infoHashIdx = 28;
         int peerIdIdx = infoHashIdx + 20;
         //прочитать и сохранить все данные?
@@ -64,12 +95,14 @@ public class MessagesManager {
         byte[] peerId = new byte[20];
         ByteBuffer byteBuffer = ByteBuffer.allocate(68);
         try {
-            remoteChannel.read(byteBuffer);
+            peer.getChannel().read(byteBuffer);
         } catch (IOException e) {
             e.printStackTrace();
         }
         byteBuffer.get(infoHashIdx, infoHash, 0, infoHash.length);
         byteBuffer.get(peerIdIdx, peerId, 0, peerId.length);
+        //вот тут что-то с id придумать надо бы
+        peer.setId(peerId);
         return new Handshake(infoHash, peerId);
     }
 
