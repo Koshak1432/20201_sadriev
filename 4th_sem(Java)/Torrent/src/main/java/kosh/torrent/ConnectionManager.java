@@ -2,8 +2,6 @@ package kosh.torrent;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -13,7 +11,7 @@ import java.util.*;
 //server
 public class ConnectionManager implements Runnable {
     public ConnectionManager(String hostname, int port, Message myHS) {
-        messagesManager = new MessagesManager(myHS);
+        this.myHS = myHS;
         InetSocketAddress address = new InetSocketAddress(hostname, port);
         try {
             selector = Selector.open();
@@ -76,21 +74,22 @@ public class ConnectionManager implements Runnable {
     //или
     //в этом классе будет мапа сокет-очередь строк с названиями команд    бред
     //пусть тут будет мапа очередей, засовывать туда буду то, что вернёт команда из messageManager
+
+    //todo мб вообще не принимать тут, а изначально подключиться к пирам, список которых в аргументах прилетает
     private void accept(SelectionKey key) {
         try {
-            //завести ещё и свой Peer и его обновлять? ага 100 проц нужно
             ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
             SocketChannel channel = serverSocketChannel.accept();
             channel.configureBlocking(false);
-            Peer peer = new Peer(channel);
-            if (!messagesManager.checkHS(peer)) {
-                closeConnection(channel);
-                System.out.println("info hashes are different, closed connection with " + peer);
+            PeerConnection connection = new PeerConnection(channel);
+            if (!connection.checkHS(myHS)) {
+                connection.closeConnection();
+                System.out.println("info hashes are different, closed connection with " + connection);
             }
-            System.out.println("Connect from " + peer);
-            peers.add(peer);
-            messagesToPeer.put(peer, new LinkedList<>());
-            messagesToPeer.get(peer).add(messagesManager.getMyHS());
+            System.out.println("Connect from " + connection);
+            connections.add(connection);
+            messagesToPeer.put(connection, new LinkedList<>());
+            messagesToPeer.get(connection).add(myHS);
             channel.register(selector, SelectionKey.OP_READ); //to read from remote socket
             channel.register(selector, SelectionKey.OP_WRITE); //to write to remote socket
         }
@@ -99,26 +98,24 @@ public class ConnectionManager implements Runnable {
         }
     }
 
-    private Peer findPeer(SocketChannel peerChannel) {
-        for (Peer peer : peers) {
-            if (peer.getChannel().equals(peerChannel)) {
-                return peer;
+    private PeerConnection findConnection(SocketChannel remoteChannel) {
+        for (PeerConnection connection : connections) {
+            if (connection.getChannel().equals(remoteChannel)) {
+                return connection;
             }
         }
-        return null;
+        return null; //never
     }
 
     //прочитать сообщение от remotePeer и обработать, потом закинуть в какую-нибудь очедерь сообщений для этого remotePeer, чтобы потом отправить
     private void readFromPeer(SelectionKey key) {
         SocketChannel channel = (SocketChannel) key.channel();
-        Peer peer = findPeer(channel);
-        if (peer == null) {
-            closeConnection(channel);
-        }
-        Message response = messagesManager.readMsg(peer);
+        PeerConnection connection = findConnection(channel);
+        assert connection != null;
+        Message response = connection.readMsg();
         if (response == null) {
             try {
-                System.out.println("Connection closed by " + peer);
+                System.out.println("Connection closed by " + connection);
                 channel.close();
                 //мб как-то ещё обработать, закинуть его в неактивные коннекты, чтобы потом рестартнуть если что
                 return;
@@ -127,50 +124,35 @@ public class ConnectionManager implements Runnable {
             }
         }
 
-        if (messagesToPeer.containsKey(peer)) {
-            messagesToPeer.get(peer).add(response);
+        if (messagesToPeer.containsKey(connection)) {
+            messagesToPeer.get(connection).add(response);
         } else {
             Queue<Message> messages = new LinkedList<>();
             messages.add(response);
-            messagesToPeer.put(peer, messages);
+            messagesToPeer.put(connection, messages);
         }
     }
 
-    private void closeConnection(SocketChannel channel) {
-        try {
-            channel.socket().close();
-            channel.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     //тут отправить сообщение из очереди
     private void sendToPeer(SelectionKey key) {
         SocketChannel channel = (SocketChannel) key.channel();
-        Peer peer = findPeer(channel);
-        if (peer == null) {
-            closeConnection(channel);
-        }
-        Queue<Message> messages = messagesToPeer.get(peer);
+        PeerConnection connection = findConnection(channel);
+        Queue<Message> messages = messagesToPeer.get(connection);
         if (!messages.isEmpty()) {
             Message msgToSend = messages.poll();
-            ByteBuffer buffer = ByteBuffer.wrap(msgToSend.getMessage());
-            System.out.println("Wrote to " + peer + ", type of msg(int): " + msgToSend.getType());
-            try {
-                channel.write(buffer);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            assert connection != null;
+            connection.sendMsg(msgToSend);
+            System.out.println("Wrote to " + connection + ", type of msg(int): " + msgToSend.getType());
             return;
         }
-        System.out.println("No more messages to " + peer);
+        System.out.println("No more messages to " + connection);
     }
 
-    private final Map<Peer, Queue<Message>> messagesToPeer = new HashMap<>();
-
-    //он не должен тут лежать, потом перенести куда-нибудь, отдельный класс мб
-    private final List<Peer> peers = new ArrayList<>();
+    private final Map<PeerConnection, Queue<Message>> messagesToPeer = new HashMap<>();
+    private final List<PeerConnection> connections = new ArrayList<>();
+    private final Peer iam = new Peer();
     private Selector selector;
-    private final MessagesManager messagesManager;
+    //мб куда-нибудь перенести
+    private final Message myHS;
 }

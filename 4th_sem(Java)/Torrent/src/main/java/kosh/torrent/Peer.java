@@ -2,13 +2,14 @@ package kosh.torrent;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.List;
 
 //client
 public class Peer {
-    public Peer(SocketChannel channel) throws IOException {
-        this.channel = channel;
-        this.id = Util.generateId(); //maybe move it here
+    public Peer() {
+        this.id = Util.generateId();
     }
 
     public byte[] getId() {
@@ -19,9 +20,6 @@ public class Peer {
         this.id = id;
     }
 
-    public SocketChannel getChannel() {
-        return channel;
-    }
 
     public int getDownloaded() {
         return downloaded;
@@ -31,51 +29,22 @@ public class Peer {
         return uploaded;
     }
 
-    public BitSet getPieces() {
-        return pieces;
+    public BitSet getHas() {
+        return has;
     }
 
-    public boolean isInterested() {
-        return interested;
-    }
-
-    public boolean isInteresting() {
-        return interesting;
-    }
-
-    public boolean isChoked() {
-        return choked;
-    }
-
-    public boolean isChoking() {
-        return choking;
-    }
-
-    public void setInterested(boolean interested) {
-        this.interested = interested;
-    }
-
-    public void setInteresting(boolean interesting) {
-        this.interesting = interesting;
-    }
-
-    public void setChoked(boolean choked) {
-        this.choked = choked;
-    }
-
-    public void setChoking(boolean choking) {
-        this.choking = choking;
-    }
-
-    public void setPieces(byte[] bitfield) {
+    public void setHas(byte[] bitfield) {
         boolean[] bits = Util.convertToBits(bitfield);
         for (int i = 0; i < bits.length; ++i) {
-            pieces.set(i, bits[i]);
+            has.set(i, bits[i]);
         }
     }
 
     public void setPiece(int pieceIdx, boolean has) {
-        pieces.set(pieceIdx, has);
+        this.has.set(pieceIdx, has);
+    }
+    public List<Piece> getHasList() {
+        return hasList;
     }
 
     public void setDownloaded(int downloaded) {
@@ -86,20 +55,24 @@ public class Peer {
         this.uploaded = uploaded;
     }
 
-    @Override
-    public String toString() {
-        return channel.socket().getRemoteSocketAddress().toString();
-    }
-
     private byte[] id;
-    private boolean interested = false;
-    private boolean interesting = false;
-    private boolean choked = true;
-    private boolean choking = true;
-    private final SocketChannel channel;
     private int downloaded = 0;
     private int uploaded = 0;
 
-    private final BitSet pieces = new BitSet();
+    //схема:
+    //либо этот класс переделать, либо новый, который будет представлять соединение п1-п2
+    //в этом классе будет лежать битфилд доступных у того, к кому подключаемся
+
+    //а тут -- те, что есть у пира вообще, channel будет у коннекшена, статусные туда можно скопировать, но тут оставить(наверное???)
+    //надо ещё добавить битсет с запрошенными
+
+    //итого: Peer -- представление пира собсна, статусные поля 1-1 с другим пиром, поэтому лучше в коннекшн убрать
+    //взаимодействия в cm и mm будут не с пирами, а с коннекшенами, а коннекшн будет пересылать готовые куски пиру?
+    //либо mm будет обрабатывать сообщение от пира, и присылать в cm ответ, типа чокнуть пира или добавить кусок
+    //тогда можно ведь всё это делать в mm самом, то есть пир будет хранится в mm?
+    //пир будет в cm(не совсем, строчка вверх)
+    private final BitSet has = new BitSet();
+    private final BitSet requested = new BitSet();
+    private final List<Piece> hasList = new ArrayList<>();
 
 }

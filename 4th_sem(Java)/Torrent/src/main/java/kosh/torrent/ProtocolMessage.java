@@ -50,6 +50,10 @@ public class ProtocolMessage extends Message {
         return len;
     }
 
+    public byte[] getPayload() {
+        return payload;
+    }
+
     private byte[] len; //msg with len == 0 is keep-alive
     private final byte[] id = new byte[1];
     private byte[] payload;

@@ -58,7 +58,7 @@ public class Util {
 
 
     public static byte[] convertToByteArr(int value) {
-        byte[] result = new byte[4];
+        byte[] result = new byte[Integer.BYTES];
         for (int i = result.length - 1; i >= 0; --i) {
             result[i] = (byte) (value % 10);
             value /= 10;
@@ -74,5 +74,12 @@ public class Util {
             mult /= 10;
         }
         return result;
+    }
+
+    public static int convertToNormalInt(byte[] value) {
+        assert value.length == Integer.BYTES;
+        ByteBuffer bb = ByteBuffer.wrap(value);
+        return bb.getInt();
+
     }
 }

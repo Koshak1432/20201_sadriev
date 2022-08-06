@@ -11,6 +11,10 @@ public class Piece {
 //        debug();
     }
 
+    public Piece() {
+
+    }
+
     private void splitDataIntoBlocks(final byte[] data) {
         int offset = 0;
         int numberOfBlocks = (int)Math.ceil((double)data.length / Constants.BLOCK_SIZE);

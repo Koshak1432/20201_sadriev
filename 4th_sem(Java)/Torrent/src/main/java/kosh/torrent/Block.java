@@ -18,8 +18,8 @@ public class Block {
     public int getSize() {
         return size;
     }
-    private final int size;
 
+    private final int size;
     private final int idx;
     private final byte[] data;
 }
