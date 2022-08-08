@@ -11,21 +11,22 @@ public class TFileCreator {
         this.file = file;
         ByteBuffer buffer = ByteBuffer.allocate(Constants.PIECE_LENGTH);
         byte[] pieceData = new byte[Constants.PIECE_LENGTH];
-        int read;
+        int read, idx = 0;
         try (InputStream input = new FileInputStream(file)) {
             while ((read = input.read(pieceData, 0, buffer.remaining())) != -1) {
                 System.out.println(read);
                 buffer.put(pieceData, 0, read);
                 if (buffer.remaining() == 0) {
-                    pieces.add(new Piece(buffer.array()));
+                    pieces.add(new Piece(idx, buffer.array()));
                     buffer.clear();
+                    ++idx;
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
         if (buffer.remaining() != buffer.capacity()) {
-            pieces.add(new Piece(Util.subArray(buffer.array(), 0, buffer.capacity() - buffer.remaining())));
+            pieces.add(new Piece(idx, Util.subArray(buffer.array(), 0, buffer.capacity() - buffer.remaining())));
         }
 
         piecesHashes = joinHashes();

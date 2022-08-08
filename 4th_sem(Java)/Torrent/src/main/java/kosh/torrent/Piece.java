@@ -5,24 +5,23 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Piece {
-    public Piece(final byte[] pieceData) {
+    public Piece( int idx, final byte[] pieceData) {
+        this.idx = idx;
         splitDataIntoBlocks(pieceData);
         generateHash(pieceData);
 //        debug();
     }
 
-    public Piece() {
-
-    }
-
     private void splitDataIntoBlocks(final byte[] data) {
         int offset = 0;
+        int offsetWithinPiece = 0;
         int numberOfBlocks = (int)Math.ceil((double)data.length / Constants.BLOCK_SIZE);
         for (int i = 0; i < numberOfBlocks; ++i) {
             int blockSize = ((i == numberOfBlocks - 1) && data.length % Constants.BLOCK_SIZE != 0) ? data.length % Constants.BLOCK_SIZE : Constants.BLOCK_SIZE;
+            offsetWithinPiece = i * Constants.BLOCK_SIZE;
             byte[] blockData = new byte[blockSize];
             System.arraycopy(data, offset, blockData, 0, blockSize);
-            Block block = new Block(offset, blockData); //also there is a size calculated inside a block
+            Block block = new Block(idx, offsetWithinPiece, blockData.length, blockData); //also there is a size calculated inside a block
             blocks.add(block);
             offset += blockSize;
         }
@@ -46,4 +45,5 @@ public class Piece {
     }
     private byte[] SHA1hash;
     private final ArrayList<Block> blocks = new ArrayList<>();
+    private final int idx;
 }

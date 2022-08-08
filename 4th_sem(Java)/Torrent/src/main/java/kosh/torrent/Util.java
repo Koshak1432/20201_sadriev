@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.BitSet;
 import java.util.Random;
 
 public class Util {
@@ -81,5 +82,11 @@ public class Util {
         ByteBuffer bb = ByteBuffer.wrap(value);
         return bb.getInt();
 
+    }
+
+    public static byte[] convertToNormalByteArr(int value) {
+        ByteBuffer bb = ByteBuffer.allocate(Integer.BYTES);
+        bb.putInt(value);
+        return bb.array();
     }
 }

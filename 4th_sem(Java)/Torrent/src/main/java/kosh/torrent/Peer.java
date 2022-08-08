@@ -2,9 +2,7 @@ package kosh.torrent;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.List;
+import java.util.*;
 
 //client
 public class Peer {
@@ -40,11 +38,16 @@ public class Peer {
         }
     }
 
+    public Map<Integer, List<Block>> getHasMap() {
+        return hasMap;
+    }
+
+    public BitSet getRequested() {
+        return requested;
+    }
+
     public void setPiece(int pieceIdx, boolean has) {
         this.has.set(pieceIdx, has);
-    }
-    public List<Piece> getHasList() {
-        return hasList;
     }
 
     public void setDownloaded(int downloaded) {
@@ -55,9 +58,15 @@ public class Peer {
         this.uploaded = uploaded;
     }
 
+    public int getIdxLastRequested() {
+        return idxLastRequested;
+    }
+
     private byte[] id;
     private int downloaded = 0;
     private int uploaded = 0;
+
+    private int idxLastRequested = 0;
 
     //схема:
     //либо этот класс переделать, либо новый, который будет представлять соединение п1-п2
@@ -73,6 +82,6 @@ public class Peer {
     //пир будет в cm(не совсем, строчка вверх)
     private final BitSet has = new BitSet();
     private final BitSet requested = new BitSet();
-    private final List<Piece> hasList = new ArrayList<>();
+    private final Map<Integer, List<Block>> hasMap = new HashMap<>();
 
 }
