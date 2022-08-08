@@ -184,9 +184,6 @@ public class ConnectionManager implements Runnable {
                 int begin = Util.convertToNormalInt(Arrays.copyOfRange(payload, 4, 8));
                 byte[] blockData = Arrays.copyOfRange(payload, 8, payload.length);
                 Queue<Task> q = DU.getTasks();
-                if (q.isEmpty()) {
-                    q = new LinkedList<>();
-                }
                 q.add(new Task(TaskType.SAVE, idx, begin, blockData));
                 List<Block> piece;
                 if (iam.getHasMap().containsKey(idx)) {
@@ -230,7 +227,7 @@ public class ConnectionManager implements Runnable {
 
     private final Map<PeerConnection, Queue<Message>> messagesToPeer = new HashMap<>();
     private final List<PeerConnection> connections = new ArrayList<>();
-    private final Peer iam = new Peer();
+    private final Peer iam = new Peer(null);
     private Selector selector;
     //мб куда-нибудь перенести
     private final Message myHS;

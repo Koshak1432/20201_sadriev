@@ -22,6 +22,17 @@ public class DownloadUploadManager implements Runnable {
     @Override
     public void run() {
         while (true) {
+            if (Thread.currentThread().isInterrupted()) {
+                try {
+                    output.close();
+                }
+                catch (IOException e) {
+                    System.err.println("Couldn't close file");
+                    e.printStackTrace();
+                }
+                System.out.println("DU finished");
+                return;
+            }
             if (!tasks.isEmpty()) {
                 doTask(tasks.poll());
             }
@@ -43,7 +54,15 @@ public class DownloadUploadManager implements Runnable {
     }
 
     private void saveBlock(Task task) {
-
+        int idx = task.getBlock().getIdx();
+        int begin = task.getBlock().getBegin();
+        byte[] block = task.getBlock().getData();
+        try {
+            output.seek((long) Constants.PIECE_LENGTH * task.getBlock().getIdx() + task.getBlock().getBegin());
+            output.write(block);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void sendBlock(Task task) {
@@ -66,23 +85,27 @@ public class DownloadUploadManager implements Runnable {
         Message msgToSend = new ProtocolMessage(MessagesTypes.PIECE,
                                                 Util.concatByteArrays(idxA, Util.concatByteArrays(beginA, dataToSend)));
         Queue<Message> q;
-        if (outgoingMsg.containsKey(task.getWho())) {
-            q = outgoingMsg.get(task.getWho());
-        } else {
-            q = new LinkedList<>();
+        synchronized (outgoingMsg) {
+            if (outgoingMsg.containsKey(task.getWho())) {
+                q = outgoingMsg.get(task.getWho());
+                outgoingMsg.put(task.getWho(), q);
+            } else {
+                q = new LinkedList<>();
+            }
+            q.add(msgToSend);
         }
-        q.add(msgToSend);
     }
 
     private void stop() {
-
+        System.out.println("Stopped DU thread");
+        Thread.currentThread().interrupt();
     }
 
     public Queue<Task> getTasks() {
         return tasks;
     }
 
-    Queue<Task> tasks = new LinkedList<>();
-    Map<PeerConnection, Queue<Message>> outgoingMsg = new HashMap<>();
-    RandomAccessFile output = null;
+    final Queue<Task> tasks = new LinkedList<>();
+    final Map<PeerConnection, Queue<Message>> outgoingMsg = new HashMap<>();
+    RandomAccessFile output;
 }

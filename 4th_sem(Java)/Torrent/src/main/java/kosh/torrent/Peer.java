@@ -6,8 +6,9 @@ import java.util.*;
 
 //client
 public class Peer {
-    public Peer() {
+    public Peer(SocketChannel channel) {
         this.id = Util.generateId();
+        this.channel = channel;
     }
 
     public byte[] getId() {
@@ -62,9 +63,15 @@ public class Peer {
         return idxLastRequested;
     }
 
+    public void setIdxLastRequested(int idxLastRequested) {
+        this.idxLastRequested = idxLastRequested;
+    }
+
     private byte[] id;
     private int downloaded = 0;
     private int uploaded = 0;
+
+    private SocketChannel channel = null;
 
     private int idxLastRequested = 0;
 
