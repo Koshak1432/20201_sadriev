@@ -1,6 +1,7 @@
 package kosh.torrent;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.*;
 
@@ -11,6 +12,67 @@ public class Peer {
         this.channel = channel;
     }
 
+    public void sendMsg(Message msg) {
+        ByteBuffer buffer = ByteBuffer.wrap(msg.getMessage());
+        try {
+            channel.write(buffer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //это не должно быть здесь, перенести куда-нибудь потом
+    public Message constructPeerMsg(SocketChannel channel) {
+        int bytesToAllocate = 1024;
+        ByteBuffer buffer = ByteBuffer.allocate(bytesToAllocate);
+        int read = -1;
+        try {
+            read = channel.read(buffer);
+            if (read == -1) {
+                return null;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        byte[] length = new byte[4];
+        byte[] id = new byte[1];
+        byte[] payload = new byte[read - id.length - length.length];
+        int len = Util.convertToInt(length);
+        int idInt;
+        buffer.get(0, length, 0, length.length);
+        if (read > length.length) {
+            buffer.get(length.length, id, 0, id.length);
+            buffer.get(length.length + id.length, payload, 0, payload.length);
+            idInt = Util.convertToInt(id);
+        } else {
+            idInt = MessagesTypes.KEEP_ALIVE;
+        }
+        return (payload.length > 0) ? new ProtocolMessage(idInt, payload) :
+                new ProtocolMessage(idInt);
+    }
+
+
+
+    public boolean checkHS(Message myHS) {
+        return messagesManager.checkHS(channel, myHS);
+    }
+
+    public void closeConnection() {
+        try {
+            channel.socket().close();
+            channel.close();
+        } catch (IOException e) {
+            System.err.println("exception while closing channel");
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public String toString() {
+        return channel.socket().getRemoteSocketAddress().toString();
+    }
+
     public byte[] getId() {
         return id;
     }
@@ -19,45 +81,29 @@ public class Peer {
         this.id = id;
     }
 
-
-    public int getDownloaded() {
-        return downloaded;
+    public BitSet getPiecesHas() {
+        return piecesHas;
     }
 
-    public int getUploaded() {
-        return uploaded;
-    }
-
-    public BitSet getHas() {
-        return has;
-    }
-
-    public void setHas(byte[] bitfield) {
+    public void setPiecesHas(byte[] bitfield) {
         boolean[] bits = Util.convertToBits(bitfield);
         for (int i = 0; i < bits.length; ++i) {
-            has.set(i, bits[i]);
+            piecesHas.set(i, bits[i]);
         }
     }
 
-    public Map<Integer, List<Block>> getHasMap() {
+    public Map<Integer, BitSet> getHasMap() {
         return hasMap;
     }
 
-    public BitSet getRequested() {
-        return requested;
+    public BitSet getRequestedBlocks() {
+        return requestedBlocks;
     }
 
     public void setPiece(int pieceIdx, boolean has) {
-        this.has.set(pieceIdx, has);
+        this.piecesHas.set(pieceIdx, has);
     }
 
-    public void setDownloaded(int downloaded) {
-        this.downloaded = downloaded;
-    }
-
-    public void setUploaded(int uploaded) {
-        this.uploaded = uploaded;
-    }
 
     public int getIdxLastRequested() {
         return idxLastRequested;
@@ -67,28 +113,70 @@ public class Peer {
         this.idxLastRequested = idxLastRequested;
     }
 
+    public SocketChannel getChannel() {
+        return channel;
+    }
+
+    public boolean isChoked() {
+        return choked;
+    }
+
+    public boolean isInterested() {
+        return interested;
+    }
+
+    public boolean isChoking() {
+        return choking;
+    }
+
+    public boolean isInteresting() {
+        return interesting;
+    }
+
+    public void setChoked(boolean choked) {
+        this.choked = choked;
+    }
+
+    public void setChoking(boolean choking) {
+        this.choking = choking;
+    }
+
+    public void setInterested(boolean interested) {
+        this.interested = interested;
+    }
+
+    public void setInteresting(boolean interesting) {
+        this.interesting = interesting;
+    }
+
+    public void initBlocks(long pieceLen, long fileLen) {
+        int blocksInPiece = (int) pieceLen / Constants.BLOCK_SIZE;
+        int modPiece = (int) (fileLen % pieceLen);
+        int lastPieceSize = (int) ((modPiece != 0) ? modPiece : pieceLen);
+        int numBlocksInLastPiece = lastPieceSize / Constants.BLOCK_SIZE;
+        for (int i = 0; i < piecesHas.length(); ++i) {
+            if (i == piecesHas.length() - 1) {
+                blocksInPiece = numBlocksInLastPiece;
+            }
+            boolean pieceAvailable = piecesHas.get(i);
+            BitSet blocks = new BitSet(blocksInPiece);
+            blocks.set(0, blocksInPiece, pieceAvailable);
+            hasMap.put(i, blocks);
+        }
+    }
+
     private byte[] id;
-    private int downloaded = 0;
-    private int uploaded = 0;
-
-    private SocketChannel channel = null;
-
+    private final SocketChannel channel;
     private int idxLastRequested = 0;
+    private boolean choked = true; //this client is choking the peer
+    private boolean choking = true; //peer is choking this client, выставлять, когда отправляю пиру choke
+    private boolean interested = false; //this client is interested in the peer
+    private boolean interesting = false; //peer is interested in this client, выставлять, когда отправляю interested
 
-    //схема:
-    //либо этот класс переделать, либо новый, который будет представлять соединение п1-п2
-    //в этом классе будет лежать битфилд доступных у того, к кому подключаемся
+    private BitSet piecesHas;
+    private final BitSet requestedBlocks = new BitSet();
+    //ключ -- номер куска, значение -- битсет длиной pieceSize / blockSize
+    private final Map<Integer, BitSet> hasMap = new HashMap<>();
 
-    //а тут -- те, что есть у пира вообще, channel будет у коннекшена, статусные туда можно скопировать, но тут оставить(наверное???)
-    //надо ещё добавить битсет с запрошенными
-
-    //итого: Peer -- представление пира собсна, статусные поля 1-1 с другим пиром, поэтому лучше в коннекшн убрать
-    //взаимодействия в cm и mm будут не с пирами, а с коннекшенами, а коннекшн будет пересылать готовые куски пиру?
-    //либо mm будет обрабатывать сообщение от пира, и присылать в cm ответ, типа чокнуть пира или добавить кусок
-    //тогда можно ведь всё это делать в mm самом, то есть пир будет хранится в mm?
-    //пир будет в cm(не совсем, строчка вверх)
-    private final BitSet has = new BitSet();
-    private final BitSet requested = new BitSet();
-    private final Map<Integer, List<Block>> hasMap = new HashMap<>();
-
+    private final MessagesManager messagesManager = new MessagesManager();
 }

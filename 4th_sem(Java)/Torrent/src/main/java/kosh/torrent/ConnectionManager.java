@@ -10,8 +10,8 @@ import java.util.*;
 
 //server
 public class ConnectionManager implements Runnable {
-    public ConnectionManager(String hostname, int port, Message myHS, DownloadUploadManager DU) {
-        this.myHS = myHS;
+    public ConnectionManager(String hostname, int port, MetainfoFile meta, DownloadUploadManager DU) {
+        this.meta = meta;
         this.DU = DU;
         InetSocketAddress address = new InetSocketAddress(hostname, port);
         try {
@@ -29,11 +29,12 @@ public class ConnectionManager implements Runnable {
         System.out.println("initialized connection manager");
     }
 
+    //todo где-то имплементнуть реквест блока, будет после получения блока, но ещё первый блок надо запросить где-то
     @Override
     public void run() {
         System.out.println("connection manager is running");
         while (true) {
-            int ready = 0;
+            int ready;
             try {
                 ready = selector.select();
             }
@@ -57,7 +58,7 @@ public class ConnectionManager implements Runnable {
                     accept(key);
                 }
                 if (key.isReadable()) {
-                    readFromPeer(key); //readManager
+                    readFromPeer(key);
                 }
                 if (key.isWritable()) {
                     sendToPeer(key);
@@ -65,6 +66,16 @@ public class ConnectionManager implements Runnable {
             }
         }
     }
+
+    private Peer findPeer(SocketChannel remoteChannel) {
+        for (Peer peer : connections) {
+            if (peer.getChannel().equals(remoteChannel)) {
+                return peer;
+            }
+        }
+        return null; //never
+    }
+
 
     //принимаю подключение, завожу очередь для пира, куда сразу же кладу HS сервера для отправки этому пиру, тот уже смотрит его, и если расходятся, то отключается
     //либо тут сверяю HS(через MessagesManager), если расходятся, то сервак отклоняет соединение
@@ -77,21 +88,26 @@ public class ConnectionManager implements Runnable {
     //пусть тут будет мапа очередей, засовывать туда буду то, что вернёт команда из messageManager
 
     //todo мб вообще не принимать тут, а изначально подключиться к пирам, список которых в аргументах прилетает
+    //принимаю подключение, чекаю HS, добавляю подключение в лист,
+    // добавляю сообщения: свой HS и Bitfield в очередь для пира
+    //регистрирую канал для записи и чтения
     private void accept(SelectionKey key) {
         try {
             ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
             SocketChannel channel = serverSocketChannel.accept();
             channel.configureBlocking(false);
-            PeerConnection connection = new PeerConnection(channel);
-            if (!connection.checkHS(myHS)) {
-                connection.closeConnection();
-                System.out.println("info hashes are different, closed connection with " + connection);
+            Peer peer = new Peer(channel);
+            Message myHS = new Handshake(meta.getInfoHash(), peer.getId());
+            if (!peer.checkHS(myHS)) {
+                peer.closeConnection();
+                System.out.println("info hashes are different, closed connection with " + peer);
             }
-            System.out.println("Connect from " + connection);
-            connections.add(connection);
-            messagesToPeer.put(connection, new LinkedList<>());
-            messagesToPeer.get(connection).add(myHS);
-            messagesToPeer.get(connection).add(new ProtocolMessage(MessagesTypes.BITFIELD, iam.getHas()));
+            System.out.println("Connect from " + peer);
+            peer.setChoked(false);
+            connections.add(peer);
+            messagesToPeer.put(peer, new LinkedList<>());
+            messagesToPeer.get(peer).add(myHS);
+            messagesToPeer.get(peer).add(new ProtocolMessage(MessagesTypes.UNCHOKE));
             channel.register(selector, SelectionKey.OP_READ); //to read from remote socket
             channel.register(selector, SelectionKey.OP_WRITE); //to write to remote socket
         }
@@ -100,14 +116,6 @@ public class ConnectionManager implements Runnable {
         }
     }
 
-    private PeerConnection findConnection(SocketChannel remoteChannel) {
-        for (PeerConnection connection : connections) {
-            if (connection.getChannel().equals(remoteChannel)) {
-                return connection;
-            }
-        }
-        return null; //never
-    }
 
     //прочитать инфу от пира, вернуть сообщение с этой инфой, тут в свиче посмотреть на тип сообщения, если что-то отметить надо, то отметить тут
     //если реквест, пис или кансел, то кинуть таску в очередь DU
@@ -118,20 +126,13 @@ public class ConnectionManager implements Runnable {
     //где выбирать какие куски запрашивать?
     private void readFromPeer(SelectionKey key) {
         SocketChannel channel = (SocketChannel) key.channel();
-        PeerConnection connection = findConnection(channel);
-        assert connection != null;
-        //что если прочитать то, что прислал пир, обернуть это в сообщение, сюда он и вернётся, а потом оповестить DU манагера
-        //который подпишется на cm, туда так же подавать коннекшн, чтобы кусок отправлять на ревкест
-        //и вообще все сообщения будет обрабатывать DU манагер, для чоканья и интереса передавать конекшн?
-        //
-        //создаётся DU манагер в одном потоке, создаётся cm в другом потоке и ему передаётся ссылка на DU
-        //потом брать из мапы результатов DU сообщения уже в байтовой форме и на isWritable() отправлять его
-        Message peerMsg = connection.readMsg();
-
-//        Message response = connection.readMsg();
-        if (response == null) {
+        Peer peer = findPeer(channel);
+        assert peer != null;
+        Message peerMsg = peer.constructPeerMsg(peer.getChannel());
+        if (peerMsg == null) {
             try {
-                System.out.println("Connection closed by " + connection);
+                //или не совсем закрыто??
+                System.out.println("Connection closed by " + peer);
                 channel.close();
                 //мб как-то ещё обработать, закинуть его в неактивные коннекты, чтобы потом рестартнуть если что
                 return;
@@ -140,28 +141,58 @@ public class ConnectionManager implements Runnable {
             }
         }
 
-        if (messagesToPeer.containsKey(connection)) {
-            messagesToPeer.get(connection).add(response);
+
+        handleMsg(peerMsg, peer);
+
+        if (messagesToPeer.containsKey(peer)) {
+            messagesToPeer.get(peer).add(response);
         } else {
             Queue<Message> messages = new LinkedList<>();
             messages.add(response);
-            messagesToPeer.put(connection, messages);
+            messagesToPeer.put(peer, messages);
         }
     }
 
-    //если убрать всё из конекшна в пира, и завести мапу socketChannel-Peer????
-    private void handleMsg(ProtocolMessage msg, PeerConnection connection) {
+    //тут отправить сообщение из очереди
+    //ищу пира, беру сообщение из очереди для него, отправляю
+    //подумать, через кого отправлять
+    private void sendToPeer(SelectionKey key) {
+        SocketChannel channel = (SocketChannel) key.channel();
+        Peer peer = findPeer(channel);
+        assert peer != null;
+        Queue<Message> messages = messagesToPeer.get(peer);
+        synchronized (DU.getOutgoingMsg().get(peer)) {
+            messages.addAll(DU.getOutgoingMsg().get(peer));
+        }
+        if (!messages.isEmpty()) {
+            Message msgToSend = messages.poll();
+            peer.sendMsg(msgToSend);
+            System.out.println("Wrote to " + peer + ", type of msg(int): " + msgToSend.getType());
+            return;
+        }
+        System.out.println("No more messages to " + peer);
+    }
+
+    //возомжно, нормал инт и дурацкая конвертация в байтовый массив -- бред, и следует просто буффером класть туда инт
+    private void handleMsg(Message msg, Peer peer) {
         switch (msg.getType()) {
-            case MessagesTypes.CHOKE -> connection.setPeerChoking(true);
-            case MessagesTypes.UNCHOKE -> connection.setPeerChoking(false);
-            case MessagesTypes.INTERESTED -> connection.setPeerInterested(true);
-            case MessagesTypes.NOT_INTERESTED -> connection.setPeerInterested(false);
-            case MessagesTypes.HAVE -> {
-                int pieceIdx = Util.convertToNormalInt(msg.getPayload());
-                connection.setPiece(pieceIdx, true);
+            case MessagesTypes.CHOKE -> peer.setChoked(true);
+            case MessagesTypes.UNCHOKE -> {
+                peer.setChoked(false);
+                //мб ещё припилить метод, который будет говорить, заинтересован ли я в пире, а то мб у него нет ничего
+                messagesToPeer.get(peer).add(new ProtocolMessage(MessagesTypes.INTERESTED));
+
             }
+            case MessagesTypes.INTERESTED -> {
+                peer.setInterested(true);
+                messagesToPeer.get(peer).add(new ProtocolMessage(MessagesTypes.BITFIELD, iam.getPiecesHas().toByteArray()));
+            }
+            case MessagesTypes.NOT_INTERESTED -> peer.setInterested(false);
+            case MessagesTypes.HAVE -> peer.setPiece(Util.convertToNormalInt(msg.getPayload()), true);
             case MessagesTypes.BITFIELD -> {
-                connection.setPeerHas(msg.getPayload());
+                peer.setPiecesHas(msg.getPayload());
+                peer.initBlocks(meta.getPieceLen(), meta.getFileLen());
+                requestPiece(peer, iam);
             }
             //means remote peer is requesting a piece
             case MessagesTypes.REQUEST -> {
@@ -171,11 +202,7 @@ public class ConnectionManager implements Runnable {
                 int begin = Util.convertToNormalInt(Arrays.copyOfRange(payload, 4, 8));
                 int len = Util.convertToNormalInt(Arrays.copyOfRange(payload, 8, payload.length));
                 //добавить в очерень тасок DU
-                Queue<Task> q = DU.getTasks();
-                if (q.isEmpty()) {
-                    q = new LinkedList<>();
-                }
-                q.add(new Task(TaskType.SEND, idx, begin, len, connection));
+                DU.addTask(new Task(TaskType.SEND, idx, begin, len, peer));
             }
             //means remote peer send us a block of data
             case MessagesTypes.PIECE -> {
@@ -183,53 +210,32 @@ public class ConnectionManager implements Runnable {
                 int idx = Util.convertToNormalInt(Arrays.copyOfRange(payload, 0, 4));
                 int begin = Util.convertToNormalInt(Arrays.copyOfRange(payload, 4, 8));
                 byte[] blockData = Arrays.copyOfRange(payload, 8, payload.length);
-                Queue<Task> q = DU.getTasks();
-                q.add(new Task(TaskType.SAVE, idx, begin, blockData));
-                List<Block> piece;
-                if (iam.getHasMap().containsKey(idx)) {
-                    piece = iam.getHasMap().get(idx);
-                } else {
-                     piece = new ArrayList<>(Constants.PIECE_LENGTH / Constants.BLOCK_SIZE);
-                }
-                piece.set(begin / Constants.BLOCK_SIZE, new Block(idx, begin, blockData.length, blockData)); // todo трабл с блоком в том, что begin -- оффсет внутри блока, переделать Block, и креатора, чтобы заходил не глобавльный оффсет, а в куске
-                //если полный кусок, то чек хэшей
+                DU.addTask(new Task(TaskType.SAVE, idx, begin, blockData));
+                int blockIdx = begin / Constants.BLOCK_SIZE;
+                iam.getHasMap().get(idx).set(blockIdx, true);
+                requestPiece(peer, iam);
+                //если полный кусок, то чек хэшей //todo
             }
             //means remote peer want us to cancel last request from him
             case MessagesTypes.CANCEL -> {
                 //todo
-                iam.getRequested().clear(iam.getIdxLastRequested());
-                //notifyCancel
                 //как отменять? где очередь сообщений должна быть?
-                //сделать этот класс паблишером, а конекшн подписчиком?
-                //или cm подписчик, и ему говорить пришло сообщение отменить запрос на кусок с индексом idx у такого-то коннекшна
-                //отправить кусок такой-то такому-то пиру
-                //сохранить блок такой-то
                 //нужен интерфейс, чтобы ещё и have всем отправлять
             }
         }
     }
 
+    //мб в пира засунуть
+    private void requestPiece(Peer to, Peer from) {
 
-    //тут отправить сообщение из очереди
-    private void sendToPeer(SelectionKey key) {
-        SocketChannel channel = (SocketChannel) key.channel();
-        PeerConnection connection = findConnection(channel);
-        Queue<Message> messages = messagesToPeer.get(connection);
-        if (!messages.isEmpty()) {
-            Message msgToSend = messages.poll();
-            assert connection != null;
-            connection.sendMsg(msgToSend);
-            System.out.println("Wrote to " + connection + ", type of msg(int): " + msgToSend.getType());
-            return;
-        }
-        System.out.println("No more messages to " + connection);
     }
 
-    private final Map<PeerConnection, Queue<Message>> messagesToPeer = new HashMap<>();
-    private final List<PeerConnection> connections = new ArrayList<>();
+
+    private final Map<Peer, Queue<Message>> messagesToPeer = new HashMap<>();
+    private final List<Peer> connections = new ArrayList<>();
     private final Peer iam = new Peer(null);
     private Selector selector;
     //мб куда-нибудь перенести
-    private final Message myHS;
+    private final MetainfoFile meta;
     private final DownloadUploadManager DU;
 }

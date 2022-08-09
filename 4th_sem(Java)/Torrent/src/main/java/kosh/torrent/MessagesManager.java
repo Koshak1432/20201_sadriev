@@ -19,53 +19,16 @@ public class MessagesManager {
     //для этого есть класс Peer
     //здесь или в cm завести мапу, где ключи -- Peer, а проверять на наличие -- пробегом всей мапы в поисках remoteChannel?
     //
-    public Message readMsg(PeerConnection connection) {
-        return constructPeerMsg(connection.getChannel());
-
         //handle msg(construct response)
 //        Message response = handleMsg(peerMsg, connection);
 //        return response;
     }
 
-    private Message handleMsg(ProtocolMessage msg, PeerConnection connection, Peer iam) {
 
-    }
-
-    private Message constructPeerMsg(SocketChannel channel) {
-        int bytesToAllocate = 1024;
-        ByteBuffer buffer = ByteBuffer.allocate(bytesToAllocate);
-        int read = -1;
-        try {
-            read = channel.read(buffer);
-            if (read == -1) {
-                return null;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        byte[] length = new byte[4];
-        byte[] id = new byte[1];
-        byte[] payload = new byte[read - id.length - length.length];
-        int len = Util.convertToInt(length);
-        int idInt;
-        buffer.get(0, length, 0, length.length);
-        if (read > length.length) {
-            buffer.get(length.length, id, 0, id.length);
-            buffer.get(length.length + id.length, payload, 0, payload.length);
-            idInt = Util.convertToInt(id);
-        } else {
-            idInt = MessagesTypes.KEEP_ALIVE;
-        }
-        return (payload.length > 0) ? new ProtocolMessage(idInt, payload) :
-                new ProtocolMessage(idInt);
-    }
 
     public boolean checkHS(SocketChannel remoteChannel, Message myHS) {
-        boolean equals = false;
         Message remotePeerHS = getRemoteHS(remoteChannel);
-        equals = checkHS(remotePeerHS, myHS);
-        return equals;
+        return checkHS(remotePeerHS, myHS);
     }
 
     private Message getRemoteHS(SocketChannel remoteChannel) {

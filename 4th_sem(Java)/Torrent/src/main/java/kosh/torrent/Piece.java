@@ -13,11 +13,16 @@ public class Piece {
     }
 
     private void splitDataIntoBlocks(final byte[] data) {
+        int offsetWithinPiece;
         int offset = 0;
-        int offsetWithinPiece = 0;
+        int blockSize = Constants.BLOCK_SIZE;
         int numberOfBlocks = (int)Math.ceil((double)data.length / Constants.BLOCK_SIZE);
+        int mod = data.length % Constants.BLOCK_SIZE;
+        int lastBlockSize = (mod != 0) ? mod : blockSize;
         for (int i = 0; i < numberOfBlocks; ++i) {
-            int blockSize = ((i == numberOfBlocks - 1) && data.length % Constants.BLOCK_SIZE != 0) ? data.length % Constants.BLOCK_SIZE : Constants.BLOCK_SIZE;
+            if (i == numberOfBlocks - 1) {
+                blockSize = lastBlockSize;
+            }
             offsetWithinPiece = i * Constants.BLOCK_SIZE;
             byte[] blockData = new byte[blockSize];
             System.arraycopy(data, offset, blockData, 0, blockSize);

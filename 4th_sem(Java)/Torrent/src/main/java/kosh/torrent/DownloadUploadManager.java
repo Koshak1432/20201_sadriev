@@ -11,11 +11,23 @@ import java.util.Queue;
 //класс, отсылающий и принимающий блоки
 public class DownloadUploadManager implements Runnable {
     public DownloadUploadManager(MetainfoFile meta) {
+        this.meta = meta;
+        initHashes(meta);
         try {
             output = new RandomAccessFile(meta.getName(), "rw");
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void initHashes(MetainfoFile meta) {
+        byte[] pieces = meta.getPieces();
+        assert pieces.length % 20 == 0;
+        int piecesNum = pieces.length / 20;
+        for (int i = 0; i < piecesNum; ++i) {
+            byte[] hash = Util.subArray(pieces, i * 20, (i + 1) * 20);
+            hashes.put(i, hash);
         }
     }
 
@@ -51,6 +63,14 @@ public class DownloadUploadManager implements Runnable {
                 stop();
             }
         }
+    }
+
+    public Map<Peer, Queue<Message>> getOutgoingMsg() {
+        return outgoingMsg;
+    }
+
+    public void addTask(Task task) {
+        tasks.add(task);
     }
 
     private void saveBlock(Task task) {
@@ -101,11 +121,15 @@ public class DownloadUploadManager implements Runnable {
         Thread.currentThread().interrupt();
     }
 
-    public Queue<Task> getTasks() {
-        return tasks;
+    public Map<Integer, byte[]> getHashes() {
+        return hashes;
     }
 
-    final Queue<Task> tasks = new LinkedList<>();
-    final Map<PeerConnection, Queue<Message>> outgoingMsg = new HashMap<>();
-    RandomAccessFile output;
+    private final MetainfoFile meta;
+    private final Queue<Task> tasks = new LinkedList<>();
+    private final Map<Peer, Queue<Message>> outgoingMsg = new HashMap<>();
+
+    //for checking hashes
+    private final Map<Integer, byte[]> hashes = new HashMap<>(); //key -- piece num, value -- hash from .torrent
+    private RandomAccessFile output;
 }

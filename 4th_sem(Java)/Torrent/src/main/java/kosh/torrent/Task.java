@@ -6,7 +6,7 @@ public class Task {
     }
 
     //request
-    public Task(TaskType type, int idx, int begin, int len, PeerConnection sender) {
+    public Task(TaskType type, int idx, int begin, int len, Peer sender) {
         this.type = type;
         this.who = sender;
         this.block = new Block(idx, begin, len, null);
@@ -27,11 +27,11 @@ public class Task {
         return block;
     }
 
-    public PeerConnection getWho() {
+    public Peer getWho() {
         return who;
     }
 
     private final TaskType type;
-    private PeerConnection who = null;
+    private Peer who = null;
     private Block block = null; //если пришёл блок и его нужно сохранить
 }

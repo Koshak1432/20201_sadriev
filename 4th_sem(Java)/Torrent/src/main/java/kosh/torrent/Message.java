@@ -10,5 +10,10 @@ abstract public class Message {
         return type;
     }
 
+    public byte[] getPayload() {
+        return payload;
+    }
+
     private final int type;
+    private byte[] payload = null;
 }
