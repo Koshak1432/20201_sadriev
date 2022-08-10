@@ -50,15 +50,10 @@ public class DownloadUploadManager implements Runnable {
 
     public void doTask(Task task) {
         switch (task.getType()) {
-            case SAVE -> {
-                saveBlock(task);
-            }
-            case SEND -> {
-                sendBlock(task);
-            }
-            case STOP -> {
-                stop();
-            }
+            case SAVE -> saveBlock(task);
+            case SEND -> sendBlock(task);
+            case CHECK_HASH -> checkHash(task);
+            case STOP -> stop();
         }
     }
 

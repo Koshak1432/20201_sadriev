@@ -44,20 +44,6 @@ public class Util {
         return result;
     }
 
-    public static boolean[] convertToBits(byte[] bytes) {
-        int bitsLen = bytes.length * 8;
-        boolean[] bits = new boolean[bitsLen];
-        for (int i = 0; i < bitsLen; ++i) {
-            int curByte = i / 8;
-            int curBit = i % 8;
-            if (((bytes[curByte] >> (7 - curBit)) & 1) > 0) {
-                bits[i] = true;
-            }
-        }
-        return bits;
-    }
-
-
     public static byte[] convertToByteArr(int value) {
         byte[] result = new byte[Integer.BYTES];
         for (int i = result.length - 1; i >= 0; --i) {

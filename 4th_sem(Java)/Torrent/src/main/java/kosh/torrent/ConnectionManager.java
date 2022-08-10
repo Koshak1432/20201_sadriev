@@ -1,6 +1,7 @@
 package kosh.torrent;
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -29,7 +30,6 @@ public class ConnectionManager implements Runnable {
         System.out.println("initialized connection manager");
     }
 
-    //todo где-то имплементнуть реквест блока, будет после получения блока, но ещё первый блок надо запросить где-то
     @Override
     public void run() {
         System.out.println("connection manager is running");
@@ -64,7 +64,31 @@ public class ConnectionManager implements Runnable {
                     sendToPeer(key);
                 }
             }
+            if (connections.isEmpty()) {
+                return;
+            }
+            while (!DU.getSuccessfulCheck().isEmpty()) {
+                Integer idxHave = DU.getSuccessfulCheck().poll();
+                assert idxHave != null;
+                for (Peer peer : connections) {
+                    messagesToPeer.get(peer).add(new ProtocolMessage(MessagesTypes.HAVE, Util.convertToNormalByteArr(idxHave)));
+                }
+            }
+            while (!DU.getUnsuccessfulCheck().isEmpty()) {
+                Integer idxToClear = DU.getUnsuccessfulCheck().poll();
+                assert idxToClear != null;
+                clearPiece(idxToClear);
+            }
         }
+    }
+
+    private void clearPiece(Integer idxToClear) {
+        iam.getPiecesHas().set(idxToClear, false);
+        int blocksNumber = iam.getHasMap().get(idxToClear).size();
+        iam.getHasMap().get(idxToClear).set(0, blocksNumber, false);
+        int fromIdx = idxToClear * (int) meta.getPieceLen() / Constants.BLOCK_SIZE;
+        int toIdx = idxToClear * (int) meta.getPieceLen() / Constants.BLOCK_SIZE + blocksNumber;
+        iam.getRequestedBlocks().set(fromIdx, toIdx, false);
     }
 
     private Peer findPeer(SocketChannel remoteChannel) {
@@ -135,22 +159,13 @@ public class ConnectionManager implements Runnable {
                 System.out.println("Connection closed by " + peer);
                 channel.close();
                 //мб как-то ещё обработать, закинуть его в неактивные коннекты, чтобы потом рестартнуть если что
-                return;
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            return;
         }
-
 
         handleMsg(peerMsg, peer);
-
-        if (messagesToPeer.containsKey(peer)) {
-            messagesToPeer.get(peer).add(response);
-        } else {
-            Queue<Message> messages = new LinkedList<>();
-            messages.add(response);
-            messagesToPeer.put(peer, messages);
-        }
     }
 
     //тут отправить сообщение из очереди
@@ -187,7 +202,10 @@ public class ConnectionManager implements Runnable {
                 messagesToPeer.get(peer).add(new ProtocolMessage(MessagesTypes.BITFIELD, iam.getPiecesHas().toByteArray()));
             }
             case MessagesTypes.NOT_INTERESTED -> peer.setInterested(false);
-            case MessagesTypes.HAVE -> peer.setPiece(Util.convertToNormalInt(msg.getPayload()), true);
+            case MessagesTypes.HAVE -> {
+                peer.setPiece(Util.convertToNormalInt(msg.getPayload()), true);
+                requestPiece(peer, iam);
+            }
             case MessagesTypes.BITFIELD -> {
                 peer.setPiecesHas(msg.getPayload());
                 peer.initBlocks(meta.getPieceLen(), meta.getFileLen());
@@ -211,7 +229,7 @@ public class ConnectionManager implements Runnable {
                 byte[] blockData = Arrays.copyOfRange(payload, 8, payload.length);
                 DU.addTask(new Task(TaskType.SAVE, idx, begin, blockData));
                 int blockIdx = begin / Constants.BLOCK_SIZE;
-                iam.getHasMap().get(idx).set(blockIdx, true);
+                iam.getHasMap().get(idx).set(blockIdx);
                 requestPiece(peer, iam);
                 BitSet bs = iam.getHasMap().get(idx);
                 if (bs.cardinality() == bs.size()) {
@@ -228,9 +246,43 @@ public class ConnectionManager implements Runnable {
         }
     }
 
-    //мб в пира засунуть
-    private void requestPiece(Peer to, Peer from) {
+    //мб в пира засунуть или в mm
+    private int getBlockIdxToRequest(Peer to, Peer from) {
+        BitSet piecesToRequest = (BitSet) from.getPiecesHas().clone();
+        piecesToRequest.flip(0, piecesToRequest.size());
+        piecesToRequest.and(to.getPiecesHas());
+        //в piecesToRequest те куски, которых нет у меня, есть у пира
+        if (piecesToRequest.cardinality() == 0) {
+            return - 1;
+        }
+        Random random = new Random();
+        int pieceIdx = piecesToRequest.nextSetBit(random.nextInt(piecesToRequest.size()));
+        if (pieceIdx == -1) {
+            pieceIdx = piecesToRequest.nextSetBit(0);
+        }
 
+        BitSet blocksToRequest = (BitSet) from.getHasMap().get(pieceIdx).clone(); //кокие у меня есть
+        blocksToRequest.or(from.getRequestedBlocks()); // какие есть у меня и запрошенные
+        blocksToRequest.flip(0, blocksToRequest.size()); //каких у меня нет и не запрошенные
+        blocksToRequest.and(to.getHasMap().get(pieceIdx)); //нет у меня, не запрошенные и есть у пира
+        if (blocksToRequest.cardinality() == 0) {
+            return -1;
+        }
+
+        int blockIdx = blocksToRequest.nextSetBit(random.nextInt(blocksToRequest.size()));
+        if (blockIdx == -1) {
+            blockIdx = blocksToRequest.nextSetBit(0);
+        }
+        return blockIdx;
+    }
+    private void requestPiece(Peer to, Peer from) {
+        int blockToRequest = getBlockIdxToRequest(to, from);
+        if (blockToRequest == -1) {
+            System.out.println("Don't have blocks to send request to " + to);
+            return;
+        }
+        from.getRequestedBlocks().set(blockToRequest);
+        messagesToPeer.get(to).add(new ProtocolMessage(MessagesTypes.REQUEST, Util.convertToNormalByteArr(blockToRequest)));
     }
 
 

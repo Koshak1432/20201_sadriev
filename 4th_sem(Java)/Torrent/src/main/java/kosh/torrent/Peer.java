@@ -52,10 +52,28 @@ public class Peer {
                 new ProtocolMessage(idInt);
     }
 
-
+    private Message getRemoteHS(SocketChannel remoteChannel) {
+        int infoHashIdx = 28;
+        int peerIdIdx = infoHashIdx + 20;
+        //прочитать и сохранить все данные?
+        byte[] infoHash = new byte[20];
+        byte[] peerId = new byte[20];
+        ByteBuffer byteBuffer = ByteBuffer.allocate(68);
+        try {
+            remoteChannel.read(byteBuffer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        byteBuffer.get(infoHashIdx, infoHash, 0, infoHash.length);
+        byteBuffer.get(peerIdIdx, peerId, 0, peerId.length);
+        //вот тут что-то с id придумать надо бы
+        setId(peerId);
+        return new Handshake(infoHash, peerId);
+    }
 
     public boolean checkHS(Message myHS) {
-        return messagesManager.checkHS(channel, myHS);
+        Message remotePeerHS = getRemoteHS(channel);
+        return Arrays.equals(remotePeerHS.getMessage(), myHS.getMessage());
     }
 
     public void closeConnection() {
@@ -86,10 +104,7 @@ public class Peer {
     }
 
     public void setPiecesHas(byte[] bitfield) {
-        boolean[] bits = Util.convertToBits(bitfield);
-        for (int i = 0; i < bits.length; ++i) {
-            piecesHas.set(i, bits[i]);
-        }
+        piecesHas = BitSet.valueOf(bitfield);
     }
 
     public Map<Integer, BitSet> getHasMap() {
@@ -159,6 +174,7 @@ public class Peer {
         for (int i = 0; i < piecesHas.length(); ++i) {
             if (i == piecesHas.length() - 1) {
                 blocksInPiece = numBlocksInLastPiece;
+                requestedBlocks = new BitSet(i * (int) pieceLen / Constants.BLOCK_SIZE + blocksInPiece);
             }
             boolean pieceAvailable = piecesHas.get(i);
             BitSet blocks = new BitSet(blocksInPiece);
@@ -180,10 +196,8 @@ public class Peer {
     private boolean interesting = false; //peer is interested in this client, выставлять, когда отправляю interested
 
     private BitSet piecesHas;
-    private final BitSet requestedBlocks = new BitSet();
+    private BitSet requestedBlocks;
     //ключ -- номер куска, значение -- битсет длиной pieceSize / blockSize
     private final Map<Integer, BitSet> hasMap = new HashMap<>();
     private int lastBlockSize = 0;
-
-    private final MessagesManager messagesManager = new MessagesManager();
 }
