@@ -1,10 +1,6 @@
 package kosh.torrent;
 
 public class Task {
-    public Task(TaskType type) {
-        this.type = type;
-    }
-
     //request
     public Task(TaskType type, int idx, int begin, int len, Peer sender) {
         this.type = type;
@@ -18,6 +14,11 @@ public class Task {
         this.block = new Block(idx, begin, blockData.length, blockData);
     }
 
+    public Task(TaskType type, int idx, int pieceLen) {
+        this.type = type;
+        this.idx = idx;
+        this.pieceLen = pieceLen;
+    }
 
     public TaskType getType() {
         return type;
@@ -31,7 +32,18 @@ public class Task {
         return who;
     }
 
+    public int getPieceLen() {
+        return pieceLen;
+    }
+
+    public int getIdx() {
+        return idx;
+    }
+
+    //сделать отдельную абстракцию под инфу, а то это дичь какая-то
     private final TaskType type;
     private Peer who = null;
     private Block block = null; //если пришёл блок и его нужно сохранить
+    private int pieceLen = 0;
+    private int idx = 0;
 }

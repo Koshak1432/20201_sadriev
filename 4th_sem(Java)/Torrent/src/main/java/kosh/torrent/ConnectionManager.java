@@ -181,7 +181,6 @@ public class ConnectionManager implements Runnable {
                 peer.setChoked(false);
                 //мб ещё припилить метод, который будет говорить, заинтересован ли я в пире, а то мб у него нет ничего
                 messagesToPeer.get(peer).add(new ProtocolMessage(MessagesTypes.INTERESTED));
-
             }
             case MessagesTypes.INTERESTED -> {
                 peer.setInterested(true);
@@ -214,7 +213,11 @@ public class ConnectionManager implements Runnable {
                 int blockIdx = begin / Constants.BLOCK_SIZE;
                 iam.getHasMap().get(idx).set(blockIdx, true);
                 requestPiece(peer, iam);
-                //если полный кусок, то чек хэшей //todo
+                BitSet bs = iam.getHasMap().get(idx);
+                if (bs.cardinality() == bs.size()) {
+                    int pieceLen = Constants.BLOCK_SIZE * (bs.size() - 1) + peer.getLastBlockSize();
+                    DU.addTask(new Task(TaskType.CHECK_HASH, idx, pieceLen));
+                }
             }
             //means remote peer want us to cancel last request from him
             case MessagesTypes.CANCEL -> {

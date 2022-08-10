@@ -3,10 +3,7 @@ package kosh.torrent;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 
 //класс, отсылающий и принимающий блоки
 public class DownloadUploadManager implements Runnable {
@@ -121,15 +118,40 @@ public class DownloadUploadManager implements Runnable {
         Thread.currentThread().interrupt();
     }
 
-    public Map<Integer, byte[]> getHashes() {
-        return hashes;
+    private void checkHash(Task task) {
+        int idx = task.getIdx();
+        int pieceLen = task.getPieceLen();
+        byte[] metaHash = hashes.get(idx);
+        byte[] pieceData = new byte[pieceLen];
+        try {
+            output.seek(meta.getPieceLen() * idx);
+            if (pieceLen != output.read(pieceData)) {
+                System.err.println("Couldn't read enough bytes while checking hashes");
+                return;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (Arrays.equals(metaHash, Util.generateHash(pieceData))) {
+            successfulCheck.add(idx);
+        } else {
+            unsuccessfulCheck.add(idx);
+        }
+    }
+
+    public Queue<Integer> getSuccessfulCheck() {
+        return successfulCheck;
+    }
+
+    public Queue<Integer> getUnsuccessfulCheck() {
+        return unsuccessfulCheck;
     }
 
     private final MetainfoFile meta;
     private final Queue<Task> tasks = new LinkedList<>();
     private final Map<Peer, Queue<Message>> outgoingMsg = new HashMap<>();
-
-    //for checking hashes
+    private final Queue<Integer> successfulCheck = new LinkedList<>();
+    private final Queue<Integer> unsuccessfulCheck = new LinkedList<>();
     private final Map<Integer, byte[]> hashes = new HashMap<>(); //key -- piece num, value -- hash from .torrent
     private RandomAccessFile output;
 }

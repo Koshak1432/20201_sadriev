@@ -9,7 +9,6 @@ public class Piece {
         this.idx = idx;
         splitDataIntoBlocks(pieceData);
         generateHash(pieceData);
-//        debug();
     }
 
     private void splitDataIntoBlocks(final byte[] data) {
@@ -30,11 +29,6 @@ public class Piece {
             blocks.add(block);
             offset += blockSize;
         }
-    }
-
-    public void debug() {
-        System.out.println("SHA1 hash: " + Arrays.toString(Arrays.toString(SHA1hash).getBytes(StandardCharsets.UTF_8)));
-        System.out.println("LEN: " + SHA1hash.length);
     }
 
     public byte[] getSHA1hash() {

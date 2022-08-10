@@ -154,6 +154,8 @@ public class Peer {
         int modPiece = (int) (fileLen % pieceLen);
         int lastPieceSize = (int) ((modPiece != 0) ? modPiece : pieceLen);
         int numBlocksInLastPiece = lastPieceSize / Constants.BLOCK_SIZE;
+        int modBlock = lastPieceSize % Constants.BLOCK_SIZE;
+        lastBlockSize = (modBlock != 0) ? modBlock : Constants.BLOCK_SIZE;
         for (int i = 0; i < piecesHas.length(); ++i) {
             if (i == piecesHas.length() - 1) {
                 blocksInPiece = numBlocksInLastPiece;
@@ -163,6 +165,10 @@ public class Peer {
             blocks.set(0, blocksInPiece, pieceAvailable);
             hasMap.put(i, blocks);
         }
+    }
+
+    public int getLastBlockSize() {
+        return lastBlockSize;
     }
 
     private byte[] id;
@@ -177,6 +183,7 @@ public class Peer {
     private final BitSet requestedBlocks = new BitSet();
     //ключ -- номер куска, значение -- битсет длиной pieceSize / blockSize
     private final Map<Integer, BitSet> hasMap = new HashMap<>();
+    private int lastBlockSize = 0;
 
     private final MessagesManager messagesManager = new MessagesManager();
 }
