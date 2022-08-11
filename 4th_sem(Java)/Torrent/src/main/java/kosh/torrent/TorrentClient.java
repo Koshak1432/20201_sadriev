@@ -1,26 +1,40 @@
 package kosh.torrent;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.net.InetSocketAddress;
+import java.util.*;
 
 public class TorrentClient {
-    public TorrentClient(MetainfoFile metainfoFile, String[] peers) {
+    //[0] -- leecher or seeder
+    //[1] -- собственный адресс
+    //брать адресса из аргументов и биндить сокетченнелы
+    //как скачивать файл, если он у меня уже есть? куда?
+    public TorrentClient(MetainfoFile metainfoFile, String[] args) {
+        boolean leecher = args[0].equals("leecher");
+        if (leecher) {
+            System.out.println("Leecher");
+        } else {
+            System.out.println("Seeder");
+        }
+        List<InetSocketAddress> peers = parseArgs(Arrays.copyOfRange(args, 1, args.length)); //[0] -- iam
         DownloadUploadManager downloadUploadManager = new DownloadUploadManager(metainfoFile);
         Thread downloadThread = new Thread(downloadUploadManager);
         downloadThread.start();
-        ConnectionManager cm = new ConnectionManager("localhost", 6969, metainfoFile , downloadUploadManager);
+        ConnectionManager cm = new ConnectionManager(metainfoFile , downloadUploadManager, peers, leecher);
         Thread connectionThread = new Thread(cm);
         connectionThread.start();
 
+        System.out.println("After parsing map");
     }
 
-    private Map<String, Integer> parseArgs(String[] args) {
-        Map<String, Integer> peersId = new HashMap<>();
+    private List<InetSocketAddress> parseArgs(String[] args) {
+        List<InetSocketAddress> addresses = new ArrayList<>();
         for (String arg : args) {
             String[] peerInfo = arg.split(":");
-            peersId.put(peerInfo[0], Integer.parseInt(peerInfo[1]));
+            InetSocketAddress address = new InetSocketAddress(peerInfo[0], Integer.parseInt(peerInfo[1]));
+            addresses.add(address);
         }
-        return peersId;
+        return addresses;
     }
+
 
 }

@@ -10,9 +10,6 @@ import java.util.*;
 public class Main {
 
     public static void main(String[] args) {
-//        ConnectionManager connectionManager = new ConnectionManager("localhost", 2020);
-//        connectionManager.run();
-
 //        try (OutputStream out = new FileOutputStream("test" + ".torrent")) {
 //            File file = new File("D:\\20201_sadriev\\4th_sem(Java)\\Torrent\\src\\main\\resources\\the art of loving.pdf");
 //            if (file.exists()) {
@@ -30,11 +27,11 @@ public class Main {
 
         //получать в args[0]
         MetainfoFile torrent = new MetainfoFile("D:\\20201_sadriev\\4th_sem(Java)\\Torrent\\test.torrent");
-        System.out.println("Name: " + torrent.getName());
-        System.out.println("FileLen: " + torrent.getFileLen());
-        System.out.println("PieceLen: " + torrent.getPieceLen());
-        System.out.println("Pieces: " + Arrays.toString(torrent.getPieces()));
-
-        TorrentClient client = new TorrentClient(torrent, Arrays.copyOfRange(args, 1, args.length));
+//        System.out.println(Arrays.toString(torrent.getInfoHash()));
+//        System.out.println("Name: " + torrent.getName());
+//        System.out.println("FileLen: " + torrent.getFileLen());
+//        System.out.println("PieceLen: " + torrent.getPieceLen());
+//        System.out.println("Pieces: " + Arrays.toString(torrent.getPieces()));
+        TorrentClient client = new TorrentClient(torrent, args);
     }
 }

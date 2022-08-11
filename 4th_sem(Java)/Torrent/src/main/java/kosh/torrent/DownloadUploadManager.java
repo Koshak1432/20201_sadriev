@@ -23,7 +23,7 @@ public class DownloadUploadManager implements Runnable {
         assert pieces.length % 20 == 0;
         int piecesNum = pieces.length / 20;
         for (int i = 0; i < piecesNum; ++i) {
-            byte[] hash = Util.subArray(pieces, i * 20, (i + 1) * 20);
+            byte[] hash = Util.subArray(pieces, i * 20, 20);
             hashes.put(i, hash);
         }
     }

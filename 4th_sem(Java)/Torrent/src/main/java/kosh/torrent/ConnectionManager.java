@@ -1,7 +1,6 @@
 package kosh.torrent;
 
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -11,14 +10,16 @@ import java.util.*;
 
 //server
 public class ConnectionManager implements Runnable {
-    public ConnectionManager(String hostname, int port, MetainfoFile meta, DownloadUploadManager DU) {
+    public ConnectionManager(MetainfoFile meta, DownloadUploadManager DU, List<InetSocketAddress> peers, boolean leecher) {
         this.meta = meta;
         this.DU = DU;
-        InetSocketAddress address = new InetSocketAddress(hostname, port);
+        if (leecher) {
+            connectToPeers(peers.subList(1, peers.size()));
+        }
         try {
             selector = Selector.open();
             ServerSocketChannel server = ServerSocketChannel.open();
-            server.bind(address);
+            server.bind(peers.get(0));
             server.configureBlocking(false);
             server.register(selector, SelectionKey.OP_ACCEPT);
         }
@@ -28,6 +29,18 @@ public class ConnectionManager implements Runnable {
             return;
         }
         System.out.println("initialized connection manager");
+    }
+
+    private void connectToPeers(List<InetSocketAddress> peers) {
+        try {
+            for (InetSocketAddress address : peers) {
+                SocketChannel channel = SocketChannel.open(address);
+                channel.configureBlocking(false);
+                System.out.println("Connected to " + address);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -64,9 +77,9 @@ public class ConnectionManager implements Runnable {
                     sendToPeer(key);
                 }
             }
-            if (connections.isEmpty()) {
-                return;
-            }
+//            if (connections.isEmpty()) {
+//                return;
+//            }
             while (!DU.getSuccessfulCheck().isEmpty()) {
                 Integer idxHave = DU.getSuccessfulCheck().poll();
                 assert idxHave != null;
@@ -125,6 +138,7 @@ public class ConnectionManager implements Runnable {
             if (!peer.checkHS(myHS)) {
                 peer.closeConnection();
                 System.out.println("info hashes are different, closed connection with " + peer);
+                return;
             }
             System.out.println("Connect from " + peer);
             peer.setChoked(false);

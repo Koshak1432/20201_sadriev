@@ -1,6 +1,9 @@
 package kosh.torrent;
 
+import com.dampcake.bencode.Bencode;
 import com.dampcake.bencode.BencodeInputStream;
+import com.dampcake.bencode.BencodeOutputStream;
+import com.dampcake.bencode.Type;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -9,11 +12,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MetainfoFile {
-    public MetainfoFile(String metainfoFileName) {
-        try (InputStream in = new FileInputStream(metainfoFileName)){
-            BencodeInputStream bencodeInputStream = new BencodeInputStream(in, StandardCharsets.UTF_8, true);
-            Map<String, Object> decoded = bencodeInputStream.readDictionary();
+    @SuppressWarnings("unchecked")
+    public MetainfoFile(String metaInfoFileName) {
+        try (InputStream in = new FileInputStream(metaInfoFileName)){
+            Bencode bencode = new Bencode(StandardCharsets.UTF_8, true);
+            Map<String, Object> decoded = bencode.decode(in.readAllBytes(), Type.DICTIONARY);
             info = (HashMap<String, Object>) decoded.get("info");
+            infoHash = bencode.encode(info);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -37,21 +42,9 @@ public class MetainfoFile {
     }
 
     public byte[] getInfoHash() {
-        byte[] infoBytes = serialize(info);
-        return Util.generateHash(infoBytes);
+        return Util.generateHash(infoHash);
     }
 
-    private byte[] serialize(Object o) {
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-             ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-            oos.writeObject(info);
-            return baos.toByteArray();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    private Map<String, Object> info;
+    byte[] infoHash;
+    private HashMap<String, Object> info = null;
 }
