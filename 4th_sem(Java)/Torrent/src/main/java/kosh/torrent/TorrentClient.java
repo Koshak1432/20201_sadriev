@@ -22,8 +22,13 @@ public class TorrentClient {
         ConnectionManager cm = new ConnectionManager(metainfoFile , downloadUploadManager, peers, leecher);
         Thread connectionThread = new Thread(cm);
         connectionThread.start();
-
-        System.out.println("After parsing map");
+        try {
+            downloadThread.join();
+            connectionThread.join();
+        } catch (InterruptedException e) {
+            System.err.println("couldn't join threads");
+            throw new RuntimeException(e);
+        }
     }
 
     private List<InetSocketAddress> parseArgs(String[] args) {

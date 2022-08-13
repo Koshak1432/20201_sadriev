@@ -11,7 +11,7 @@ public class DownloadUploadManager implements Runnable {
         this.meta = meta;
         initHashes(meta);
         try {
-            output = new RandomAccessFile(meta.getName(), "rw");
+            output = new RandomAccessFile(meta.getName() + "test", "rw");
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -100,10 +100,10 @@ public class DownloadUploadManager implements Runnable {
         synchronized (outgoingMsg) {
             if (outgoingMsg.containsKey(task.getWho())) {
                 q = outgoingMsg.get(task.getWho());
-                outgoingMsg.put(task.getWho(), q);
             } else {
                 q = new LinkedList<>();
             }
+            outgoingMsg.put(task.getWho(), q);
             q.add(msgToSend);
         }
     }

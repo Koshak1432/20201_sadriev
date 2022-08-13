@@ -14,6 +14,7 @@ public class Peer {
 
     public void sendMsg(Message msg) {
         ByteBuffer buffer = ByteBuffer.wrap(msg.getMessage());
+        System.out.println("Ready to send " + buffer.capacity() + " bytes: " + Arrays.toString(buffer.array()));
         try {
             channel.write(buffer);
         } catch (IOException e) {
@@ -21,13 +22,21 @@ public class Peer {
         }
     }
 
+    public List<Peer> getHandshaked() {
+        return handshaked;
+    }
+
     //это не должно быть здесь, перенести куда-нибудь потом
     public Message constructPeerMsg(SocketChannel channel) {
+        //сделать буффер, считывать в него сколько считается, а потом проверять,
+        // есть ли полноценные сообщения и слать их
+        System.out.println("CONSTRUCTING MSG");
         int bytesToAllocate = 1024;
         ByteBuffer buffer = ByteBuffer.allocate(bytesToAllocate);
         int read = -1;
         try {
             read = channel.read(buffer);
+            System.out.println("read in constucting: " + read);
             if (read == -1) {
                 return null;
             }
@@ -38,9 +47,13 @@ public class Peer {
         byte[] length = new byte[4];
         byte[] id = new byte[1];
         byte[] payload = new byte[read - id.length - length.length];
+        System.out.println("payload len: " + payload.length);
         int len = Util.convertToInt(length);
         int idInt;
+
+        System.out.println("len: " + len);
         buffer.get(0, length, 0, length.length);
+        System.out.println("length : " + Arrays.toString(length));
         if (read > length.length) {
             buffer.get(length.length, id, 0, id.length);
             buffer.get(length.length + id.length, payload, 0, payload.length);
@@ -48,19 +61,22 @@ public class Peer {
         } else {
             idInt = MessagesTypes.KEEP_ALIVE;
         }
+        System.out.println("idInt : " + idInt);
         return (payload.length > 0) ? new ProtocolMessage(idInt, payload) :
                 new ProtocolMessage(idInt);
     }
 
-    private Message getRemoteHS(SocketChannel remoteChannel) {
+    public Message getRemoteHS() {
         int infoHashIdx = 28;
         int peerIdIdx = infoHashIdx + 20;
         //прочитать и сохранить все данные?
         byte[] infoHash = new byte[20];
         byte[] peerId = new byte[20];
         ByteBuffer byteBuffer = ByteBuffer.allocate(68);
+        int read;
         try {
-            remoteChannel.read(byteBuffer);
+            read = channel.read(byteBuffer);
+            System.out.println("read " + read + " bytes");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -71,10 +87,13 @@ public class Peer {
         return new Handshake(infoHash, peerId);
     }
 
-    public boolean checkHS(Message myHS) {
-        Message remotePeerHS = getRemoteHS(channel);
-        return Arrays.equals(remotePeerHS.getMessage(), myHS.getMessage());
-    }
+//    public boolean checkHS(Message myHS) {
+//        Message remotePeerHS = getRemoteHS(channel);
+//        System.out.println("compare 2 handshakes");
+//        System.out.println(remotePeerHS);
+//        System.out.println(myHS);
+//        return Arrays.equals(remotePeerHS.getMessage(), myHS.getMessage());
+//    }
 
     public void closeConnection() {
         try {
@@ -105,6 +124,9 @@ public class Peer {
 
     public void setPiecesHas(byte[] bitfield) {
         piecesHas = BitSet.valueOf(bitfield);
+    }
+    public void setPiecesHas(BitSet bitfield) {
+        piecesHas = bitfield;
     }
 
     public Map<Integer, BitSet> getHasMap() {
@@ -199,5 +221,6 @@ public class Peer {
     private BitSet requestedBlocks;
     //ключ -- номер куска, значение -- битсет длиной pieceSize / blockSize
     private final Map<Integer, BitSet> hasMap = new HashMap<>();
+    private final List<Peer> handshaked = new ArrayList<>();
     private int lastBlockSize = 0;
 }
