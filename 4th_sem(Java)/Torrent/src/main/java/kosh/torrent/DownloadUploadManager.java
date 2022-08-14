@@ -7,11 +7,15 @@ import java.util.*;
 
 //класс, отсылающий и принимающий блоки
 public class DownloadUploadManager implements Runnable {
-    public DownloadUploadManager(MetainfoFile meta) {
+    public DownloadUploadManager(MetainfoFile meta, boolean leecher) {
         this.meta = meta;
         initHashes(meta);
         try {
-            output = new RandomAccessFile(meta.getName() + "test", "rw");
+            if (leecher) {
+                output = new RandomAccessFile(meta.getName() + "test", "rw");
+            } else {
+                output = new RandomAccessFile(meta.getName(), "rw");
+            }
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -84,19 +88,22 @@ public class DownloadUploadManager implements Runnable {
 
         byte[] dataToSend = new byte[task.getBlock().getLen()];
         try {
-            output.seek((long) Constants.PIECE_LENGTH * task.getBlock().getIdx() + task.getBlock().getBegin());
+            long pos = (long) Constants.PIECE_LENGTH * task.getBlock().getIdx() + task.getBlock().getBegin();
+            output.seek(pos);
             int read = output.read(dataToSend);
+            System.out.println("pos : " + pos + ", read in DU: " + read);
             if (task.getBlock().getLen() != read) {
                 System.err.println("Count of read bytes and requested len are different");
                 return;
             }
         } catch (IOException e) {
             e.printStackTrace();
+            throw new RuntimeException("Exception in send block DU");
         }
         byte[] idxA = Util.convertToByteArr(idx);
         byte[] beginA = Util.convertToByteArr(begin);
         Message msgToSend = new ProtocolMessage(MessagesTypes.PIECE,
-                                                Util.concatByteArrays(idxA, Util.concatByteArrays(beginA, dataToSend)));
+                                                Util.concatByteArrays(Util.concatByteArrays(idxA, beginA), dataToSend));
         Queue<Message> q;
         synchronized (outgoingMsg) {
             if (outgoingMsg.containsKey(task.getWho())) {
@@ -106,6 +113,7 @@ public class DownloadUploadManager implements Runnable {
             }
             outgoingMsg.put(task.getWho(), q);
             q.add(msgToSend);
+            System.out.println("added PIECE in DU");
         }
     }
 

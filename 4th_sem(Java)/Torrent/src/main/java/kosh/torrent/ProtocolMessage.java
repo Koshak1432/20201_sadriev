@@ -58,6 +58,4 @@ public class ProtocolMessage extends Message {
     private final byte[] id = new byte[1];
     private byte[] payload = null;
     private final int type;
-
-
 }

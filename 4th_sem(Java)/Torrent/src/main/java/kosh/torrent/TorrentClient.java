@@ -16,7 +16,7 @@ public class TorrentClient {
             System.out.println("Seeder");
         }
         List<InetSocketAddress> peers = parseArgs(Arrays.copyOfRange(args, 1, args.length)); //[0] -- iam
-        DownloadUploadManager downloadUploadManager = new DownloadUploadManager(metainfoFile);
+        DownloadUploadManager downloadUploadManager = new DownloadUploadManager(metainfoFile, leecher);
         Thread downloadThread = new Thread(downloadUploadManager);
         downloadThread.start();
         ConnectionManager cm = new ConnectionManager(metainfoFile , downloadUploadManager, peers, leecher);

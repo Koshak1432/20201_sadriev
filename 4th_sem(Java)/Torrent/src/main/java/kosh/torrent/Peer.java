@@ -45,13 +45,12 @@ public class Peer {
     }
 
     private boolean readFromChannel(SocketChannel channel) {
-        int bytesToAllocate = 1024;
+        int bytesToAllocate = Constants.BLOCK_SIZE;
         ByteBuffer buffer = ByteBuffer.allocate(bytesToAllocate);
         int read = -1;
         try {
             read = channel.read(buffer);
             System.out.println("read in constucting: " + read);
-
         } catch (IOException e) {
             e.printStackTrace();
         }
