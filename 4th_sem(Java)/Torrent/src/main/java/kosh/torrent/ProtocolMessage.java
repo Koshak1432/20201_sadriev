@@ -18,10 +18,10 @@ public class ProtocolMessage extends Message {
     //for messages without payload
     public void setInfo(int type) {
         if (type == MessagesTypes.KEEP_ALIVE) {
-            len = new byte[] {0, 0, 0, 0};
+            len = Util.convertToByteArr(0);
             return;
         }
-        len = new byte[] {0, 0, 0, 1};
+        len = Util.convertToByteArr(1);
         id[0] = (byte) type;
     }
 
@@ -29,9 +29,9 @@ public class ProtocolMessage extends Message {
         this.payload = payload;
         id[0] = (byte) type;
         switch (type) {
-            case MessagesTypes.HAVE -> len = new byte[] {0, 0, 0, 5};
+            case MessagesTypes.HAVE -> len = Util.convertToByteArr(5);
             case MessagesTypes.BITFIELD, MessagesTypes.PIECE -> len = Util.convertToByteArr(1 + payload.length);
-            case MessagesTypes.REQUEST, MessagesTypes.CANCEL -> len = new byte[] {0, 0, 0, 13};
+            case MessagesTypes.REQUEST, MessagesTypes.CANCEL -> len = Util.convertToByteArr(13);
         }
     }
 
@@ -41,7 +41,7 @@ public class ProtocolMessage extends Message {
 
     @Override
     public byte[] getMessage() {
-        if (type > MessagesTypes.NOT_INTERESTED) {
+        if (type > MessagesTypes.NOT_INTERESTED && payload != null) {
             return Util.concatByteArrays(Util.concatByteArrays(len, id), payload);
         }
         if (type >= MessagesTypes.CHOKE) {
@@ -56,7 +56,7 @@ public class ProtocolMessage extends Message {
 
     private byte[] len; //msg with len == 0 is keep-alive
     private final byte[] id = new byte[1];
-    private byte[] payload;
+    private byte[] payload = null;
     private final int type;
 
 

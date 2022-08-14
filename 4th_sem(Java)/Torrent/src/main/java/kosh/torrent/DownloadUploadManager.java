@@ -85,15 +85,16 @@ public class DownloadUploadManager implements Runnable {
         byte[] dataToSend = new byte[task.getBlock().getLen()];
         try {
             output.seek((long) Constants.PIECE_LENGTH * task.getBlock().getIdx() + task.getBlock().getBegin());
-            if (task.getBlock().getLen() != output.read(dataToSend)) {
+            int read = output.read(dataToSend);
+            if (task.getBlock().getLen() != read) {
                 System.err.println("Count of read bytes and requested len are different");
                 return;
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        byte[] idxA = Util.convertToNormalByteArr(idx);
-        byte[] beginA = Util.convertToNormalByteArr(begin);
+        byte[] idxA = Util.convertToByteArr(idx);
+        byte[] beginA = Util.convertToByteArr(begin);
         Message msgToSend = new ProtocolMessage(MessagesTypes.PIECE,
                                                 Util.concatByteArrays(idxA, Util.concatByteArrays(beginA, dataToSend)));
         Queue<Message> q;

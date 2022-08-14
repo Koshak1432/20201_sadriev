@@ -26,44 +26,85 @@ public class Peer {
         return handshaked;
     }
 
+    public Queue<Message> getReadyMessages() {
+        return readyMessages;
+    }
+
     //это не должно быть здесь, перенести куда-нибудь потом
-    public Message constructPeerMsg(SocketChannel channel) {
-        //сделать буффер, считывать в него сколько считается, а потом проверять,
-        // есть ли полноценные сообщения и слать их
+    public void constructPeerMsg() {
         System.out.println("CONSTRUCTING MSG");
+        boolean able = readFromChannel(channel);
+        if (!able) {
+            System.out.println("NOT ABLE");
+            return;
+        }
+        while (hasFullMessage(readBytes)) {
+            System.out.println("HAS FULL");
+            addFullMessages(readBytes, readyMessages);
+        }
+    }
+
+    private boolean readFromChannel(SocketChannel channel) {
         int bytesToAllocate = 1024;
         ByteBuffer buffer = ByteBuffer.allocate(bytesToAllocate);
         int read = -1;
         try {
             read = channel.read(buffer);
             System.out.println("read in constucting: " + read);
-            if (read == -1) {
-                return null;
-            }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        byte[] length = new byte[4];
-        byte[] id = new byte[1];
-        byte[] payload = new byte[read - id.length - length.length];
-        System.out.println("payload len: " + payload.length);
-        int len = Util.convertToInt(length);
-        int idInt;
-
-        System.out.println("len: " + len);
-        buffer.get(0, length, 0, length.length);
-        System.out.println("length : " + Arrays.toString(length));
-        if (read > length.length) {
-            buffer.get(length.length, id, 0, id.length);
-            buffer.get(length.length + id.length, payload, 0, payload.length);
-            idInt = Util.convertToInt(id);
-        } else {
-            idInt = MessagesTypes.KEEP_ALIVE;
+        if (read == -1) {
+            return false;
         }
-        System.out.println("idInt : " + idInt);
-        return (payload.length > 0) ? new ProtocolMessage(idInt, payload) :
-                new ProtocolMessage(idInt);
+        for (int i = 0; i < read; ++i) {
+            readBytes.add(buffer.get(i));
+        }
+        System.out.println("added to read bytes " + read + " bytes");
+        buffer.clear();
+        return true;
+    }
+
+    private boolean hasFullMessage(List<Byte> bytesList) {
+        if (bytesList.isEmpty()) {
+            return false;
+        }
+        int prefixLen = 4;
+        byte[] length = new byte[prefixLen];
+        for (int i = 0; i < prefixLen; ++i) {
+            length[i] = readBytes.get(i);
+        }
+        int messageLen = Util.convertToInt(length);
+        return bytesList.size() - prefixLen >= messageLen;
+    }
+
+    private void addFullMessages(List<Byte> bytesList, Queue<Message> messagesQueue) {
+        int prefixLen = 4;
+        byte[] length = new byte[prefixLen];
+        byte[] id = new byte[1];
+        for (int i = 0; i < prefixLen; ++i) {
+            length[i] = bytesList.get(i);
+        }
+        bytesList.subList(0, prefixLen).clear();
+        id[0] = bytesList.get(0);
+        bytesList.remove(0);
+        System.out.println("id: " + id[0]);
+        int messageLen = Util.convertToInt(length);
+        System.out.println("message len: " + messageLen);
+        int idInt = id[0];
+        int payloadLen = messageLen - 1;
+        System.out.println("payload len: " + payloadLen);
+        if (payloadLen > 0) {
+            byte[] payload = new byte[payloadLen];
+            for (int i = 0; i < payloadLen; ++i) {
+                payload[i] = bytesList.get(i);
+            }
+            bytesList.subList(0, payloadLen).clear();
+            messagesQueue.add(new ProtocolMessage(idInt, payload));
+            return;
+        }
+        messagesQueue.add(new ProtocolMessage(idInt));
     }
 
     public Message getRemoteHS() {
@@ -118,15 +159,17 @@ public class Peer {
         this.id = id;
     }
 
+    public void initPiecesHas(int numPieces, boolean has) {
+        piecesHas = new BitSet(numPieces);
+        piecesHas.set(0, numPieces, has);
+    }
+
     public BitSet getPiecesHas() {
         return piecesHas;
     }
 
     public void setPiecesHas(byte[] bitfield) {
         piecesHas = BitSet.valueOf(bitfield);
-    }
-    public void setPiecesHas(BitSet bitfield) {
-        piecesHas = bitfield;
     }
 
     public Map<Integer, BitSet> getHasMap() {
@@ -193,8 +236,9 @@ public class Peer {
         int numBlocksInLastPiece = lastPieceSize / Constants.BLOCK_SIZE;
         int modBlock = lastPieceSize % Constants.BLOCK_SIZE;
         lastBlockSize = (modBlock != 0) ? modBlock : Constants.BLOCK_SIZE;
-        for (int i = 0; i < piecesHas.length(); ++i) {
-            if (i == piecesHas.length() - 1) {
+        int piecesNum = (int) Math.ceilDiv(fileLen,  pieceLen);
+        for (int i = 0; i < piecesNum; ++i) {
+            if (i == piecesNum - 1) {
                 blocksInPiece = numBlocksInLastPiece;
                 requestedBlocks = new BitSet(i * (int) pieceLen / Constants.BLOCK_SIZE + blocksInPiece);
             }
@@ -202,6 +246,11 @@ public class Peer {
             BitSet blocks = new BitSet(blocksInPiece);
             blocks.set(0, blocksInPiece, pieceAvailable);
             hasMap.put(i, blocks);
+        }
+        System.out.println("has map size:" + hasMap.size());
+
+        for (int i = 0; i < hasMap.size(); ++i) {
+            System.out.println(hasMap.get(i));
         }
     }
 
@@ -223,4 +272,6 @@ public class Peer {
     private final Map<Integer, BitSet> hasMap = new HashMap<>();
     private final List<Peer> handshaked = new ArrayList<>();
     private int lastBlockSize = 0;
+    private final List<Byte> readBytes = new ArrayList<>();
+    private final Queue<Message> readyMessages = new ArrayDeque<>();
 }

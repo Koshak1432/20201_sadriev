@@ -1,12 +1,5 @@
 package kosh.torrent;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-
 public class Main {
 
     public static void main(String[] args) {
@@ -27,11 +20,6 @@ public class Main {
 
         //получать в args[0]
         MetainfoFile torrent = new MetainfoFile("D:\\20201_sadriev\\4th_sem(Java)\\Torrent\\test.torrent");
-//        System.out.println(Arrays.toString(torrent.getInfoHash()));
-//        System.out.println("Name: " + torrent.getName());
-//        System.out.println("FileLen: " + torrent.getFileLen());
-//        System.out.println("PieceLen: " + torrent.getPieceLen());
-//        System.out.println("Pieces: " + Arrays.toString(torrent.getPieces()));
         TorrentClient client = new TorrentClient(torrent, args);
     }
 }
