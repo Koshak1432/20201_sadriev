@@ -100,11 +100,11 @@ public class ConnectionManager implements Runnable {
             selector.selectedKeys().clear();
 
 //            if (i == 400) {
-//                try {
-//                    Thread.sleep(1000000000);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
+    //            try {
+    //                Thread.sleep(1000000000);
+    //            } catch (InterruptedException e) {
+    //                e.printStackTrace();
+    //            }
 //                if (connections.isEmpty()) {
 //                    System.out.println("Connections list is empty");
 //                    return;
@@ -117,11 +117,28 @@ public class ConnectionManager implements Runnable {
                 for (Peer peer : connections) {
                     messagesToPeer.get(peer).add(new ProtocolMessage(MessagesTypes.HAVE, Util.convertToByteArr(idxHave)));
                 }
+                int piecesNum = Math.ceilDiv((int) meta.getFileLen(), Constants.PIECE_LENGTH);
+
+                if (iam.getPiecesHas().cardinality() == piecesNum) {
+                    System.out.println("HAVE ALL THE PIECES, RETURN FROM MAIN LOOP");
+                    DU.addTask(new Task(TaskType.STOP));
+                    return;
+                }
             }
             while (!DU.getUnsuccessfulCheck().isEmpty()) {
                 Integer idxToClear = DU.getUnsuccessfulCheck().poll();
                 assert idxToClear != null;
                 clearPiece(idxToClear);
+                for (Peer peer : connections) {
+                    Message request = createRequest(peer, iam);
+                    if (request == null) {
+                        System.out.println("have no blocks to request");
+                        return;
+                    }
+                    messagesToPeer.get(peer).add(request);
+                    System.out.println("added request after clearing piece");
+                }
+
             }
 //            System.out.println("---------------------------------");
             ++i;
@@ -129,7 +146,7 @@ public class ConnectionManager implements Runnable {
     }
 
     private void clearPiece(Integer idxToClear) {
-        System.out.println("enter clear piece");
+        System.out.println("enter clear piece, idx to clear : " + idxToClear);
         iam.getPiecesHas().set(idxToClear, false);
         int blocksNumber = iam.getHasMap().get(idxToClear).size();
         iam.getHasMap().get(idxToClear).set(0, blocksNumber, false);
@@ -166,7 +183,7 @@ public class ConnectionManager implements Runnable {
     }
 
     private void readFromPeer(SelectionKey key) {
-        System.out.println("READ FROM PEER");
+//        System.out.println("READ FROM PEER");
         SocketChannel channel = (SocketChannel) key.channel();
         Peer peer = findPeer(channel);
         assert peer != null;
@@ -184,7 +201,7 @@ public class ConnectionManager implements Runnable {
 //                e.printStackTrace();
 //            }
 //            return;
-        System.out.println("read peer messages size: " + peer.getReadyMessages().size());
+//        System.out.println("read peer messages size: " + peer.getReadyMessages().size());
         while (!peer.getReadyMessages().isEmpty()) {
             Message msg = peer.getReadyMessages().poll();
             System.out.println("going to handle msg type: " + msg.getType());
@@ -203,8 +220,10 @@ public class ConnectionManager implements Runnable {
 //        System.out.println("messages size: " + messages.size() + " , 219 cm");
         if (DU.getOutgoingMsg().containsKey(peer)) {
             synchronized (DU.getOutgoingMsg().get(peer)) {
-                messagesToPeer.get(peer).addAll(DU.getOutgoingMsg().get(peer));
-                DU.getOutgoingMsg().get(peer).clear();
+                if (!DU.getOutgoingMsg().get(peer).isEmpty()) {
+                    messagesToPeer.get(peer).addAll(DU.getOutgoingMsg().get(peer));
+                    DU.getOutgoingMsg().get(peer).clear();
+                }
             }
         }
 
@@ -256,6 +275,10 @@ public class ConnectionManager implements Runnable {
             case MessagesTypes.NOT_INTERESTED -> peer.setInteresting(false);
             case MessagesTypes.HAVE -> {
                 System.out.println("got HAVE msg, set peer's piece to true");
+                if (peer.getPiecesHas() == null) {
+                    int piecesNum = (int) Math.ceilDiv(meta.getFileLen(),  meta.getPieceLen());
+                    peer.initPiecesHas(piecesNum, false);
+                }
                 peer.setPiece(Util.convertToInt(msg.getPayload()), true);
             }
             case MessagesTypes.BITFIELD -> {
@@ -281,6 +304,17 @@ public class ConnectionManager implements Runnable {
             }
             //means remote peer is requesting a piece
             case MessagesTypes.REQUEST -> {
+                ++i;
+                if (i == 80) {
+                    System.out.println(i + " times enter request");
+                    try {
+                        Thread.sleep(100000000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                        Thread.currentThread().interrupt();
+                        return;
+                    }
+                }
                 //A block is uploaded by a client when the client is not choking a peer,
                 // and that peer is interested in the client
                 if (peer.isChoked() || !peer.isInteresting()) {
@@ -299,6 +333,18 @@ public class ConnectionManager implements Runnable {
             }
             //means remote peer send us a block of data
             case MessagesTypes.PIECE -> {
+                System.out.println("got PIECE");
+                ++i;
+                if (i == 80) {
+                    System.out.println(i + " times enter handling piece");
+                    try {
+                        Thread.sleep(100000000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                        Thread.currentThread().interrupt();
+                        return;
+                    }
+                }
                 //A block is downloaded by the client when the client is interested in a peer,
                 // and that peer is not choking the client
                 if (!peer.isInterested() || peer.isChoking()) {
@@ -310,10 +356,27 @@ public class ConnectionManager implements Runnable {
                 int idx = Util.convertToInt(Arrays.copyOfRange(payload, 0, 4));
                 int begin = Util.convertToInt(Arrays.copyOfRange(payload, 4, 8));
                 byte[] blockData = Arrays.copyOfRange(payload, 8, payload.length);
+                System.out.println("piece idx: " + idx + ", block begin: " + begin + ", blockData len: " + blockData.length);
                 DU.addTask(new Task(TaskType.SAVE, idx, begin, blockData));
                 System.out.println("added SAVE task to DU");
                 int blockIdx = begin / Constants.BLOCK_SIZE;
                 iam.getHasMap().get(idx).set(blockIdx);
+
+                BitSet bs = iam.getHasMap().get(idx);
+
+                int piecesNum = Math.ceilDiv((int) meta.getFileLen(), Constants.PIECE_LENGTH);
+                int blocksNum = Math.ceilDiv((int) meta.getPieceLen(), Constants.BLOCK_SIZE);
+//                System.out.println("CARDINALITY OF HAS MAP BY IDX " + idx + " : " + bs.cardinality());
+                if (piecesNum - 1 == idx && bs.cardinality() == iam.getBlocksInLastPiece()) {
+                    int pieceLen = Constants.BLOCK_SIZE * (iam.getBlocksInLastPiece() - 1) + peer.getLastBlockSize();
+                    DU.addTask(new Task(TaskType.CHECK_HASH, idx, pieceLen));
+                    iam.setPiece(idx, true);
+                    System.out.println("got last block, added task CHECK_HASH to DU and set piece idx: " + idx);
+                } else if (bs.cardinality() == blocksNum) {
+                    DU.addTask(new Task(TaskType.CHECK_HASH, idx, (int) meta.getPieceLen()));
+                    iam.setPiece(idx, true);
+                    System.out.println("added CHECK_HASH to DU and set piece idx: " + idx);
+                }
                 Message request = createRequest(peer, iam);
                 if (request == null) {
                     System.out.println("have no blocks to request");
@@ -321,13 +384,6 @@ public class ConnectionManager implements Runnable {
                 }
                 messagesToPeer.get(peer).add(request);
                 System.out.println("added REQUEST");
-                BitSet bs = iam.getHasMap().get(idx);
-                if (bs.cardinality() == bs.size()) {
-                    int pieceLen = Constants.BLOCK_SIZE * (bs.size() - 1) + peer.getLastBlockSize();
-                    DU.addTask(new Task(TaskType.CHECK_HASH, idx, pieceLen));
-                    System.out.println("added task CHECK_HASH to DU");
-                }
-                System.out.println("got PIECE, send request, gave DU task to save and(optional) check hash");
             }
             //means remote peer want us to cancel last request from him
             case MessagesTypes.CANCEL -> {
@@ -339,53 +395,83 @@ public class ConnectionManager implements Runnable {
     }
 
     //мб в пира засунуть или в mm
-    //todo тут где-то трабл
-    private int getBlockIdxToRequest(Peer to, Peer from) {
-        System.out.println("!!!cardinality of seeder's pieces has in leecher: " + to.getPiecesHas().cardinality());
-        BitSet piecesToRequest = (BitSet) from.getPiecesHas().clone();
-        piecesToRequest.flip(0, piecesToRequest.size());
-        piecesToRequest.and(to.getPiecesHas());
-        //в piecesToRequest те куски, которых нет у меня, есть у пира
+    private int getPieceIdxToRequest(Peer to, Peer from) {
+        System.out.println("FINDING PIECE TO REQUEST");
+        int piecesNum = Math.ceilDiv((int) meta.getFileLen(), Constants.PIECE_LENGTH);
+        BitSet piecesToRequest = (BitSet) from.getPiecesHas().clone(); //есть у меня
+        System.out.println("I have pieces: " + piecesToRequest);
+        piecesToRequest.flip(0, piecesNum); //нет у меня
+        System.out.println("i don't have pieces: " + piecesToRequest);
+        piecesToRequest.and(to.getPiecesHas()); //нет у меня и есть у пира
+        System.out.println("i don't have and peer has: " + piecesToRequest);
         if (piecesToRequest.cardinality() == 0) {
             System.out.println("piecesTORequest cardinality is zero, return");
             return - 1;
         }
-        Random random = new Random();
-        int pieceIdx = piecesToRequest.nextSetBit(random.nextInt(piecesToRequest.size()));
-        if (pieceIdx == -1) {
-            pieceIdx = piecesToRequest.nextSetBit(0);
-        }
+//        Random random = new Random();
+//        int pieceIdx = -1;
+//        while (pieceIdx == -1) {
+//            pieceIdx = piecesToRequest.nextSetBit(random.nextInt(piecesToRequest.size()));
+//        }
+        int pieceIdx = piecesToRequest.nextSetBit(0);
+        System.out.println("pieceIdx to request: " + pieceIdx);
+        return pieceIdx;
+    }
+
+    private int getBlockIdxToRequest(Peer to, Peer from, int pieceIdx) {
+        int blocksNum = Math.ceilDiv((int) meta.getPieceLen(), Constants.BLOCK_SIZE);
+        int piecesNum = Math.ceilDiv((int) meta.getFileLen(), Constants.PIECE_LENGTH);
 
         BitSet blocksToRequest = (BitSet) from.getHasMap().get(pieceIdx).clone(); //кокие у меня есть
-        blocksToRequest.or(from.getRequestedBlocks()); // какие есть у меня и запрошенные
-        blocksToRequest.flip(0, blocksToRequest.size()); //каких у меня нет и не запрошенные
+        System.out.println("i have blocks in hasMap by piece idx " + pieceIdx + ":" + blocksToRequest);
+        System.out.println("requested blocks: " + from.getRequestedBlocks());
+        int fromIdx = pieceIdx * blocksNum;
+        int toIdx = fromIdx + blocksNum;
+        if (pieceIdx == piecesNum - 1) {
+            blocksNum = iam.getBlocksInLastPiece();
+            toIdx = fromIdx + iam.getBlocksInLastPiece();
+        }
+        blocksToRequest.or(from.getRequestedBlocks().get(fromIdx, toIdx)); // какие есть у меня и запрошенные
+        blocksToRequest.flip(0, blocksNum); //каких у меня нет и не запрошенные
+        System.out.println("blocks i don't have and not requested: " + blocksToRequest);
         blocksToRequest.and(to.getHasMap().get(pieceIdx)); //нет у меня, не запрошенные и есть у пира
+        System.out.println("blocksToRequest: " + blocksToRequest);
         if (blocksToRequest.cardinality() == 0) {
+            System.out.println("cardinality of blocks to request is zero, smthing went WRONG!!");
             return -1;
         }
 
-        int blockIdx = blocksToRequest.nextSetBit(random.nextInt(blocksToRequest.size()));
-        if (blockIdx == -1) {
-            blockIdx = blocksToRequest.nextSetBit(0);
-        }
+//        Random random = new Random();
+//        int blockIdx = -1;
+//        while (blockIdx == -1) {
+//            blockIdx = blocksToRequest.nextSetBit(random.nextInt(blocksToRequest.size()));
+//        }
+        int blockIdx = blocksToRequest.nextSetBit(0);
+        System.out.println("blockToRequest idx: " + blockIdx);
         return blockIdx;
     }
 
     private Message createRequest(Peer to, Peer from) {
-        int blockToRequest = getBlockIdxToRequest(to, from);
-        System.out.println("requested block idx: " + blockToRequest);
+
+        System.out.println("NUMBER OF CREATE REQUEST: " + i);
+
+        int pieceIdxToRequest = getPieceIdxToRequest(to, from);
+        if (pieceIdxToRequest == -1) {
+            return null;
+        }
+        int blockToRequest = getBlockIdxToRequest(to, from, pieceIdxToRequest);
         if (blockToRequest == -1) {
             return null;
         }
-        from.getRequestedBlocks().set(blockToRequest);
-        int blocksNum = (int) meta.getPieceLen() / Constants.BLOCK_SIZE;
-        int pieceIdx = blockToRequest / blocksNum;
-        int blockMod = blockToRequest % blocksNum;
-        int begin = Constants.BLOCK_SIZE * blockMod;
-        int len = (blockToRequest - 1 == Math.ceilDiv(meta.getFileLen(), Constants.BLOCK_SIZE) && pieceIdx == from.getHasMap().size() - 1) ?
-                iam.getLastBlockSize() : Constants.BLOCK_SIZE;
-        System.out.println("request pieceIdx: " + pieceIdx + ", begin: " + begin + ", len: " + len);
-        return new ProtocolMessage(MessagesTypes.REQUEST, Util.concatByteArrays(Util.concatByteArrays(Util.convertToByteArr(pieceIdx), Util.convertToByteArr(begin)), Util.convertToByteArr(len)));
+        int piecesNum = Math.ceilDiv((int) meta.getFileLen(), Constants.PIECE_LENGTH);
+        int blocksNum = Math.ceilDiv((int) meta.getPieceLen(), Constants.BLOCK_SIZE);
+        from.getRequestedBlocks().set(blocksNum * pieceIdxToRequest + blockToRequest);
+        int begin = Constants.BLOCK_SIZE * blockToRequest;
+        int len = (blockToRequest == iam.getBlocksInLastPiece() - 1 && pieceIdxToRequest == piecesNum - 1) ? iam.getLastBlockSize() : Constants.BLOCK_SIZE;
+        System.out.println("request pieceIdx: " + pieceIdxToRequest + ", begin: " + begin + ", len: " + len);
+        return new ProtocolMessage(MessagesTypes.REQUEST, Util.concatByteArrays(Util.concatByteArrays(Util.convertToByteArr(pieceIdxToRequest),
+                                                                                                      Util.convertToByteArr(begin)),
+                                                                                                      Util.convertToByteArr(len)));
     }
 
 
@@ -397,4 +483,5 @@ public class ConnectionManager implements Runnable {
     private final MetainfoFile meta;
     private final DownloadUploadManager DU;
     private boolean leecher = false;
+    private int i = 0;
 }

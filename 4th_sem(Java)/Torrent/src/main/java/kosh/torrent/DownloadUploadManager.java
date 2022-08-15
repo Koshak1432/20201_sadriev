@@ -53,6 +53,7 @@ public class DownloadUploadManager implements Runnable {
     }
 
     public void doTask(Task task) {
+        System.out.println("DOING TASK TYPE: " + task.getType() + " IN DU");
         switch (task.getType()) {
             case SAVE -> saveBlock(task);
             case SEND -> sendBlock(task);
@@ -118,15 +119,17 @@ public class DownloadUploadManager implements Runnable {
     }
 
     private void stop() {
-        System.out.println("Stopped DU thread");
+        System.out.println("STOPPED DU THREAD");
         Thread.currentThread().interrupt();
     }
 
     private void checkHash(Task task) {
+        System.out.println("CHECKING HASH");
         int idx = task.getIdx();
         int pieceLen = task.getPieceLen();
         byte[] metaHash = hashes.get(idx);
         byte[] pieceData = new byte[pieceLen];
+        System.out.println("piece idx : " + idx + ", pieceLen : " + pieceLen);
         try {
             output.seek(meta.getPieceLen() * idx);
             if (pieceLen != output.read(pieceData)) {
@@ -138,8 +141,10 @@ public class DownloadUploadManager implements Runnable {
         }
         if (Arrays.equals(metaHash, Util.generateHash(pieceData))) {
             successfulCheck.add(idx);
+            System.out.println("HASHES ARE EQUAL");
         } else {
             unsuccessfulCheck.add(idx);
+            System.out.println("HASHES ARE NOT EQUAL");
         }
     }
 

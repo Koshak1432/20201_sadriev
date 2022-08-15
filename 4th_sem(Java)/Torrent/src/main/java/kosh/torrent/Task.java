@@ -1,6 +1,9 @@
 package kosh.torrent;
 
 public class Task {
+    public Task(TaskType type) {
+        this.type = type;
+    }
     //request
     public Task(TaskType type, int idx, int begin, int len, Peer sender) {
         this.type = type;

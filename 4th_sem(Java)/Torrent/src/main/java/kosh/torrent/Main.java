@@ -20,6 +20,11 @@ public class Main {
 
         //получать в args[0]
         MetainfoFile torrent = new MetainfoFile("D:\\20201_sadriev\\4th_sem(Java)\\Torrent\\test.torrent");
+        System.out.println(torrent.getFileLen());
+        //file len 1225658
+        //pieceLen = 262144
+        //last block output 160698
+        //must be 177082
         TorrentClient client = new TorrentClient(torrent, args);
     }
 }

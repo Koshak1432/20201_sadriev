@@ -14,7 +14,7 @@ public class Peer {
 
     public void sendMsg(Message msg) {
         ByteBuffer buffer = ByteBuffer.wrap(msg.getMessage());
-        System.out.println("Ready to send " + buffer.capacity() + " bytes: " + Arrays.toString(buffer.array()));
+//        System.out.println("Ready to send " + buffer.capacity() + " bytes");
         try {
             channel.write(buffer);
         } catch (IOException e) {
@@ -32,25 +32,25 @@ public class Peer {
 
     //это не должно быть здесь, перенести куда-нибудь потом
     public void constructPeerMsg() {
-        System.out.println("CONSTRUCTING MSG");
+//        System.out.println("CONSTRUCTING MSG");
         boolean able = readFromChannel(channel);
         if (!able) {
-            System.out.println("NOT ABLE");
+            System.out.println("NOT ABLE TO READ");
             return;
         }
         while (hasFullMessage(readBytes)) {
-            System.out.println("HAS FULL");
+            System.out.println("HAS FULL MESSAGE");
             addFullMessages(readBytes, readyMessages);
         }
     }
 
     private boolean readFromChannel(SocketChannel channel) {
-        int bytesToAllocate = Constants.BLOCK_SIZE;
+        int bytesToAllocate = Constants.BLOCK_SIZE / 2;
         ByteBuffer buffer = ByteBuffer.allocate(bytesToAllocate);
         int read = -1;
         try {
             read = channel.read(buffer);
-            System.out.println("read in constucting: " + read);
+//            System.out.println("read in constucting: " + read);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -60,7 +60,7 @@ public class Peer {
         for (int i = 0; i < read; ++i) {
             readBytes.add(buffer.get(i));
         }
-        System.out.println("added to read bytes " + read + " bytes");
+//        System.out.println("added to read bytes " + read + " bytes");
         buffer.clear();
         return true;
     }
@@ -90,10 +90,10 @@ public class Peer {
         bytesList.remove(0);
         System.out.println("id: " + id[0]);
         int messageLen = Util.convertToInt(length);
-        System.out.println("message len: " + messageLen);
+//        System.out.println("message len: " + messageLen);
         int idInt = id[0];
         int payloadLen = messageLen - 1;
-        System.out.println("payload len: " + payloadLen);
+//        System.out.println("payload len: " + payloadLen);
         if (payloadLen > 0) {
             byte[] payload = new byte[payloadLen];
             for (int i = 0; i < payloadLen; ++i) {
@@ -232,7 +232,8 @@ public class Peer {
         int blocksInPiece = (int) pieceLen / Constants.BLOCK_SIZE;
         int modPiece = (int) (fileLen % pieceLen);
         int lastPieceSize = (int) ((modPiece != 0) ? modPiece : pieceLen);
-        int numBlocksInLastPiece = lastPieceSize / Constants.BLOCK_SIZE;
+        int numBlocksInLastPiece = Math.ceilDiv(lastPieceSize, Constants.BLOCK_SIZE);
+        this.blocksInLastPiece = numBlocksInLastPiece;
         int modBlock = lastPieceSize % Constants.BLOCK_SIZE;
         lastBlockSize = (modBlock != 0) ? modBlock : Constants.BLOCK_SIZE;
         int piecesNum = (int) Math.ceilDiv(fileLen,  pieceLen);
@@ -246,11 +247,13 @@ public class Peer {
             blocks.set(0, blocksInPiece, pieceAvailable);
             hasMap.put(i, blocks);
         }
-        System.out.println("has map size:" + hasMap.size());
-
         for (int i = 0; i < hasMap.size(); ++i) {
             System.out.println(hasMap.get(i));
         }
+    }
+
+    public int getBlocksInLastPiece() {
+        return blocksInLastPiece;
     }
 
     public int getLastBlockSize() {
@@ -265,12 +268,13 @@ public class Peer {
     private boolean interested = false; //this client is interested in the peer
     private boolean interesting = false; //peer is interested in this client, выставлять, когда отправляю interested
 
-    private BitSet piecesHas;
+    private BitSet piecesHas = null;
     private BitSet requestedBlocks;
     //ключ -- номер куска, значение -- битсет длиной pieceSize / blockSize
     private final Map<Integer, BitSet> hasMap = new HashMap<>();
     private final List<Peer> handshaked = new ArrayList<>();
     private int lastBlockSize = 0;
+    private int blocksInLastPiece = 0;
     private final List<Byte> readBytes = new ArrayList<>();
     private final Queue<Message> readyMessages = new ArrayDeque<>();
 }
