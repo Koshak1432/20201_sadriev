@@ -75,7 +75,7 @@ public class DownloadUploadManager implements Runnable {
         int begin = task.getBlock().getBegin();
         byte[] block = task.getBlock().getData();
         try {
-            output.seek((long) Constants.PIECE_LENGTH * task.getBlock().getIdx() + task.getBlock().getBegin());
+            output.seek((long) Constants.PIECE_LEN * task.getBlock().getIdx() + task.getBlock().getBegin());
             output.write(block);
         } catch (IOException e) {
             e.printStackTrace();
@@ -89,7 +89,7 @@ public class DownloadUploadManager implements Runnable {
 
         byte[] dataToSend = new byte[task.getBlock().getLen()];
         try {
-            long pos = (long) Constants.PIECE_LENGTH * task.getBlock().getIdx() + task.getBlock().getBegin();
+            long pos = (long) Constants.PIECE_LEN * task.getBlock().getIdx() + task.getBlock().getBegin();
             output.seek(pos);
             int read = output.read(dataToSend);
             System.out.println("pos : " + pos + ", read in DU: " + read);

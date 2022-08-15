@@ -1,8 +1,6 @@
 package kosh.torrent;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class Piece {
     public Piece( int idx, final byte[] pieceData) {
@@ -14,15 +12,15 @@ public class Piece {
     private void splitDataIntoBlocks(final byte[] data) {
         int offsetWithinPiece;
         int offset = 0;
-        int blockSize = Constants.BLOCK_SIZE;
-        int numberOfBlocks = (int)Math.ceil((double)data.length / Constants.BLOCK_SIZE);
-        int mod = data.length % Constants.BLOCK_SIZE;
+        int blockSize = Constants.BLOCK_LEN;
+        int numberOfBlocks = (int)Math.ceil((double)data.length / Constants.BLOCK_LEN);
+        int mod = data.length % Constants.BLOCK_LEN;
         int lastBlockSize = (mod != 0) ? mod : blockSize;
         for (int i = 0; i < numberOfBlocks; ++i) {
             if (i == numberOfBlocks - 1) {
                 blockSize = lastBlockSize;
             }
-            offsetWithinPiece = i * Constants.BLOCK_SIZE;
+            offsetWithinPiece = i * Constants.BLOCK_LEN;
             byte[] blockData = new byte[blockSize];
             System.arraycopy(data, offset, blockData, 0, blockSize);
             Block block = new Block(idx, offsetWithinPiece, blockData.length, blockData); //also there is a size calculated inside a block

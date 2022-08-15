@@ -9,8 +9,8 @@ import java.util.*;
 public class TFileCreator {
     public TFileCreator(File file) {
         this.file = file;
-        ByteBuffer buffer = ByteBuffer.allocate(Constants.PIECE_LENGTH);
-        byte[] pieceData = new byte[Constants.PIECE_LENGTH];
+        ByteBuffer buffer = ByteBuffer.allocate(Constants.PIECE_LEN);
+        byte[] pieceData = new byte[Constants.PIECE_LEN];
         int read, idx = 0;
         try (InputStream input = new FileInputStream(file)) {
             while ((read = input.read(pieceData, 0, buffer.remaining())) != -1) {
@@ -43,7 +43,7 @@ public class TFileCreator {
 
     private Map<String, Object> createInfoMap() {
         SortedMap<String, Object> info = new TreeMap<>();
-        info.put("piece length", Constants.PIECE_LENGTH);
+        info.put("piece length", Constants.PIECE_LEN);
         info.put("pieces", piecesBuffer);
         info.put("name", file.getName());
         info.put("length", file.length());

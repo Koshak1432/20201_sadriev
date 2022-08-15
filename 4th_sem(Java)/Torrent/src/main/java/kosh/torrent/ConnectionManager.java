@@ -117,7 +117,7 @@ public class ConnectionManager implements Runnable {
                 for (Peer peer : connections) {
                     messagesToPeer.get(peer).add(new ProtocolMessage(MessagesTypes.HAVE, Util.convertToByteArr(idxHave)));
                 }
-                int piecesNum = Math.ceilDiv((int) meta.getFileLen(), Constants.PIECE_LENGTH);
+                int piecesNum = Math.ceilDiv((int) meta.getFileLen(), Constants.PIECE_LEN);
 
                 if (iam.getPiecesHas().cardinality() == piecesNum) {
                     System.out.println("HAVE ALL THE PIECES, RETURN FROM MAIN LOOP");
@@ -150,8 +150,8 @@ public class ConnectionManager implements Runnable {
         iam.getPiecesHas().set(idxToClear, false);
         int blocksNumber = iam.getHasMap().get(idxToClear).size();
         iam.getHasMap().get(idxToClear).set(0, blocksNumber, false);
-        int fromIdx = idxToClear * (int) meta.getPieceLen() / Constants.BLOCK_SIZE;
-        int toIdx = idxToClear * (int) meta.getPieceLen() / Constants.BLOCK_SIZE + blocksNumber;
+        int fromIdx = idxToClear * (int) meta.getPieceLen() / Constants.BLOCK_LEN;
+        int toIdx = idxToClear * (int) meta.getPieceLen() / Constants.BLOCK_LEN + blocksNumber;
         iam.getRequestedBlocks().set(fromIdx, toIdx, false);
     }
 
@@ -359,16 +359,16 @@ public class ConnectionManager implements Runnable {
                 System.out.println("piece idx: " + idx + ", block begin: " + begin + ", blockData len: " + blockData.length);
                 DU.addTask(new Task(TaskType.SAVE, idx, begin, blockData));
                 System.out.println("added SAVE task to DU");
-                int blockIdx = begin / Constants.BLOCK_SIZE;
+                int blockIdx = begin / Constants.BLOCK_LEN;
                 iam.getHasMap().get(idx).set(blockIdx);
 
                 BitSet bs = iam.getHasMap().get(idx);
 
-                int piecesNum = Math.ceilDiv((int) meta.getFileLen(), Constants.PIECE_LENGTH);
-                int blocksNum = Math.ceilDiv((int) meta.getPieceLen(), Constants.BLOCK_SIZE);
+                int piecesNum = Math.ceilDiv((int) meta.getFileLen(), Constants.PIECE_LEN);
+                int blocksNum = Math.ceilDiv((int) meta.getPieceLen(), Constants.BLOCK_LEN);
 //                System.out.println("CARDINALITY OF HAS MAP BY IDX " + idx + " : " + bs.cardinality());
                 if (piecesNum - 1 == idx && bs.cardinality() == iam.getBlocksInLastPiece()) {
-                    int pieceLen = Constants.BLOCK_SIZE * (iam.getBlocksInLastPiece() - 1) + peer.getLastBlockSize();
+                    int pieceLen = Constants.BLOCK_LEN * (iam.getBlocksInLastPiece() - 1) + peer.getLastBlockSize();
                     DU.addTask(new Task(TaskType.CHECK_HASH, idx, pieceLen));
                     iam.setPiece(idx, true);
                     System.out.println("got last block, added task CHECK_HASH to DU and set piece idx: " + idx);
@@ -397,7 +397,7 @@ public class ConnectionManager implements Runnable {
     //мб в пира засунуть или в mm
     private int getPieceIdxToRequest(Peer to, Peer from) {
         System.out.println("FINDING PIECE TO REQUEST");
-        int piecesNum = Math.ceilDiv((int) meta.getFileLen(), Constants.PIECE_LENGTH);
+        int piecesNum = Math.ceilDiv((int) meta.getFileLen(), Constants.PIECE_LEN);
         BitSet piecesToRequest = (BitSet) from.getPiecesHas().clone(); //есть у меня
         System.out.println("I have pieces: " + piecesToRequest);
         piecesToRequest.flip(0, piecesNum); //нет у меня
@@ -419,8 +419,8 @@ public class ConnectionManager implements Runnable {
     }
 
     private int getBlockIdxToRequest(Peer to, Peer from, int pieceIdx) {
-        int blocksNum = Math.ceilDiv((int) meta.getPieceLen(), Constants.BLOCK_SIZE);
-        int piecesNum = Math.ceilDiv((int) meta.getFileLen(), Constants.PIECE_LENGTH);
+        int blocksNum = Math.ceilDiv((int) meta.getPieceLen(), Constants.BLOCK_LEN);
+        int piecesNum = Math.ceilDiv((int) meta.getFileLen(), Constants.PIECE_LEN);
 
         BitSet blocksToRequest = (BitSet) from.getHasMap().get(pieceIdx).clone(); //кокие у меня есть
         System.out.println("i have blocks in hasMap by piece idx " + pieceIdx + ":" + blocksToRequest);
@@ -463,11 +463,11 @@ public class ConnectionManager implements Runnable {
         if (blockToRequest == -1) {
             return null;
         }
-        int piecesNum = Math.ceilDiv((int) meta.getFileLen(), Constants.PIECE_LENGTH);
-        int blocksNum = Math.ceilDiv((int) meta.getPieceLen(), Constants.BLOCK_SIZE);
+        int piecesNum = Math.ceilDiv((int) meta.getFileLen(), Constants.PIECE_LEN);
+        int blocksNum = Math.ceilDiv((int) meta.getPieceLen(), Constants.BLOCK_LEN);
         from.getRequestedBlocks().set(blocksNum * pieceIdxToRequest + blockToRequest);
-        int begin = Constants.BLOCK_SIZE * blockToRequest;
-        int len = (blockToRequest == iam.getBlocksInLastPiece() - 1 && pieceIdxToRequest == piecesNum - 1) ? iam.getLastBlockSize() : Constants.BLOCK_SIZE;
+        int begin = Constants.BLOCK_LEN * blockToRequest;
+        int len = (blockToRequest == iam.getBlocksInLastPiece() - 1 && pieceIdxToRequest == piecesNum - 1) ? iam.getLastBlockSize() : Constants.BLOCK_LEN;
         System.out.println("request pieceIdx: " + pieceIdxToRequest + ", begin: " + begin + ", len: " + len);
         return new ProtocolMessage(MessagesTypes.REQUEST, Util.concatByteArrays(Util.concatByteArrays(Util.convertToByteArr(pieceIdxToRequest),
                                                                                                       Util.convertToByteArr(begin)),

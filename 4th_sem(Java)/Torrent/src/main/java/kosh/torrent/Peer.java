@@ -45,7 +45,7 @@ public class Peer {
     }
 
     private boolean readFromChannel(SocketChannel channel) {
-        int bytesToAllocate = Constants.BLOCK_SIZE / 2;
+        int bytesToAllocate = Constants.BLOCK_LEN / 2;
         ByteBuffer buffer = ByteBuffer.allocate(bytesToAllocate);
         int read = -1;
         try {
@@ -229,18 +229,18 @@ public class Peer {
     }
 
     public void initBlocks(long pieceLen, long fileLen) {
-        int blocksInPiece = (int) pieceLen / Constants.BLOCK_SIZE;
+        int blocksInPiece = (int) pieceLen / Constants.BLOCK_LEN;
         int modPiece = (int) (fileLen % pieceLen);
         int lastPieceSize = (int) ((modPiece != 0) ? modPiece : pieceLen);
-        int numBlocksInLastPiece = Math.ceilDiv(lastPieceSize, Constants.BLOCK_SIZE);
+        int numBlocksInLastPiece = Math.ceilDiv(lastPieceSize, Constants.BLOCK_LEN);
         this.blocksInLastPiece = numBlocksInLastPiece;
-        int modBlock = lastPieceSize % Constants.BLOCK_SIZE;
-        lastBlockSize = (modBlock != 0) ? modBlock : Constants.BLOCK_SIZE;
+        int modBlock = lastPieceSize % Constants.BLOCK_LEN;
+        lastBlockSize = (modBlock != 0) ? modBlock : Constants.BLOCK_LEN;
         int piecesNum = (int) Math.ceilDiv(fileLen,  pieceLen);
         for (int i = 0; i < piecesNum; ++i) {
             if (i == piecesNum - 1) {
                 blocksInPiece = numBlocksInLastPiece;
-                requestedBlocks = new BitSet(i * (int) pieceLen / Constants.BLOCK_SIZE + blocksInPiece);
+                requestedBlocks = new BitSet(i * (int) pieceLen / Constants.BLOCK_LEN + blocksInPiece);
             }
             boolean pieceAvailable = piecesHas.get(i);
             BitSet blocks = new BitSet(blocksInPiece);
