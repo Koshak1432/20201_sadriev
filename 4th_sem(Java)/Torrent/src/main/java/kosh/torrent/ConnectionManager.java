@@ -21,30 +21,24 @@ public class ConnectionManager implements Runnable {
             server.register(selector, SelectionKey.OP_ACCEPT);
         }
         catch (IOException e) {
-            System.err.println("can't init connection manager");
+            System.err.println("Couldn't init connection manager");
             e.printStackTrace();
+            Thread.currentThread().interrupt();
             return;
         }
 
         if (leecher) {
             List<SocketChannel> channels = connectToPeers(peers.subList(1, peers.size()));
-            sendHS(channels, meta.getInfoHash());
+            if (channels == null) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+            sendHStoPeers(channels, meta.getInfoHash());
         }
-        int numPieces = meta.getPieces().length / 20;
-        iam.initPiecesHas(numPieces, !leecher);
-        iam.initBlocks(meta.getPieceLen(), meta.getFileLen());
+        piecesInfo = new PiecesAndBlocksInfo((int) meta.getFileLen(), (int) meta.getPieceLen(), Constants.BLOCK_LEN);
+        iam = new Peer(null, piecesInfo);
+        //todo SOMEWHERE TO SET ALL PIECES TO TRUE IF IAM IS SEEDER
         System.out.println("initialized connection manager");
-    }
-
-    private void sendHS(List<SocketChannel> channels, byte[] infoHash) {
-        for (SocketChannel channel : channels) {
-            Peer peer = new Peer(channel);
-            connections.add(peer);
-            Message msg = new Handshake(infoHash, peer.getId());
-            Queue<Message> messages = new LinkedList<>();
-            messages.add(msg);
-            messagesToPeer.put(peer, messages);
-        }
     }
 
 
@@ -60,15 +54,23 @@ public class ConnectionManager implements Runnable {
             }
         } catch (IOException e) {
             e.printStackTrace();
+            return null;
         }
         return channels;
     }
 
+    private void sendHStoPeers(List<SocketChannel> channels, byte[] infoHash) {
+        for (SocketChannel channel : channels) {
+            Peer peer = new Peer(channel, piecesInfo);
+            connections.add(peer);
+            addMsgToQueue(new Handshake(infoHash, peer.getId());
+        }
+    }
+
     @Override
     public void run() {
-        System.out.println("connection manager is running");
-        int i = 0;
-        while (true) {
+        System.out.println("Connection manager is running");
+        while (!Thread.currentThread().isInterrupted()) {
             int ready;
             try {
                 ready = selector.selectNow();
@@ -84,7 +86,6 @@ public class ConnectionManager implements Runnable {
             Set<SelectionKey> keys = selector.selectedKeys();
             for (SelectionKey key : keys) {
                 if (! key.isValid()) {
-                    System.out.println("key isn't valid");
                     continue;
                 }
                 if (key.isAcceptable()) {
@@ -99,60 +100,40 @@ public class ConnectionManager implements Runnable {
             }
             selector.selectedKeys().clear();
 
-//            if (i == 400) {
-    //            try {
-    //                Thread.sleep(1000000000);
-    //            } catch (InterruptedException e) {
-    //                e.printStackTrace();
-    //            }
-//                if (connections.isEmpty()) {
-//                    System.out.println("Connections list is empty");
-//                    return;
-//                }
-//            }
+            if (connections.isEmpty()) {
+                System.out.println("Connections list is empty, returning");
+                return;
+            }
 
             while (!DU.getSuccessfulCheck().isEmpty()) {
                 Integer idxHave = DU.getSuccessfulCheck().poll();
                 assert idxHave != null;
                 for (Peer peer : connections) {
-                    messagesToPeer.get(peer).add(new ProtocolMessage(MessagesTypes.HAVE, Util.convertToByteArr(idxHave)));
+                    addMsgToQueue(peer, new ProtocolMessage(MessagesTypes.HAVE, Util.convertToByteArr(idxHave)));
                 }
-                int piecesNum = Math.ceilDiv((int) meta.getFileLen(), Constants.PIECE_LEN);
 
-                if (iam.getPiecesHas().cardinality() == piecesNum) {
-                    System.out.println("HAVE ALL THE PIECES, RETURN FROM MAIN LOOP");
+                if (iam.isHasAllPieces()) {
                     DU.addTask(new Task(TaskType.STOP));
+                    System.out.println("Have all the messages, download completed!");
                     return;
                 }
             }
             while (!DU.getUnsuccessfulCheck().isEmpty()) {
                 Integer idxToClear = DU.getUnsuccessfulCheck().poll();
                 assert idxToClear != null;
-                clearPiece(idxToClear);
+                if (!iam.clearPiece(idxToClear)) {
+                    System.err.println("Invalid piece idx to clear");
+                    continue;
+                }
                 for (Peer peer : connections) {
                     Message request = createRequest(peer, iam);
                     if (request == null) {
-                        System.out.println("have no blocks to request");
-                        return;
+                        continue;
                     }
                     messagesToPeer.get(peer).add(request);
-                    System.out.println("added request after clearing piece");
                 }
-
             }
-//            System.out.println("---------------------------------");
-            ++i;
         }
-    }
-
-    private void clearPiece(Integer idxToClear) {
-        System.out.println("enter clear piece, idx to clear : " + idxToClear);
-        iam.getPiecesHas().set(idxToClear, false);
-        int blocksNumber = iam.getHasMap().get(idxToClear).size();
-        iam.getHasMap().get(idxToClear).set(0, blocksNumber, false);
-        int fromIdx = idxToClear * (int) meta.getPieceLen() / Constants.BLOCK_LEN;
-        int toIdx = idxToClear * (int) meta.getPieceLen() / Constants.BLOCK_LEN + blocksNumber;
-        iam.getRequestedBlocks().set(fromIdx, toIdx, false);
     }
 
     private Peer findPeer(SocketChannel remoteChannel) {
@@ -164,48 +145,46 @@ public class ConnectionManager implements Runnable {
         return null; //never
     }
 
+    private void addMsgToQueue(Peer peer, Message msg) {
+        if (messagesToPeer.containsKey(peer)) {
+            messagesToPeer.get(peer).add(msg);
+            return;
+        }
+        Queue<Message> messages = new LinkedList<>();
+        messages.add(msg);
+        messagesToPeer.put(peer, messages);
+    }
+
     private void accept(SelectionKey key) {
         System.out.println("ENTER ACCEPT");
         try {
             ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
             SocketChannel channel = serverSocketChannel.accept();
             channel.configureBlocking(false);
-            Peer peer = new Peer(channel);
+            Peer peer = new Peer(channel, piecesInfo);
             connections.add(peer);
-            Handshake myHS = new Handshake(meta.getInfoHash(), iam.getId());
-            messagesToPeer.put(peer, new LinkedList<>());
-            messagesToPeer.get(peer).add(myHS);
+            addMsgToQueue(peer, new Handshake(meta.getInfoHash(), iam.getId()));
             channel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
         }
         catch (IOException e) {
+            System.err.println("Catch an exception while accepting a connection");
             e.printStackTrace();
         }
     }
 
     private void readFromPeer(SelectionKey key) {
-//        System.out.println("READ FROM PEER");
         SocketChannel channel = (SocketChannel) key.channel();
         Peer peer = findPeer(channel);
         assert peer != null;
         if (!iam.getHandshaked().contains(peer)) {
             peer.getReadyMessages().add(peer.getRemoteHS());
-            System.out.println("add HS");
         }
+
         peer.constructPeerMsg();
-//            try {
-//                //или не совсем закрыто??
-////                System.out.println("Connection closed by " + peer);
-////                channel.close();
-//                //мб как-то ещё обработать, закинуть его в неактивные коннекты, чтобы потом рестартнуть если что
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//            return;
-//        System.out.println("read peer messages size: " + peer.getReadyMessages().size());
         while (!peer.getReadyMessages().isEmpty()) {
             Message msg = peer.getReadyMessages().poll();
-            System.out.println("going to handle msg type: " + msg.getType());
-            handleMsg(msg, peer);
+            assert msg != null;
+            handleMsg(peer, msg);
         }
     }
 
@@ -213,11 +192,10 @@ public class ConnectionManager implements Runnable {
     //ищу пира, беру сообщение из очереди для него, отправляю
     //подумать, через кого отправлять
     private void sendToPeer(SelectionKey key) {
-//        System.out.println("SEND TO PEER");
         SocketChannel channel = (SocketChannel) key.channel();
         Peer peer = findPeer(channel);
         assert peer != null;
-//        System.out.println("messages size: " + messages.size() + " , 219 cm");
+        //todo mb also extract method
         if (DU.getOutgoingMsg().containsKey(peer)) {
             synchronized (DU.getOutgoingMsg().get(peer)) {
                 if (!DU.getOutgoingMsg().get(peer).isEmpty()) {
@@ -231,90 +209,68 @@ public class ConnectionManager implements Runnable {
             Message msgToSend = messagesToPeer.get(peer).poll();
             assert msgToSend != null;
             peer.sendMsg(msgToSend);
-            System.out.println("Wrote to " + peer + ", type of msg(int): " + msgToSend.getType());
+            System.out.println("Wrote to " + peer + ", type of msg: " + msgToSend.getType());
         }
 //        System.out.println("No more messages to " + peer);
     }
 
-    //возомжно, нормал инт и дурацкая конвертация в байтовый массив -- бред, и следует просто буффером класть туда инт
-    private void handleMsg(Message msg, Peer peer) {
+    private void handleMsg( Peer peer, Message msg) {
+        System.out.println("Got message from " + peer);
         switch (msg.getType()) {
             case MessagesTypes.HANDSHAKE -> {
-                System.out.println("Got HANDSHAKE");
+                System.out.println("HANDSHAKE");
                 //спецом id пировский, т.к. трекера нет
                 if (!Arrays.equals(msg.getMessage(), new Handshake(meta.getInfoHash(), peer.getId()).getMessage())) {
-                    System.out.println("HS are different!, interrupted");
-                    Thread.currentThread().interrupt();
+                    System.out.println("HS are different");
+                    peer.closeConnection();
                     return;
                 }
                 iam.getHandshaked().add(peer);
+                //mb move it to connection, add hs and interested
                 if (leecher) {
-                    messagesToPeer.get(peer).add(new ProtocolMessage(MessagesTypes.INTERESTED));
+                    addMsgToQueue(peer, new ProtocolMessage(MessagesTypes.INTERESTED));
                     peer.setInterested(true);
-                    System.out.println("add INTERESTED");
                 }
             }
             case MessagesTypes.CHOKE -> {
-                System.out.println("got CHOKE");
+                System.out.println("CHOKE");
                 peer.setChoking(true);
             }
             case MessagesTypes.UNCHOKE -> {
-                System.out.println("got UNCHOKE");
+                System.out.println("UNCHOKE");
                 peer.setChoking(false);
-                //мб ещё припилить метод, который будет говорить, заинтересован ли я в пире, а то мб у него нет ничего
+                //todo подумать мб ещё припилить метод, который будет говорить, заинтересован ли я в пире, а то мб у него нет ничего
             }
             case MessagesTypes.INTERESTED -> {
-                System.out.println("got INTERESTED msg");
+                System.out.println("INTERESTED");
+                addMsgToQueue(peer, new ProtocolMessage(MessagesTypes.UNCHOKE));
+                addMsgToQueue(peer, new ProtocolMessage(MessagesTypes.BITFIELD, iam.getPiecesHas().toByteArray()));
                 peer.setInteresting(true);
-                messagesToPeer.get(peer).add(new ProtocolMessage(MessagesTypes.UNCHOKE));
-                System.out.println("add UNCHOKE");
                 peer.setChoked(false);
-                messagesToPeer.get(peer).add(new ProtocolMessage(MessagesTypes.BITFIELD, iam.getPiecesHas().toByteArray()));
-                System.out.println("add BITFIELD");
             }
-            case MessagesTypes.NOT_INTERESTED -> peer.setInteresting(false);
+            case MessagesTypes.NOT_INTERESTED -> {
+                System.out.println("NOT INTERESTED");
+                peer.setInteresting(false);
+            }
             case MessagesTypes.HAVE -> {
-                System.out.println("got HAVE msg, set peer's piece to true");
-                if (peer.getPiecesHas() == null) {
-                    int piecesNum = (int) Math.ceilDiv(meta.getFileLen(),  meta.getPieceLen());
-                    peer.initPiecesHas(piecesNum, false);
-                }
+                System.out.println("HAVE");
                 peer.setPiece(Util.convertToInt(msg.getPayload()), true);
             }
             case MessagesTypes.BITFIELD -> {
-                System.out.println("got BITFIELD");
+                System.out.println("BITFIELD");
                 if (msg.getMessage().length > 5) {
                     peer.setPiecesHas(msg.getPayload());
-                } else {
-                    System.out.println("bitfield payload is 0, init peer's pieces to false");
-                    int piecesNum = (int) Math.ceilDiv(meta.getFileLen(),  meta.getPieceLen());
-                    peer.initPiecesHas(piecesNum, false);
                 }
-                peer.initBlocks(meta.getPieceLen(), meta.getFileLen());
-                System.out.println("iam cardinality in bitfield handle: " + iam.getPiecesHas().cardinality());
-                if (iam.getPiecesHas().cardinality() != meta.getPieces().length / 20) {
+
+                if (!iam.isHasAllPieces()) {
                     Message request = createRequest(peer, iam);
                     if (request == null) {
-                        System.out.println("have no blocks to request");
                         return;
                     }
-                    messagesToPeer.get(peer).add(request);
-                    System.out.println("sent REQUEST");
+                    addMsgToQueue(peer, request);
                 }
-            }
-            //means remote peer is requesting a piece
+            } //todo FINISH HERE
             case MessagesTypes.REQUEST -> {
-                ++i;
-                if (i == 80) {
-                    System.out.println(i + " times enter request");
-                    try {
-                        Thread.sleep(100000000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                        Thread.currentThread().interrupt();
-                        return;
-                    }
-                }
                 //A block is uploaded by a client when the client is not choking a peer,
                 // and that peer is interested in the client
                 if (peer.isChoked() || !peer.isInteresting()) {
@@ -329,22 +285,9 @@ public class ConnectionManager implements Runnable {
                 System.out.println("REQUEST idx: " + idx + ", begin: " + begin + ", len: " + len);
                 //добавить в очерень тасок DU
                 DU.addTask(new Task(TaskType.SEND, idx, begin, len, peer));
-                System.out.println("got REQUEST, gave DU task SEND, DU add PIECE");
             }
-            //means remote peer send us a block of data
             case MessagesTypes.PIECE -> {
-                System.out.println("got PIECE");
-                ++i;
-                if (i == 80) {
-                    System.out.println(i + " times enter handling piece");
-                    try {
-                        Thread.sleep(100000000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                        Thread.currentThread().interrupt();
-                        return;
-                    }
-                }
+                System.out.println("PIECE");
                 //A block is downloaded by the client when the client is interested in a peer,
                 // and that peer is not choking the client
                 if (!peer.isInterested() || peer.isChoking()) {
@@ -383,7 +326,6 @@ public class ConnectionManager implements Runnable {
                     return;
                 }
                 messagesToPeer.get(peer).add(request);
-                System.out.println("added REQUEST");
             }
             //means remote peer want us to cancel last request from him
             case MessagesTypes.CANCEL -> {
@@ -396,7 +338,6 @@ public class ConnectionManager implements Runnable {
 
     //мб в пира засунуть или в mm
     private int getPieceIdxToRequest(Peer to, Peer from) {
-        System.out.println("FINDING PIECE TO REQUEST");
         int piecesNum = Math.ceilDiv((int) meta.getFileLen(), Constants.PIECE_LEN);
         BitSet piecesToRequest = (BitSet) from.getPiecesHas().clone(); //есть у меня
         System.out.println("I have pieces: " + piecesToRequest);
@@ -475,9 +416,10 @@ public class ConnectionManager implements Runnable {
     }
 
 
+    private final PiecesAndBlocksInfo piecesInfo;
     private final Map<Peer, Queue<Message>> messagesToPeer = new HashMap<>();
     private final List<Peer> connections = new ArrayList<>();
-    private final Peer iam = new Peer(null);
+    private Peer iam;
     private Selector selector;
     //мб куда-нибудь перенести
     private final MetainfoFile meta;

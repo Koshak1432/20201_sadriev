@@ -5,53 +5,68 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MyBitSet {
-    public MyBitSet(int fileLen, int pieceLen, int blockLen) {
-        this.fileLen = fileLen;
-        this.pieceLen = pieceLen;
-        this.blockLen = blockLen;
-        this.piecesNum = Math.ceilDiv(fileLen, pieceLen);
-        this.blocksInPiece = Math.ceilDiv(pieceLen, blockLen);
+    public MyBitSet(PiecesAndBlocksInfo info) {
+        this.info = info;
+        //todo do not forget about initialization of leecher and seeder
+        //where to init?
+        piecesHas = new BitSet(info.getPiecesNum());
+        requestedBlocks = new BitSet((info.getPiecesNum() - 1) * info.getBlocksInPiece() + info.getBlocksInLastPiece());
 
-        this.lastPieceLen = (fileLen % pieceLen != 0) ? (fileLen % pieceLen) : pieceLen;
-        this.lastBlockLen = (lastPieceLen % blockLen != 0) ? (lastPieceLen % blockLen) : blockLen;
-        this.blocksInLastPiece = Math.ceilDiv(lastPieceLen, blockLen);
+        initHasMap();
     }
 
-    private void initBlocks(long pieceLen, long fileLen) {
-        int blocksInPiece = (int) pieceLen / Constants.BLOCK_LEN;
-        int modPiece = (int) (fileLen % pieceLen);
-        int lastPieceSize = (int) ((modPiece != 0) ? modPiece : pieceLen);
-        int numBlocksInLastPiece = Math.ceilDiv(lastPieceSize, Constants.BLOCK_LEN);
-        int modBlock = lastPieceSize % Constants.BLOCK_LEN;
-        lastBlockSize = (modBlock != 0) ? modBlock : Constants.BLOCK_LEN;
-        int piecesNum = (int) Math.ceilDiv(fileLen,  pieceLen);
-        for (int i = 0; i < piecesNum; ++i) {
-            if (i == piecesNum - 1) {
-                blocksInPiece = numBlocksInLastPiece;
-                requestedBlocks = new BitSet(i * (int) pieceLen / Constants.BLOCK_LEN + blocksInPiece);
+    private void initHasMap() {
+        int blocksInPiece = info.getBlocksInPiece();
+        for (int i = 0; i < info.getPiecesNum(); ++i) {
+            if (i == info.getPiecesNum() - 1) {
+                blocksInPiece = info.getBlocksInLastPiece();
             }
             boolean pieceAvailable = piecesHas.get(i);
             BitSet blocks = new BitSet(blocksInPiece);
             blocks.set(0, blocksInPiece, pieceAvailable);
             hasMap.put(i, blocks);
         }
-        for (int i = 0; i < hasMap.size(); ++i) {
-            System.out.println(hasMap.get(i));
-        }
     }
 
+    public BitSet getPiecesHas() {
+        return piecesHas;
+    }
 
+    public boolean isHasAllPieces() {
+        return piecesHas.cardinality() == info.getPiecesNum();
+    }
+
+    public void setPiecesHas(byte[] bitfield) {
+        piecesHas = BitSet.valueOf(bitfield);
+    }
+
+    public void setPiece(int idx, boolean has) {
+        piecesHas.set(idx, has);
+    }
+
+    private boolean isLastPiece(int idx) {
+        return idx == info.getPiecesNum() - 1;
+    }
+
+    public boolean clearPiece(int idx) {
+        if (idx > hasMap.size() - 1 || idx < 0) {
+            return false;
+        }
+        int blocksInThisPiece = isLastPiece(idx) ? info.getBlocksInLastPiece() : info.getBlocksInPiece();
+        setPiece(idx, false);
+        hasMap.get(idx).set(0, blocksInThisPiece, false);
+        requestedBlocks.set(idx * info.getBlocksInPiece(), idx * info.getBlocksInPiece() + blocksInThisPiece);
+        return true;
+    }
+
+//    private void initPiecesHas(int numPieces, boolean has) {
+//        piecesHas = new BitSet(numPieces);
+//        piecesHas.set(0, numPieces, has);
+//    }
+
+
+    private final PiecesAndBlocksInfo info;
     private BitSet piecesHas = null;
     private BitSet requestedBlocks = null;
     private final Map<Integer, BitSet> hasMap = new HashMap<>();
-    private final int fileLen;
-    private final int pieceLen;
-    private final int blockLen;
-    private final int piecesNum;
-    private final int blocksInPiece;
-    private final int blocksInLastPiece;
-
-    private final int lastBlockLen;
-    private final int lastPieceLen;
-
 }

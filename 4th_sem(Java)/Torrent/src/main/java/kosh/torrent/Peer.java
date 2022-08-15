@@ -7,17 +7,18 @@ import java.util.*;
 
 //client
 public class Peer {
-    public Peer(SocketChannel channel) {
+    public Peer(SocketChannel channel, PiecesAndBlocksInfo info) {
         this.id = Util.generateId();
         this.channel = channel;
+        this.bitset = new MyBitSet(info);
     }
 
     public void sendMsg(Message msg) {
         ByteBuffer buffer = ByteBuffer.wrap(msg.getMessage());
-//        System.out.println("Ready to send " + buffer.capacity() + " bytes");
         try {
             channel.write(buffer);
         } catch (IOException e) {
+            System.err.println("Catch an exception while writing message to " + this);
             e.printStackTrace();
         }
     }
@@ -30,16 +31,27 @@ public class Peer {
         return readyMessages;
     }
 
-    //это не должно быть здесь, перенести куда-нибудь потом
+    public boolean isHasAllPieces() {
+        return bitset.isHasAllPieces();
+    }
+
+    public boolean clearPiece(int idx) {
+        return bitset.clearPiece(idx);
+    }
+
+    public BitSet getPiecesHas() {
+        return bitset.getPiecesHas();
+    }
+
+    //todo подумать это не должно быть здесь, перенести куда-нибудь потом???
     public void constructPeerMsg() {
-//        System.out.println("CONSTRUCTING MSG");
         boolean able = readFromChannel(channel);
         if (!able) {
+            //todo это что-то значит?
             System.out.println("NOT ABLE TO READ");
             return;
         }
         while (hasFullMessage(readBytes)) {
-            System.out.println("HAS FULL MESSAGE");
             addFullMessages(readBytes, readyMessages);
         }
     }
@@ -50,7 +62,6 @@ public class Peer {
         int read = -1;
         try {
             read = channel.read(buffer);
-//            System.out.println("read in constucting: " + read);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -60,7 +71,6 @@ public class Peer {
         for (int i = 0; i < read; ++i) {
             readBytes.add(buffer.get(i));
         }
-//        System.out.println("added to read bytes " + read + " bytes");
         buffer.clear();
         return true;
     }
@@ -163,12 +173,8 @@ public class Peer {
         piecesHas.set(0, numPieces, has);
     }
 
-    public BitSet getPiecesHas() {
-        return piecesHas;
-    }
-
     public void setPiecesHas(byte[] bitfield) {
-        piecesHas = BitSet.valueOf(bitfield);
+        bitset.setPiecesHas(bitfield);
     }
 
     public Map<Integer, BitSet> getHasMap() {
@@ -180,7 +186,7 @@ public class Peer {
     }
 
     public void setPiece(int pieceIdx, boolean has) {
-        this.piecesHas.set(pieceIdx, has);
+        bitset.setPiece(pieceIdx, has);
     }
 
 
@@ -252,14 +258,6 @@ public class Peer {
         }
     }
 
-    public int getBlocksInLastPiece() {
-        return blocksInLastPiece;
-    }
-
-    public int getLastBlockSize() {
-        return lastBlockSize;
-    }
-
     private byte[] id;
     private final SocketChannel channel;
     private int idxLastRequested = 0;
@@ -268,13 +266,14 @@ public class Peer {
     private boolean interested = false; //this client is interested in the peer
     private boolean interesting = false; //peer is interested in this client, выставлять, когда отправляю interested
 
-    private BitSet piecesHas = null;
-    private BitSet requestedBlocks;
+    private MyBitSet bitset = null;
+//    private BitSet piecesHas = null;
+//    private BitSet requestedBlocks;
     //ключ -- номер куска, значение -- битсет длиной pieceSize / blockSize
-    private final Map<Integer, BitSet> hasMap = new HashMap<>();
+//    private final Map<Integer, BitSet> hasMap = new HashMap<>();
     private final List<Peer> handshaked = new ArrayList<>();
-    private int lastBlockSize = 0;
-    private int blocksInLastPiece = 0;
+//    private int lastBlockSize = 0;
+//    private int blocksInLastPiece = 0;
     private final List<Byte> readBytes = new ArrayList<>();
     private final Queue<Message> readyMessages = new ArrayDeque<>();
 }
