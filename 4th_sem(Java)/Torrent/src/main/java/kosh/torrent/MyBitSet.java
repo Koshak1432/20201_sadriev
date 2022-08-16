@@ -6,13 +6,12 @@ import java.util.Map;
 import java.util.Random;
 
 public class MyBitSet {
-    public MyBitSet(PiecesAndBlocksInfo info) {
+    public MyBitSet(PiecesAndBlocksInfo info, boolean seeder) {
         this.info = info;
-        //todo do not forget about initialization of leecher and seeder
-        //where to init?
         piecesHas = new BitSet(info.getPiecesNum());
         requestedBlocks = new BitSet((info.getPiecesNum() - 1) * info.getBlocksInPiece() + info.getBlocksInLastPiece());
 
+        piecesHas.set(0, info.getPiecesNum(), seeder);
         initHasMap();
     }
 

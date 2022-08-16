@@ -11,8 +11,15 @@ public class Peer {
     public Peer(SocketChannel channel, PiecesAndBlocksInfo info) {
         this.id = generateId();
         this.channel = channel;
-        this.bitset = new MyBitSet(info);
         this.info = info;
+        this.bitset = new MyBitSet(info, false);
+    }
+
+    public Peer(SocketChannel channel, PiecesAndBlocksInfo info, boolean seeder) {
+        this.id = generateId();
+        this.channel = channel;
+        this.info = info;
+        this.bitset = new MyBitSet(info, seeder);
     }
 
     private byte[] generateId() {
@@ -49,11 +56,11 @@ public class Peer {
         return bitset.getPiecesHas();
     }
 
-    public int choosePieceToRequest(Peer receiver) {
+    private int choosePieceToRequest(Peer receiver) {
         return bitset.chooseClearPiece(receiver.getPiecesHas());
     }
 
-    public int chooseBlockToRequest(Peer receiver, int pieceIdx) {
+    private int chooseBlockToRequest(Peer receiver, int pieceIdx) {
         return bitset.chooseClearBlock(receiver.getBlocksInPiece(pieceIdx), pieceIdx);
     }
 
@@ -85,7 +92,7 @@ public class Peer {
             channel.socket().close();
             channel.close();
         } catch (IOException e) {
-            System.err.println("exception while closing channel");
+            System.err.println("Couldn't close connection with " + channel);
             e.printStackTrace();
         }
     }

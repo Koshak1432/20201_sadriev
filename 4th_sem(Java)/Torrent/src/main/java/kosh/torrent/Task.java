@@ -43,10 +43,9 @@ public class Task {
         return idx;
     }
 
-    //сделать отдельную абстракцию под инфу, а то это дичь какая-то
     private final TaskType type;
     private Peer who = null;
-    private Block block = null; //если пришёл блок и его нужно сохранить
+    private Block block = null;
     private int pieceLen = 0;
     private int idx = 0;
 }

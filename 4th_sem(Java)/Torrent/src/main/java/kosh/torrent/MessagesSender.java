@@ -2,14 +2,10 @@ package kosh.torrent;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Queue;
 
 public class MessagesSender implements IMessagesSender {
 
-    public MessagesSender() {
-    }
+    public MessagesSender() {}
 
     public void sendMsg(Peer peer, Message msg) {
         ByteBuffer buffer = ByteBuffer.wrap(msg.getMessage());
@@ -20,5 +16,4 @@ public class MessagesSender implements IMessagesSender {
             e.printStackTrace();
         }
     }
-    //notifyer??
 }

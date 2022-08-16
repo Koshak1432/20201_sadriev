@@ -9,11 +9,13 @@ import java.nio.channels.SocketChannel;
 import java.util.*;
 
 public class ConnectionManager implements Runnable {
-    public ConnectionManager(MetainfoFile meta, DownloadUploadManager DU, List<InetSocketAddress> peers, boolean leecher) {
+    public ConnectionManager(MetainfoFile meta, DownloadUploadManager DU, List<InetSocketAddress> peers, boolean seeder) {
         this.infoHash = meta.getInfoHash();
         this.DU = DU;
-        this.piecesInfo = new PiecesAndBlocksInfo((int) meta.getFileLen(), (int) meta.getPieceLen(), Constants.BLOCK_LEN);
-        this.messagesReceiver = new MessagesReceiver(meta.getInfoHash(), DU, piecesInfo, leecher);
+        this.piecesInfo = new PiecesAndBlocksInfo((int) meta.getFileLen(), (int) meta.getPieceLen(), BLOCK_LEN);
+        this.messagesReceiver = new MessagesReceiver(meta.getInfoHash(), DU, piecesInfo, seeder);
+        this.iam = new Peer(null, piecesInfo, seeder);
+
         try (ServerSocketChannel server = ServerSocketChannel.open()) {
             selector = Selector.open();
             server.bind(peers.get(0));
@@ -27,19 +29,14 @@ public class ConnectionManager implements Runnable {
             return;
         }
 
-        iam = new Peer(null, piecesInfo);
-
-        if (leecher) {
+        if (!seeder) {
             List<SocketChannel> channels = connectToPeers(peers.subList(1, peers.size()));
             if (channels == null) {
                 Thread.currentThread().interrupt();
                 return;
             }
             addHSToPeers(channels, meta.getInfoHash());
-        } else {
-
         }
-        //todo SOMEWHERE TO SET ALL PIECES TO TRUE IF IAM IS SEEDER
     }
 
     private List<SocketChannel> connectToPeers(List<InetSocketAddress> peers) {
@@ -138,7 +135,7 @@ public class ConnectionManager implements Runnable {
             if (request == null) {
                 continue;
             }
-            messagesReceiver.getMessages(peer).add(request);
+            messagesReceiver.addMsgToQueue(peer, request);
         }
     }
 
@@ -188,31 +185,31 @@ public class ConnectionManager implements Runnable {
         SocketChannel channel = (SocketChannel) key.channel();
         Peer peer = findPeer(channel);
         assert peer != null;
-        //todo mb also extract method
         if (DU.getOutgoingMsg().containsKey(peer)) {
             synchronized (DU.getOutgoingMsg().get(peer)) {
-                if (!DU.getOutgoingMsg().get(peer).isEmpty()) {
-                    messagesReceiver.getMessages(peer).addAll(DU.getOutgoingMsg().get(peer));
-                    DU.getOutgoingMsg().get(peer).clear();
+                Message msg;
+                while ((msg = DU.getOutgoingMsg().get(peer).poll()) != null) {
+                    messagesReceiver.addMsgToQueue(peer, msg);
                 }
             }
         }
 
         Message msgToSend;
-        while ((msgToSend = messagesReceiver.getMessages(peer).poll()) != null) {
+        while ((msgToSend = messagesReceiver.pollMessage(peer)) != null) {
             messagesSender.sendMsg(peer, msgToSend);
             System.out.println("Wrote to " + peer + ", type of msg: " + msgToSend.getType());
         }
     }
 
 
+    private Selector selector;
     private final PiecesAndBlocksInfo piecesInfo;
     private final IMessagesReceiver messagesReceiver;
-
     private final IMessagesSender messagesSender = new MessagesSender();
     private final List<Peer> connections = new ArrayList<>();
-    private Peer iam;
-    private Selector selector;
+    private final Peer iam;
     private final byte[] infoHash;
     private final DownloadUploadManager DU;
+
+    public final int BLOCK_LEN = 16 * 1024;
 }

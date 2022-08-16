@@ -6,9 +6,9 @@ import java.io.RandomAccessFile;
 import java.util.*;
 
 public class DownloadUploadManager implements Runnable {
-    public DownloadUploadManager(MetainfoFile meta, boolean leecher) {
+    public DownloadUploadManager(MetainfoFile meta, boolean seeder) {
         this.meta = meta;
-        String outputFileName = leecher ? meta.getName() + "test" : meta.getName();
+        String outputFileName = seeder ? meta.getName() : meta.getName() + "test";
         try {
             output = new RandomAccessFile(outputFileName, "rw");
         } catch (FileNotFoundException e) {
@@ -52,9 +52,9 @@ public class DownloadUploadManager implements Runnable {
     }
 
     private void saveBlock(Task task) {
-        int idx = task.getBlock().getIdx();
-        int begin = task.getBlock().getBegin();
-        byte[] block = task.getBlock().getData();
+        int idx = task.getBlock().idx();
+        int begin = task.getBlock().begin();
+        byte[] block = task.getBlock().data();
         try {
             output.seek( meta.getPieceLen() * idx + begin);
             output.write(block);
@@ -77,14 +77,14 @@ public class DownloadUploadManager implements Runnable {
     }
 
     private void sendBlock(Task task) {
-        int idx = task.getBlock().getIdx();
-        int begin = task.getBlock().getBegin();
-        byte[] dataToSend = new byte[task.getBlock().getLen()];
+        int idx = task.getBlock().idx();
+        int begin = task.getBlock().begin();
+        byte[] dataToSend = new byte[task.getBlock().len()];
 
         try {
             output.seek(meta.getPieceLen() * idx + begin);
             int read = output.read(dataToSend);
-            if (task.getBlock().getLen() != read) {
+            if (task.getBlock().len() != read) {
                 System.err.println("Count of read bytes and requested len are different");
                 return;
             }

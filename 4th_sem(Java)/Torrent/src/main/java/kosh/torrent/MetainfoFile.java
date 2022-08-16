@@ -1,11 +1,11 @@
 package kosh.torrent;
 
 import com.dampcake.bencode.Bencode;
-import com.dampcake.bencode.BencodeInputStream;
-import com.dampcake.bencode.BencodeOutputStream;
 import com.dampcake.bencode.Type;
 
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;

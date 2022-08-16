@@ -7,19 +7,17 @@ import java.util.*;
 
 public class MessagesReceiver implements IMessagesReceiver {
 
-    public MessagesReceiver(byte[] infoHash, DownloadUploadManager DU, PiecesAndBlocksInfo piecesInfo, boolean leecher) {
+    public MessagesReceiver(byte[] infoHash, DownloadUploadManager DU, PiecesAndBlocksInfo piecesInfo, boolean seeder) {
         this.infoHash = infoHash;
         this.DU = DU;
         this.piecesInfo = piecesInfo;
-        this.leecher = leecher;
+        this.seeder = seeder;
     }
 
-    public Queue<Message> getMessages(Peer peer) {
-        if (messagesToPeer.containsKey(peer)) {
-            return messagesToPeer.get(peer);
-        }
-        return null;
+    public Message pollMessage(Peer peer) {
+        return messagesToPeer.get(peer).poll();
     }
+
 
     public void addMsgToQueue(Peer peer, Message msg) {
         if (messagesToPeer.containsKey(peer)) {
@@ -45,7 +43,7 @@ public class MessagesReceiver implements IMessagesReceiver {
                 }
                 to.getHandshaked().add(from);
                 //mb move it to connection, add hs and interested
-                if (leecher) {
+                if (!seeder) {
                     addMsgToQueue(from, new ProtocolMessage(MessagesTypes.INTERESTED));
                     from.setInterested(true);
                 }
@@ -57,7 +55,6 @@ public class MessagesReceiver implements IMessagesReceiver {
             case MessagesTypes.UNCHOKE -> {
                 System.out.println("UNCHOKE");
                 from.setChoking(false);
-                //todo подумать мб ещё припилить метод, который будет говорить, заинтересован ли я в пире, а то мб у него нет ничего
             }
             case MessagesTypes.INTERESTED -> {
                 System.out.println("INTERESTED");
@@ -97,18 +94,7 @@ public class MessagesReceiver implements IMessagesReceiver {
                     System.out.println("Rejected request because " + from + " is choked or not interesting");
                     return;
                 }
-                byte[] payload = msg.getPayload();
-                if (payload != null) {
-                    if (payload.length != 12) {
-                        return;
-                    }
-                    int idx = Util.convertToInt(Arrays.copyOfRange(payload, 0, 4));
-                    int begin = Util.convertToInt(Arrays.copyOfRange(payload, 4, 8));
-                    int len = Util.convertToInt(Arrays.copyOfRange(payload, 8, payload.length));
-                    System.out.println("REQUESTED idx: " + idx + ", begin: " + begin + ", len: " + len);
-
-                    DU.addTask(new Task(TaskType.SEND, idx, begin, len, from));
-                }
+                handleRequest(from, msg);
             }
             case MessagesTypes.PIECE -> {
                 System.out.println("PIECE");
@@ -118,44 +104,62 @@ public class MessagesReceiver implements IMessagesReceiver {
                     System.out.println("Rejected piece because " + from + " is choking or not interested");
                     return;
                 }
-                byte[] payload = msg.getPayload();
-                if (payload != null) {
-                    if (payload.length < 8) {
-                        return;
-                    }
-                    int pieceIdx = Util.convertToInt(Arrays.copyOfRange(payload, 0, 4));
-                    int begin = Util.convertToInt(Arrays.copyOfRange(payload, 4, 8));
-                    byte[] blockData = Arrays.copyOfRange(payload, 8, payload.length);
-
-                    System.out.println("PIECE idx: " + pieceIdx + ", begin: " + begin + ", blockData len: " + blockData.length);
-
-                    DU.addTask(new Task(TaskType.SAVE, pieceIdx, begin, blockData));
-                    int blockIdx = begin / piecesInfo.getBlockLen();
-                    to.setBlock(pieceIdx, blockIdx);
-
-                    if (to.isPieceFull(pieceIdx)) {
-                        to.setPiece(pieceIdx, true);
-                        if (to.isLastPiece(pieceIdx)) {
-                            DU.addTask(new Task(TaskType.CHECK_HASH, pieceIdx, piecesInfo.getLastPieceLen()));
-                        } else {
-                            DU.addTask(new Task(TaskType.CHECK_HASH, pieceIdx, piecesInfo.getPieceLen()));
-                        }
-                    }
-
-                    Message request = to.createRequest(from);
-                    if (request == null) {
-                        return;
-                    }
-                    addMsgToQueue(from, request);
-                }
+                handlePiece(from, to, msg);
             }
             case MessagesTypes.CANCEL -> {
-                //todo
-                //как отменять? где очередь сообщений должна быть?
-                //нужен интерфейс, чтобы ещё и have всем отправлять
+                //todo как отменять? где очередь сообщений должна быть?
             }
         }
     }
+
+    private void handleRequest(Peer from, Message msg) {
+        byte[] payload = msg.getPayload();
+        if (payload != null) {
+            if (payload.length != 12) {
+                return;
+            }
+            int idx = Util.convertToInt(Arrays.copyOfRange(payload, 0, 4));
+            int begin = Util.convertToInt(Arrays.copyOfRange(payload, 4, 8));
+            int len = Util.convertToInt(Arrays.copyOfRange(payload, 8, payload.length));
+            System.out.println("REQUESTED idx: " + idx + ", begin: " + begin + ", len: " + len);
+
+            DU.addTask(new Task(TaskType.SEND, idx, begin, len, from));
+        }
+    }
+
+    private void handlePiece(Peer from, Peer to, Message msg) {
+        byte[] payload = msg.getPayload();
+        if (payload != null) {
+            if (payload.length < 8) {
+                return;
+            }
+            int pieceIdx = Util.convertToInt(Arrays.copyOfRange(payload, 0, 4));
+            int begin = Util.convertToInt(Arrays.copyOfRange(payload, 4, 8));
+            byte[] blockData = Arrays.copyOfRange(payload, 8, payload.length);
+
+            System.out.println("PIECE idx: " + pieceIdx + ", begin: " + begin + ", blockData len: " + blockData.length);
+
+            DU.addTask(new Task(TaskType.SAVE, pieceIdx, begin, blockData));
+            int blockIdx = begin / piecesInfo.getBlockLen();
+            to.setBlock(pieceIdx, blockIdx);
+
+            if (to.isPieceFull(pieceIdx)) {
+                to.setPiece(pieceIdx, true);
+                if (to.isLastPiece(pieceIdx)) {
+                    DU.addTask(new Task(TaskType.CHECK_HASH, pieceIdx, piecesInfo.getLastPieceLen()));
+                } else {
+                    DU.addTask(new Task(TaskType.CHECK_HASH, pieceIdx, piecesInfo.getPieceLen()));
+                }
+            }
+
+            Message request = to.createRequest(from);
+            if (request == null) {
+                return;
+            }
+            addMsgToQueue(from, request);
+        }
+    }
+
 
     public boolean readHS(Peer peer) {
         int HSSize = 68;
@@ -264,6 +268,6 @@ public class MessagesReceiver implements IMessagesReceiver {
     private final Queue<Message> readyMessages = new ArrayDeque<>();
     private final PiecesAndBlocksInfo piecesInfo;
     private final byte[] infoHash;
-    private final boolean leecher;
+    private final boolean seeder;
     private final DownloadUploadManager DU;
 }
