@@ -59,7 +59,7 @@ public class DownloadUploadManager implements Runnable {
             output.seek( meta.getPieceLen() * idx + begin);
             output.write(block);
         } catch (IOException e) {
-            System.err.println("Caught an exception while saving block");
+            System.err.println("Couldn't save block");
             e.printStackTrace();
         }
     }
@@ -89,7 +89,7 @@ public class DownloadUploadManager implements Runnable {
                 return;
             }
         } catch (IOException e) {
-            System.err.println("Caught an exception while sending block");
+            System.err.println("Couldn't send block");
             e.printStackTrace();
             return;
         }
@@ -122,7 +122,7 @@ public class DownloadUploadManager implements Runnable {
                 return;
             }
         } catch (IOException e) {
-            System.err.println("Caught an exception while checking hashes");
+            System.err.println("Couldn't check hashes");
             e.printStackTrace();
             return;
         }
