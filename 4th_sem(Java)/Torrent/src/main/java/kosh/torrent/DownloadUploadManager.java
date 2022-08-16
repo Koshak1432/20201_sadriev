@@ -56,7 +56,7 @@ public class DownloadUploadManager implements Runnable {
         int begin = task.getBlock().getBegin();
         byte[] block = task.getBlock().getData();
         try {
-            output.seek((long) Constants.PIECE_LEN * task.getBlock().getIdx() + task.getBlock().getBegin());
+            output.seek( meta.getPieceLen() * idx + begin);
             output.write(block);
         } catch (IOException e) {
             System.err.println("Caught an exception while saving block");
@@ -64,40 +64,40 @@ public class DownloadUploadManager implements Runnable {
         }
     }
 
+    private void addToOutgoingMessages(Peer peer, Message msg) {
+        synchronized (outgoingMsg) {
+            if (outgoingMsg.containsKey(peer)) {
+                outgoingMsg.get(peer).add(msg);
+                return;
+            }
+            Queue<Message> queue = new LinkedList<>();
+            queue.add(msg);
+            outgoingMsg.put(peer, queue);
+        }
+    }
+
     private void sendBlock(Task task) {
         int idx = task.getBlock().getIdx();
         int begin = task.getBlock().getBegin();
-        int len = task.getBlock().getLen();
-
         byte[] dataToSend = new byte[task.getBlock().getLen()];
+
         try {
-            long pos = (long) Constants.PIECE_LEN * task.getBlock().getIdx() + task.getBlock().getBegin();
-            output.seek(pos);
+            output.seek(meta.getPieceLen() * idx + begin);
             int read = output.read(dataToSend);
-            System.out.println("pos : " + pos + ", read in DU: " + read);
             if (task.getBlock().getLen() != read) {
                 System.err.println("Count of read bytes and requested len are different");
                 return;
             }
         } catch (IOException e) {
+            System.err.println("Caught an exception while sending block");
             e.printStackTrace();
-            throw new RuntimeException("Exception in send block DU");
+            return;
         }
         byte[] idxA = Util.convertToByteArr(idx);
         byte[] beginA = Util.convertToByteArr(begin);
         Message msgToSend = new ProtocolMessage(MessagesTypes.PIECE,
                                                 Util.concatByteArrays(Util.concatByteArrays(idxA, beginA), dataToSend));
-        Queue<Message> q;
-        synchronized (outgoingMsg) {
-            if (outgoingMsg.containsKey(task.getWho())) {
-                q = outgoingMsg.get(task.getWho());
-            } else {
-                q = new LinkedList<>();
-            }
-            outgoingMsg.put(task.getWho(), q);
-            q.add(msgToSend);
-            System.out.println("added PIECE in DU");
-        }
+        addToOutgoingMessages(task.getWho(), msgToSend);
     }
 
     private void stop() {

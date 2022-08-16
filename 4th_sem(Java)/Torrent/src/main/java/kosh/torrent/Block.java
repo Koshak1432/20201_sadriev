@@ -1,7 +1,6 @@
 package kosh.torrent;
 
 
-//todo пофиксить креатора
 public class Block {
     public Block(int idx, int begin, int len, byte[] data) {
         this.idx = idx;
@@ -9,7 +8,6 @@ public class Block {
         this.len = len;
         this.data = data;
     }
-
 
     public int getIdx() {
         return idx;

@@ -7,10 +7,17 @@ import java.util.*;
 
 public class Peer {
     public Peer(SocketChannel channel, PiecesAndBlocksInfo info) {
-        this.id = Util.generateId();
+        this.id = generateId();
         this.channel = channel;
         this.bitset = new MyBitSet(info);
         this.info = info;
+    }
+
+    private byte[] generateId() {
+        byte[] id = new byte[20];
+        Random random = new Random(System.currentTimeMillis());
+        random.nextBytes(id);
+        return id;
     }
 
     public void sendMsg(Message msg) {
@@ -73,11 +80,12 @@ public class Peer {
         }
 
         bitset.setRequested(info.getBlocksInPiece() * pieceIdx + blockIdx);
-        int begin = info.getBlockLen() * blockIdx;
+
         int len = (isLastPiece(pieceIdx) && isPieceFull(pieceIdx)) ? info.getLastBlockLen() : info.getBlockLen();
-        return new ProtocolMessage(MessagesTypes.REQUEST, Util.concatByteArrays(Util.concatByteArrays(Util.convertToByteArr(pieceIdx),
-                                                                                                      Util.convertToByteArr(begin)),
-                                                                                                      Util.convertToByteArr(len)));
+        byte[] begin = Util.convertToByteArr(info.getBlockLen() * blockIdx);
+        byte[] lenA = Util.convertToByteArr(len);
+        return new ProtocolMessage(MessagesTypes.REQUEST,
+                                  Util.concatByteArrays(Util.concatByteArrays(Util.convertToByteArr(pieceIdx), begin), lenA));
     }
 
     private BitSet getBlocksInPiece(int pieceIdx) {

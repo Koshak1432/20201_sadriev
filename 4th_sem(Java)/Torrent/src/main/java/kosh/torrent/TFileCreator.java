@@ -9,49 +9,46 @@ import java.util.*;
 public class TFileCreator {
     public TFileCreator(File file) {
         this.file = file;
-        ByteBuffer buffer = ByteBuffer.allocate(Constants.PIECE_LEN);
-        byte[] pieceData = new byte[Constants.PIECE_LEN];
+        ByteBuffer buffer = ByteBuffer.allocate(PIECE_LEN);
+        byte[] pieceData = new byte[PIECE_LEN];
+        byte[] piecesHashes = new byte[0];
         int read, idx = 0;
         try (InputStream input = new FileInputStream(file)) {
             while ((read = input.read(pieceData, 0, buffer.remaining())) != -1) {
-                System.out.println(read);
                 buffer.put(pieceData, 0, read);
                 if (buffer.remaining() == 0) {
-                    pieces.add(new Piece(idx, buffer.array()));
+                    byte[] hash = Util.generateHash(buffer.array());
+                    if (hash == null) {
+                        return;
+                    }
+                    piecesHashes = Util.concatByteArrays(piecesHashes, hash);
                     buffer.clear();
                     ++idx;
                 }
             }
+
+            if (buffer.remaining() != buffer.capacity()) {
+                byte[] hash = Util.generateHash(Arrays.copyOfRange(buffer.array(), 0, buffer.capacity() - buffer.remaining()));
+                if (hash == null) {
+                    return;
+                }
+                piecesHashes = Util.concatByteArrays(piecesHashes, hash);
+            }
         } catch (IOException e) {
+            System.err.println("Caught an exception while creating metainfo file");
             e.printStackTrace();
-        }
-        if (buffer.remaining() != buffer.capacity()) {
-            pieces.add(new Piece(idx, Util.subArray(buffer.array(), 0, buffer.capacity() - buffer.remaining())));
+            return;
         }
 
-        piecesHashes = joinHashes();
         piecesBuffer = ByteBuffer.wrap(piecesHashes);
-    }
-
-    private byte[] joinHashes() {
-        byte[] hashes = new byte[0];
-        for (Piece piece : pieces) {
-            hashes = Util.concatByteArrays(hashes, piece.getSHA1hash());
-        }
-        return hashes;
     }
 
     private Map<String, Object> createInfoMap() {
         SortedMap<String, Object> info = new TreeMap<>();
-        info.put("piece length", Constants.PIECE_LEN);
+        info.put("piece length", PIECE_LEN);
         info.put("pieces", piecesBuffer);
         info.put("name", file.getName());
         info.put("length", file.length());
-        System.out.println("DEBUG");
-        System.out.println(file.length());
-        System.out.println("PiecesHashes len:" + piecesHashes.length);
-        System.out.println("pieces hashes after encoding: " + Arrays.toString(piecesHashes));
-        System.out.println("number of pieces:" + pieces.size());
         return info;
     }
 
@@ -63,8 +60,9 @@ public class TFileCreator {
         return bencode.encode(metaInfo);
     }
 
-    private final byte[] piecesHashes; //it's the concat of all 20-byte hashes
-    private final ByteBuffer piecesBuffer;
-    private final ArrayList<Piece> pieces = new ArrayList<>();
+    private ByteBuffer piecesBuffer;
     private final File file;
+
+    public final int PIECE_LEN = 256 * 1024;
+
 }
