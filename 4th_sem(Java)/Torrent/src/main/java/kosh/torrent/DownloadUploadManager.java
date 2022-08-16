@@ -5,55 +5,36 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.*;
 
-//класс, отсылающий и принимающий блоки
 public class DownloadUploadManager implements Runnable {
     public DownloadUploadManager(MetainfoFile meta, boolean leecher) {
         this.meta = meta;
-        initHashes(meta);
+        String outputFileName = leecher ? meta.getName() + "test" : meta.getName();
         try {
-            if (leecher) {
-                output = new RandomAccessFile(meta.getName() + "test", "rw");
-            } else {
-                output = new RandomAccessFile(meta.getName(), "rw");
-            }
-
+            output = new RandomAccessFile(outputFileName, "rw");
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
     }
 
-    private void initHashes(MetainfoFile meta) {
-        byte[] pieces = meta.getPieces();
-        assert pieces.length % 20 == 0;
-        int piecesNum = pieces.length / 20;
-        for (int i = 0; i < piecesNum; ++i) {
-            byte[] hash = Util.subArray(pieces, i * 20, 20);
-            hashes.put(i, hash);
-        }
-    }
-
     @Override
     public void run() {
-        while (true) {
-            if (Thread.currentThread().isInterrupted()) {
-                try {
-                    output.close();
-                }
-                catch (IOException e) {
-                    System.err.println("Couldn't close file");
-                    e.printStackTrace();
-                }
-                System.out.println("DU finished");
-                return;
-            }
+        while (!Thread.currentThread().isInterrupted()) {
             if (!tasks.isEmpty()) {
                 doTask(tasks.poll());
             }
         }
+
+        try {
+            output.close();
+        }
+        catch (IOException e) {
+            System.err.println("Couldn't close" + output);
+            e.printStackTrace();
+        }
+        System.out.println("DU finished");
     }
 
     public void doTask(Task task) {
-        System.out.println("DOING TASK TYPE: " + task.getType() + " IN DU");
         switch (task.getType()) {
             case SAVE -> saveBlock(task);
             case SEND -> sendBlock(task);
@@ -78,6 +59,7 @@ public class DownloadUploadManager implements Runnable {
             output.seek((long) Constants.PIECE_LEN * task.getBlock().getIdx() + task.getBlock().getBegin());
             output.write(block);
         } catch (IOException e) {
+            System.err.println("Caught an exception while saving block");
             e.printStackTrace();
         }
     }
@@ -119,17 +101,20 @@ public class DownloadUploadManager implements Runnable {
     }
 
     private void stop() {
-        System.out.println("STOPPED DU THREAD");
+        System.out.println("Stopped DU");
         Thread.currentThread().interrupt();
     }
 
+    private byte[] getMetaHash(int pieceIdx) {
+        int SHA1Len = 20;
+        return Arrays.copyOfRange(meta.getInfoHash(), pieceIdx * SHA1Len, (pieceIdx + 1) * SHA1Len);
+    }
+
     private void checkHash(Task task) {
-        System.out.println("CHECKING HASH");
         int idx = task.getIdx();
         int pieceLen = task.getPieceLen();
-        byte[] metaHash = hashes.get(idx);
+        byte[] metaHash = getMetaHash(idx);
         byte[] pieceData = new byte[pieceLen];
-        System.out.println("piece idx : " + idx + ", pieceLen : " + pieceLen);
         try {
             output.seek(meta.getPieceLen() * idx);
             if (pieceLen != output.read(pieceData)) {
@@ -137,14 +122,15 @@ public class DownloadUploadManager implements Runnable {
                 return;
             }
         } catch (IOException e) {
+            System.err.println("Caught an exception while checking hashes");
             e.printStackTrace();
+            return;
         }
+
         if (Arrays.equals(metaHash, Util.generateHash(pieceData))) {
             successfulCheck.add(idx);
-            System.out.println("HASHES ARE EQUAL");
         } else {
             unsuccessfulCheck.add(idx);
-            System.out.println("HASHES ARE NOT EQUAL");
         }
     }
 
@@ -161,6 +147,5 @@ public class DownloadUploadManager implements Runnable {
     private final Map<Peer, Queue<Message>> outgoingMsg = new HashMap<>();
     private final Queue<Integer> successfulCheck = new LinkedList<>();
     private final Queue<Integer> unsuccessfulCheck = new LinkedList<>();
-    private final Map<Integer, byte[]> hashes = new HashMap<>(); //key -- piece num, value -- hash from .torrent
     private RandomAccessFile output;
 }

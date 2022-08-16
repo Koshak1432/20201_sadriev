@@ -5,12 +5,12 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.*;
 
-//client
 public class Peer {
     public Peer(SocketChannel channel, PiecesAndBlocksInfo info) {
         this.id = Util.generateId();
         this.channel = channel;
         this.bitset = new MyBitSet(info);
+        this.info = info;
     }
 
     public void sendMsg(Message msg) {
@@ -35,12 +35,53 @@ public class Peer {
         return bitset.isHasAllPieces();
     }
 
-    public boolean clearPiece(int idx) {
-        return bitset.clearPiece(idx);
+    public boolean isPieceFull(int pieceIdx) {
+        return bitset.isPieceFull(pieceIdx);
+    }
+
+    public boolean isLastPiece(int pieceIdx) {
+        return bitset.isLastPiece(pieceIdx);
+    }
+    public void clearPiece(int idx) {
+        bitset.clearPiece(idx);
+    }
+
+    public void setBlock(int pieceIdx, int blockIdx) {
+        bitset.setBlock(pieceIdx, blockIdx);
     }
 
     public BitSet getPiecesHas() {
         return bitset.getPiecesHas();
+    }
+
+    public int choosePieceToRequest(Peer receiver) {
+        return bitset.chooseClearPiece(receiver.getPiecesHas());
+    }
+
+    public int chooseBlockToRequest(Peer receiver, int pieceIdx) {
+        return bitset.chooseClearBlock(receiver.getBlocksInPiece(pieceIdx), pieceIdx);
+    }
+
+    public Message createRequest(Peer to) {
+        int pieceIdx = choosePieceToRequest(to);
+        if (pieceIdx == -1) {
+            return null;
+        }
+        int blockIdx = chooseBlockToRequest(to, pieceIdx);
+        if (blockIdx == -1) {
+            return null;
+        }
+
+        bitset.setRequested(info.getBlocksInPiece() * pieceIdx + blockIdx);
+        int begin = info.getBlockLen() * blockIdx;
+        int len = (isLastPiece(pieceIdx) && isPieceFull(pieceIdx)) ? info.getLastBlockLen() : info.getBlockLen();
+        return new ProtocolMessage(MessagesTypes.REQUEST, Util.concatByteArrays(Util.concatByteArrays(Util.convertToByteArr(pieceIdx),
+                                                                                                      Util.convertToByteArr(begin)),
+                                                                                                      Util.convertToByteArr(len)));
+    }
+
+    private BitSet getBlocksInPiece(int pieceIdx) {
+        return bitset.getBlocksInPiece(pieceIdx);
     }
 
     //todo подумать это не должно быть здесь, перенести куда-нибудь потом???
@@ -100,10 +141,8 @@ public class Peer {
         bytesList.remove(0);
         System.out.println("id: " + id[0]);
         int messageLen = Util.convertToInt(length);
-//        System.out.println("message len: " + messageLen);
         int idInt = id[0];
         int payloadLen = messageLen - 1;
-//        System.out.println("payload len: " + payloadLen);
         if (payloadLen > 0) {
             byte[] payload = new byte[payloadLen];
             for (int i = 0; i < payloadLen; ++i) {
@@ -137,14 +176,6 @@ public class Peer {
         return new Handshake(infoHash, peerId);
     }
 
-//    public boolean checkHS(Message myHS) {
-//        Message remotePeerHS = getRemoteHS(channel);
-//        System.out.println("compare 2 handshakes");
-//        System.out.println(remotePeerHS);
-//        System.out.println(myHS);
-//        return Arrays.equals(remotePeerHS.getMessage(), myHS.getMessage());
-//    }
-
     public void closeConnection() {
         try {
             channel.socket().close();
@@ -168,34 +199,12 @@ public class Peer {
         this.id = id;
     }
 
-    public void initPiecesHas(int numPieces, boolean has) {
-        piecesHas = new BitSet(numPieces);
-        piecesHas.set(0, numPieces, has);
-    }
-
     public void setPiecesHas(byte[] bitfield) {
         bitset.setPiecesHas(bitfield);
     }
 
-    public Map<Integer, BitSet> getHasMap() {
-        return hasMap;
-    }
-
-    public BitSet getRequestedBlocks() {
-        return requestedBlocks;
-    }
-
     public void setPiece(int pieceIdx, boolean has) {
         bitset.setPiece(pieceIdx, has);
-    }
-
-
-    public int getIdxLastRequested() {
-        return idxLastRequested;
-    }
-
-    public void setIdxLastRequested(int idxLastRequested) {
-        this.idxLastRequested = idxLastRequested;
     }
 
     public SocketChannel getChannel() {
@@ -234,46 +243,17 @@ public class Peer {
         this.interesting = interesting;
     }
 
-    public void initBlocks(long pieceLen, long fileLen) {
-        int blocksInPiece = (int) pieceLen / Constants.BLOCK_LEN;
-        int modPiece = (int) (fileLen % pieceLen);
-        int lastPieceSize = (int) ((modPiece != 0) ? modPiece : pieceLen);
-        int numBlocksInLastPiece = Math.ceilDiv(lastPieceSize, Constants.BLOCK_LEN);
-        this.blocksInLastPiece = numBlocksInLastPiece;
-        int modBlock = lastPieceSize % Constants.BLOCK_LEN;
-        lastBlockSize = (modBlock != 0) ? modBlock : Constants.BLOCK_LEN;
-        int piecesNum = (int) Math.ceilDiv(fileLen,  pieceLen);
-        for (int i = 0; i < piecesNum; ++i) {
-            if (i == piecesNum - 1) {
-                blocksInPiece = numBlocksInLastPiece;
-                requestedBlocks = new BitSet(i * (int) pieceLen / Constants.BLOCK_LEN + blocksInPiece);
-            }
-            boolean pieceAvailable = piecesHas.get(i);
-            BitSet blocks = new BitSet(blocksInPiece);
-            blocks.set(0, blocksInPiece, pieceAvailable);
-            hasMap.put(i, blocks);
-        }
-        for (int i = 0; i < hasMap.size(); ++i) {
-            System.out.println(hasMap.get(i));
-        }
-    }
-
     private byte[] id;
     private final SocketChannel channel;
-    private int idxLastRequested = 0;
     private boolean choked = true; //this client is choking the peer
     private boolean choking = true; //peer is choking this client, выставлять, когда отправляю пиру choke
     private boolean interested = false; //this client is interested in the peer
     private boolean interesting = false; //peer is interested in this client, выставлять, когда отправляю interested
 
-    private MyBitSet bitset = null;
-//    private BitSet piecesHas = null;
-//    private BitSet requestedBlocks;
-    //ключ -- номер куска, значение -- битсет длиной pieceSize / blockSize
-//    private final Map<Integer, BitSet> hasMap = new HashMap<>();
+    private MyBitSet bitset;
     private final List<Peer> handshaked = new ArrayList<>();
-//    private int lastBlockSize = 0;
-//    private int blocksInLastPiece = 0;
     private final List<Byte> readBytes = new ArrayList<>();
     private final Queue<Message> readyMessages = new ArrayDeque<>();
+
+    private final PiecesAndBlocksInfo info;
 }
