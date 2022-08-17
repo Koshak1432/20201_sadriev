@@ -9,17 +9,17 @@ public class TorrentClient {
     //брать адресса из аргументов и биндить сокетченнелы
     //как скачивать файл, если он у меня уже есть? куда?
     public TorrentClient(MetainfoFile metainfoFile, String[] args) {
-        boolean leecher = args[0].equals("leecher");
-        if (leecher) {
-            System.out.println("Leecher");
-        } else {
+        boolean seeder = args[0].equals("seeder");
+        if (seeder) {
             System.out.println("Seeder");
+        } else {
+            System.out.println("Leecher");
         }
         List<InetSocketAddress> peers = parseArgs(Arrays.copyOfRange(args, 1, args.length)); //[0] -- iam
-        DownloadUploadManager downloadUploadManager = new DownloadUploadManager(metainfoFile, leecher);
+        DownloadUploadManager downloadUploadManager = new DownloadUploadManager(metainfoFile, seeder);
         Thread downloadThread = new Thread(downloadUploadManager);
         downloadThread.start();
-        ConnectionManager cm = new ConnectionManager(metainfoFile , downloadUploadManager, peers, leecher);
+        ConnectionManager cm = new ConnectionManager(metainfoFile , downloadUploadManager, peers, seeder);
         Thread connectionThread = new Thread(cm);
         connectionThread.start();
         try {

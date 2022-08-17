@@ -5,10 +5,14 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.*;
 
-public class DownloadUploadManager implements Runnable {
+
+//если сделать DU паблишером, а км и прочие, кому нужен он, будут подписываться, тогда не понятно, как добавлять таски в него
+//подпишутся друг на друга?
+public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
     public DownloadUploadManager(MetainfoFile meta, boolean seeder) {
         this.meta = meta;
         String outputFileName = seeder ? meta.getName() : meta.getName() + "test";
+        System.out.println(outputFileName);
         try {
             output = new RandomAccessFile(outputFileName, "rw");
         } catch (FileNotFoundException e) {
@@ -34,7 +38,7 @@ public class DownloadUploadManager implements Runnable {
         System.out.println("DU finished");
     }
 
-    public void doTask(Task task) {
+    private void doTask(Task task) {
         switch (task.getType()) {
             case SAVE -> saveBlock(task);
             case SEND -> sendBlock(task);
@@ -43,8 +47,13 @@ public class DownloadUploadManager implements Runnable {
         }
     }
 
-    public Map<Peer, Queue<Message>> getOutgoingMsg() {
-        return outgoingMsg;
+    public Message getOutgoingMsg(Peer peer) {
+        if (outgoingMsg.containsKey(peer)) {
+            synchronized (outgoingMsg.get(peer)) {
+                return outgoingMsg.get(peer).poll();
+            }
+        }
+        return null;
     }
 
     public void addTask(Task task) {
@@ -80,10 +89,21 @@ public class DownloadUploadManager implements Runnable {
         int idx = task.getBlock().idx();
         int begin = task.getBlock().begin();
         byte[] dataToSend = new byte[task.getBlock().len()];
+        System.out.println("got sendBlcok task: idx=" + idx + ", begin=" + begin + ", dataLen=" + dataToSend.length);
 
         try {
             output.seek(meta.getPieceLen() * idx + begin);
-            int read = output.read(dataToSend);
+            int offset = 0;
+            int total = 0;
+            int read = 0;
+            while (total != dataToSend.length) {
+                read = output.read(dataToSend, offset, dataToSend.length - total);
+                if (read != -1) {
+                    total += read;
+                    offset += read;
+                }
+            }
+            System.out.println("read in DU: " + total);
             if (task.getBlock().len() != read) {
                 System.err.println("Count of read bytes and requested len are different");
                 return;
@@ -107,7 +127,7 @@ public class DownloadUploadManager implements Runnable {
 
     private byte[] getMetaHash(int pieceIdx) {
         int SHA1Len = 20;
-        return Arrays.copyOfRange(meta.getInfoHash(), pieceIdx * SHA1Len, (pieceIdx + 1) * SHA1Len);
+        return Arrays.copyOfRange(meta.getPieces(), pieceIdx * SHA1Len, (pieceIdx + 1) * SHA1Len);
     }
 
     private void checkHash(Task task) {
@@ -128,18 +148,20 @@ public class DownloadUploadManager implements Runnable {
         }
 
         if (Arrays.equals(metaHash, Util.generateHash(pieceData))) {
+            System.out.println("successful check");
             successfulCheck.add(idx);
         } else {
             unsuccessfulCheck.add(idx);
+            System.out.println("unsuccessful check");
         }
     }
 
-    public Queue<Integer> getSuccessfulCheck() {
-        return successfulCheck;
+    public Integer getSuccessfulCheck() {
+        return successfulCheck.poll();
     }
 
-    public Queue<Integer> getUnsuccessfulCheck() {
-        return unsuccessfulCheck;
+    public Integer getUnsuccessfulCheck() {
+        return unsuccessfulCheck.poll();
     }
 
     private final MetainfoFile meta;

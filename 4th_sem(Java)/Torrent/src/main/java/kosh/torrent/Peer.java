@@ -76,7 +76,8 @@ public class Peer {
 
         bitset.setRequested(info.getBlocksInPiece() * pieceIdx + blockIdx);
 
-        int len = (isLastPiece(pieceIdx) && isPieceFull(pieceIdx)) ? info.getLastBlockLen() : info.getBlockLen();
+//todo мб вообще сделать метод в битсете, который будет сразу возвращать длину по куску и блоку
+        int len = bitset.isLastBlock(pieceIdx, blockIdx) ? info.getLastBlockLen() : info.getBlockLen();
         byte[] begin = Util.convertToByteArr(info.getBlockLen() * blockIdx);
         byte[] lenA = Util.convertToByteArr(len);
         return new ProtocolMessage(MessagesTypes.REQUEST,

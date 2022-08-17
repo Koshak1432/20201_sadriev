@@ -16,7 +16,8 @@ public class ConnectionManager implements Runnable {
         this.messagesReceiver = new MessagesReceiver(meta.getInfoHash(), DU, piecesInfo, seeder);
         this.iam = new Peer(null, piecesInfo, seeder);
 
-        try (ServerSocketChannel server = ServerSocketChannel.open()) {
+        try {
+            ServerSocketChannel server = ServerSocketChannel.open();
             selector = Selector.open();
             server.bind(peers.get(0));
             server.configureBlocking(false);
@@ -66,7 +67,6 @@ public class ConnectionManager implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("Connection manager is running");
         while (!Thread.currentThread().isInterrupted()) {
             int ready;
             try {
@@ -103,29 +103,27 @@ public class ConnectionManager implements Runnable {
             }
 
             Integer idxHave, idxToClear;
-            while ((idxHave = DU.getSuccessfulCheck().poll()) != null) {
-                if (notifyPeers(idxHave)) {
+            while ((idxHave = DU.getSuccessfulCheck()) != null) {
+                notifyPeers(idxHave);
+
+                System.out.println("isHasAll pieces: " + iam.isHasAllPieces());
+                if (iam.isHasAllPieces()) {
+                    DU.addTask(new Task(TaskType.STOP));
+                    System.out.println("Have all the messages, download completed!");
                     return;
                 }
             }
 
-            while ((idxToClear = DU.getUnsuccessfulCheck().poll()) != null) {
+            while ((idxToClear = DU.getUnsuccessfulCheck()) != null) {
                 handleFailPiece(idxToClear);
             }
         }
     }
 
-    private boolean notifyPeers(int idxHave) {
+    private void notifyPeers(int idxHave) {
         for (Peer peer : connections) {
             messagesReceiver.addMsgToQueue(peer, new ProtocolMessage(MessagesTypes.HAVE, Util.convertToByteArr(idxHave)));
         }
-
-        if (iam.isHasAllPieces()) {
-            DU.addTask(new Task(TaskType.STOP));
-            System.out.println("Have all the messages, download completed!");
-            return true;
-        }
-        return false;
     }
 
     private void handleFailPiece(int idxToClear) {
@@ -150,7 +148,8 @@ public class ConnectionManager implements Runnable {
 
     //todo possible error place in try with resources
     private void accept(SelectionKey key) {
-        try (ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel()) {
+        try {
+            ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
             SocketChannel channel = serverSocketChannel.accept();
             channel.configureBlocking(false);
             Peer peer = new Peer(channel, piecesInfo);
@@ -185,13 +184,9 @@ public class ConnectionManager implements Runnable {
         SocketChannel channel = (SocketChannel) key.channel();
         Peer peer = findPeer(channel);
         assert peer != null;
-        if (DU.getOutgoingMsg().containsKey(peer)) {
-            synchronized (DU.getOutgoingMsg().get(peer)) {
-                Message msg;
-                while ((msg = DU.getOutgoingMsg().get(peer).poll()) != null) {
-                    messagesReceiver.addMsgToQueue(peer, msg);
-                }
-            }
+        Message msgFromDU;
+        while ((msgFromDU = DU.getOutgoingMsg(peer)) != null) {
+            messagesReceiver.addMsgToQueue(peer, msgFromDU);
         }
 
         Message msgToSend;
@@ -209,7 +204,7 @@ public class ConnectionManager implements Runnable {
     private final List<Peer> connections = new ArrayList<>();
     private final Peer iam;
     private final byte[] infoHash;
-    private final DownloadUploadManager DU;
+    private final IDownloadUploadManager DU;
 
     public final int BLOCK_LEN = 16 * 1024;
 }

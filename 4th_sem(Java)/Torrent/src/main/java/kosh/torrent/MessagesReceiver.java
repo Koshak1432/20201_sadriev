@@ -29,82 +29,83 @@ public class MessagesReceiver implements IMessagesReceiver {
         messagesToPeer.put(peer, messages);
     }
 
-    public void handleMsg(Peer from, Peer to, Message msg) {
-        System.out.println("Got message from " + from);
+    public void handleMsg(Peer sender, Peer receiver, Message msg) {
+        System.out.println("Got message sender " + sender);
         switch (msg.getType()) {
             case MessagesTypes.KEEP_ALIVE -> System.out.println("KEEP ALIVE");
             case MessagesTypes.HANDSHAKE -> {
                 System.out.println("HANDSHAKE");
                 //спецом id пировский, т.к. трекера нет
-                if (! Arrays.equals(msg.getMessage(), new Handshake(infoHash, from.getId()).getMessage())) {
+                if (! Arrays.equals(msg.getMessage(), new Handshake(infoHash, sender.getId()).getMessage())) {
                     System.out.println("HS are different");
-                    from.closeConnection();
+                    sender.closeConnection();
                     return;
                 }
-                to.getHandshaked().add(from);
-                //mb move it to connection, add hs and interested
+                receiver.getHandshaked().add(sender);
+                //mb move it receiver connection, add hs and interested
                 if (!seeder) {
-                    addMsgToQueue(from, new ProtocolMessage(MessagesTypes.INTERESTED));
-                    from.setInterested(true);
+                    addMsgToQueue(sender, new ProtocolMessage(MessagesTypes.INTERESTED));
+                    sender.setInterested(true);
                 }
             }
             case MessagesTypes.CHOKE -> {
                 System.out.println("CHOKE");
-                from.setChoking(true);
+                sender.setChoking(true);
             }
             case MessagesTypes.UNCHOKE -> {
                 System.out.println("UNCHOKE");
-                from.setChoking(false);
+                sender.setChoking(false);
             }
             case MessagesTypes.INTERESTED -> {
                 System.out.println("INTERESTED");
-                addMsgToQueue(from, new ProtocolMessage(MessagesTypes.UNCHOKE));
-                addMsgToQueue(from, new ProtocolMessage(MessagesTypes.BITFIELD, to.getPiecesHas().toByteArray()));
-                from.setInteresting(true);
-                from.setChoked(false);
+                addMsgToQueue(sender, new ProtocolMessage(MessagesTypes.UNCHOKE));
+                addMsgToQueue(sender, new ProtocolMessage(MessagesTypes.BITFIELD, receiver.getPiecesHas().toByteArray()));
+                sender.setInteresting(true);
+                sender.setChoked(false);
 
             }
             case MessagesTypes.NOT_INTERESTED -> {
                 System.out.println("NOT INTERESTED");
-                from.setInteresting(false);
+                sender.setInteresting(false);
             }
             case MessagesTypes.HAVE -> {
                 System.out.println("HAVE");
-                from.setPiece(Util.convertToInt(msg.getPayload()), true);
+                sender.setPiece(Util.convertToInt(msg.getPayload()), true);
             }
             case MessagesTypes.BITFIELD -> {
                 System.out.println("BITFIELD");
                 if (msg.getMessage().length > 5) {
-                    from.setPiecesHas(msg.getPayload());
+                    sender.setPiecesHas(msg.getPayload());
                 }
-
-                if (!to.isHasAllPieces()) {
-                    Message request = to.createRequest(from);
+                //receiver -- кому пришло данное сообщение, sender -- от кого
+                if (!receiver.isHasAllPieces()) {
+                    Message request = receiver.createRequest(sender);
                     if (request == null) {
+                        System.out.println("request is null");
                         return;
                     }
-                    addMsgToQueue(from, request);
+                    addMsgToQueue(sender, request);
                 }
             }
             case MessagesTypes.REQUEST -> {
                 System.out.println("REQUEST");
                 //A block is uploaded by a client when the client is not choking a peer,
                 //and that peer is interested in the client
-                if (from.isChoked() || !from.isInteresting()) {
-                    System.out.println("Rejected request because " + from + " is choked or not interesting");
+                if (sender.isChoked() || !sender.isInteresting()) {
+                    System.out.println("Rejected request because " + sender + " is choked or not interesting");
                     return;
                 }
-                handleRequest(from, msg);
+                handleRequest(sender, msg);
             }
             case MessagesTypes.PIECE -> {
                 System.out.println("PIECE");
                 //A block is downloaded by the client when the client is interested in a peer,
                 //and that peer is not choking the client
-                if (!from.isInterested() || from.isChoking()) {
-                    System.out.println("Rejected piece because " + from + " is choking or not interested");
+                if (!sender.isInterested() || sender.isChoking()) {
+                    System.out.println("Rejected piece because " + sender + " is choking or not interested");
                     return;
                 }
-                handlePiece(from, to, msg);
+                handlePiece(sender, receiver, msg);
             }
             case MessagesTypes.CANCEL -> {
                 //todo как отменять? где очередь сообщений должна быть?
@@ -142,14 +143,15 @@ public class MessagesReceiver implements IMessagesReceiver {
             DU.addTask(new Task(TaskType.SAVE, pieceIdx, begin, blockData));
             int blockIdx = begin / piecesInfo.getBlockLen();
             to.setBlock(pieceIdx, blockIdx);
-
             if (to.isPieceFull(pieceIdx)) {
+                System.out.println("piece is full");
                 to.setPiece(pieceIdx, true);
                 if (to.isLastPiece(pieceIdx)) {
                     DU.addTask(new Task(TaskType.CHECK_HASH, pieceIdx, piecesInfo.getLastPieceLen()));
                 } else {
                     DU.addTask(new Task(TaskType.CHECK_HASH, pieceIdx, piecesInfo.getPieceLen()));
                 }
+                return;
             }
 
             Message request = to.createRequest(from);

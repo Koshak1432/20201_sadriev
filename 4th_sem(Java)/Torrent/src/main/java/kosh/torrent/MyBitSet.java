@@ -33,9 +33,11 @@ public class MyBitSet {
     }
 
     public boolean isHasAllPieces() {
+        System.out.println("piecesHas cardinality: " + piecesHas.cardinality() + " info get pieces num: " + info.getPiecesNum());
         return piecesHas.cardinality() == info.getPiecesNum();
     }
 
+    //todo тут трабл, скорее всего
     public boolean isPieceFull(int pieceIdx) {
         int cardinality = hasMap.get(pieceIdx).cardinality();
         if (isLastPiece(pieceIdx)) {
@@ -44,8 +46,13 @@ public class MyBitSet {
         return hasMap.get(pieceIdx).cardinality() == info.getBlocksInPiece();
     }
 
+    public boolean isLastBlock(int pieceIdx, int blockIdx) {
+        return blockIdx == info.getBlocksInLastPiece() - 1 && pieceIdx == info.getPiecesNum() - 1;
+    }
+
     public void setPiecesHas(byte[] bitfield) {
         piecesHas = BitSet.valueOf(bitfield);
+        initHasMap();
     }
 
     public void setPiece(int idx, boolean has) {
@@ -74,7 +81,10 @@ public class MyBitSet {
     public int chooseClearPiece(BitSet receiverHas) {
         BitSet piecesToRequest = (BitSet) getPiecesHas().clone(); //I have
         piecesToRequest.flip(0, info.getPiecesNum()); //I don't have
+        System.out.println("I don't have pieces: " + piecesToRequest);
         piecesToRequest.and(receiverHas); //I don't have and receiver has
+        System.out.println("I don't have and receiver has pieces: " + piecesToRequest);
+        System.out.println("PiecesToRequest cardinality: " + piecesToRequest.cardinality());
         if (piecesToRequest.cardinality() == 0) {
             return -1;
         }
@@ -83,18 +93,25 @@ public class MyBitSet {
         while (pieceIdx == -1) {
             pieceIdx = piecesToRequest.nextSetBit(random.nextInt(info.getPiecesNum()));
         }
+        System.out.println("Piece idx to request: " + pieceIdx);
         return pieceIdx;
     }
 
     public int chooseClearBlock(BitSet receiverBlocks, int pieceIdx) {
+        System.out.println("------------");
+        System.out.println("receiverBlocks: " + receiverBlocks);
         BitSet blocksToRequest = (BitSet) hasMap.get(pieceIdx).clone(); //I have
-
+        System.out.println("I have blocks: " + blocksToRequest);
         int blocksInThisPiece = isLastPiece(pieceIdx) ? info.getBlocksInLastPiece() : info.getBlocksInPiece();
         int fromIdx = info.getBlocksInPiece() * pieceIdx;
 
         blocksToRequest.or(requestedBlocks.get(fromIdx, fromIdx + blocksInThisPiece)); // I have and requested
+        System.out.println("I have and requested blocks: " + blocksToRequest);
         blocksToRequest.flip(0, blocksInThisPiece); //I don't have and not requested
+        System.out.println("I don't have and not requested blocks: " + blocksToRequest);
         blocksToRequest.and(receiverBlocks); // I don't have, not requested and receiver has
+        System.out.println("I don't have, not requested and receiver has blocks: " + blocksToRequest);
+        System.out.println("Cardinality: " + blocksToRequest.cardinality());
         if (blocksToRequest.cardinality() == 0) {
             return -1;
         }
@@ -103,6 +120,7 @@ public class MyBitSet {
         while (blockIdx == -1) {
             blockIdx = blocksToRequest.nextSetBit(random.nextInt(blocksInThisPiece));
         }
+        System.out.println("block idx to request: " + blockIdx);
         return blockIdx;
     }
 
