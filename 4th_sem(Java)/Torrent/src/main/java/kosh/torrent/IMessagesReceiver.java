@@ -7,9 +7,9 @@ public interface IMessagesReceiver {
 
     void addMsgToQueue(Peer peer, Message msg);
 
-    Message pollMessage(Peer peer);
-
     void handleMsg(Peer from, Peer to, Message msg);
+
+    Message getMsgTo(Peer peer);
 
     Message getReadyMsg();
 }

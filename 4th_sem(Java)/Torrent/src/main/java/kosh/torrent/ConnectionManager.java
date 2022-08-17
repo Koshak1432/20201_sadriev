@@ -107,8 +107,10 @@ public class ConnectionManager implements Runnable {
                 notifyPeers(idxHave);
 
                 if (iam.isHasAllPieces()) {
-                    DU.addTask(new Task(TaskType.STOP));
+                    DU.addTask(Task.createStopTask());
                     System.out.println("Have all the messages, download completed!");
+                    //todo можно апдейтнуть везде флаг сидера на тру, чтобы этот тоже остался и можно было с него грузить
+                    closeConnections();
                     return;
                 }
             }
@@ -116,6 +118,12 @@ public class ConnectionManager implements Runnable {
             while ((idxToClear = DU.getUnsuccessfulCheck()) != null) {
                 handleFailPiece(idxToClear);
             }
+        }
+    }
+
+    private void closeConnections() {
+        for (Peer peer : connections) {
+            peer.closeConnection();
         }
     }
 
@@ -189,7 +197,7 @@ public class ConnectionManager implements Runnable {
         }
 
         Message msgToSend;
-        while ((msgToSend = messagesReceiver.pollMessage(peer)) != null) {
+        while ((msgToSend = messagesReceiver.getMsgTo(peer)) != null) {
             messagesSender.sendMsg(peer, msgToSend);
             System.out.println("Wrote to " + peer + ", type of msg: " + msgToSend.getType());
         }

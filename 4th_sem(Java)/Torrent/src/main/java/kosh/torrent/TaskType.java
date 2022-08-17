@@ -2,7 +2,7 @@ package kosh.torrent;
 
 public enum TaskType {
     SAVE,
-    SEND,
+    EXTRACT_BLOCK,
     STOP,
     CHECK_HASH
 }

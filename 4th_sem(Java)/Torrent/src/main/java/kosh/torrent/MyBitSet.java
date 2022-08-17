@@ -46,7 +46,7 @@ public class MyBitSet {
     }
 
     public boolean isLastBlock(int pieceIdx, int blockIdx) {
-        return blockIdx == info.getBlocksInLastPiece() - 1 && pieceIdx == info.getPiecesNum() - 1;
+        return blockIdx == info.getBlocksInLastPiece() - 1 && isLastPiece(pieceIdx);
     }
 
     public void setPiecesHas(byte[] bitfield) {

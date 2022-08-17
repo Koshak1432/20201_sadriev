@@ -41,12 +41,13 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
     private void doTask(Task task) {
         switch (task.getType()) {
             case SAVE -> saveBlock(task);
-            case SEND -> sendBlock(task);
+            case EXTRACT_BLOCK -> sendBlock(task);
             case CHECK_HASH -> checkHash(task);
             case STOP -> stop();
         }
     }
 
+    @Override
     public Message getOutgoingMsg(Peer peer) {
         if (outgoingMsg.containsKey(peer)) {
             synchronized (outgoingMsg.get(peer)) {
@@ -56,6 +57,7 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
         return null;
     }
 
+    @Override
     public void addTask(Task task) {
         tasks.add(task);
     }
@@ -89,21 +91,10 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
         int idx = task.getBlock().idx();
         int begin = task.getBlock().begin();
         byte[] dataToSend = new byte[task.getBlock().len()];
-        System.out.println("got sendBlcok task: idx=" + idx + ", begin=" + begin + ", dataLen=" + dataToSend.length);
 
         try {
             output.seek(meta.getPieceLen() * idx + begin);
-            int offset = 0;
-            int total = 0;
-            int read = 0;
-            while (total != dataToSend.length) {
-                read = output.read(dataToSend, offset, dataToSend.length - total);
-                if (read != -1) {
-                    total += read;
-                    offset += read;
-                }
-            }
-            System.out.println("read in DU: " + total);
+            int read = output.read(dataToSend);
             if (task.getBlock().len() != read) {
                 System.err.println("Count of read bytes and requested len are different");
                 return;
@@ -156,10 +147,12 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
         }
     }
 
+    @Override
     public Integer getSuccessfulCheck() {
         return successfulCheck.poll();
     }
 
+    @Override
     public Integer getUnsuccessfulCheck() {
         return unsuccessfulCheck.poll();
     }

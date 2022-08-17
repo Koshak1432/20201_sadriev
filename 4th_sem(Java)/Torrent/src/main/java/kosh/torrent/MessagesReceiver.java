@@ -14,11 +14,12 @@ public class MessagesReceiver implements IMessagesReceiver {
         this.seeder = seeder;
     }
 
-    public Message pollMessage(Peer peer) {
+    @Override
+    public Message getMsgTo(Peer peer) {
         return messagesToPeer.get(peer).poll();
     }
 
-
+    @Override
     public void addMsgToQueue(Peer peer, Message msg) {
         if (messagesToPeer.containsKey(peer)) {
             messagesToPeer.get(peer).add(msg);
@@ -29,6 +30,7 @@ public class MessagesReceiver implements IMessagesReceiver {
         messagesToPeer.put(peer, messages);
     }
 
+    @Override
     public void handleMsg(Peer sender, Peer receiver, Message msg) {
         System.out.println("Got message sender " + sender);
         switch (msg.getType()) {
@@ -114,57 +116,7 @@ public class MessagesReceiver implements IMessagesReceiver {
         }
     }
 
-    private void handleRequest(Peer from, Message msg) {
-        byte[] payload = msg.getPayload();
-        if (payload != null) {
-            if (payload.length != 12) {
-                return;
-            }
-            int idx = Util.convertToInt(Arrays.copyOfRange(payload, 0, 4));
-            int begin = Util.convertToInt(Arrays.copyOfRange(payload, 4, 8));
-            int len = Util.convertToInt(Arrays.copyOfRange(payload, 8, payload.length));
-            System.out.println("REQUESTED idx: " + idx + ", begin: " + begin + ", len: " + len);
-
-            DU.addTask(new Task(TaskType.SEND, idx, begin, len, from));
-        }
-    }
-
-    private void handlePiece(Peer from, Peer to, Message msg) {
-        byte[] payload = msg.getPayload();
-        if (payload != null) {
-            if (payload.length < 8) {
-                return;
-            }
-            int pieceIdx = Util.convertToInt(Arrays.copyOfRange(payload, 0, 4));
-            int begin = Util.convertToInt(Arrays.copyOfRange(payload, 4, 8));
-            byte[] blockData = Arrays.copyOfRange(payload, 8, payload.length);
-
-            System.out.println("PIECE idx: " + pieceIdx + ", begin: " + begin + ", blockData len: " + blockData.length);
-
-            DU.addTask(new Task(TaskType.SAVE, pieceIdx, begin, blockData));
-            int blockIdx = begin / piecesInfo.getBlockLen();
-            to.setBlock(pieceIdx, blockIdx);
-            if (to.isPieceFull(pieceIdx)) {
-                to.setPiece(pieceIdx, true);
-                if (to.isLastPiece(pieceIdx)) {
-                    DU.addTask(new Task(TaskType.CHECK_HASH, pieceIdx, piecesInfo.getLastPieceLen()));
-                } else {
-                    DU.addTask(new Task(TaskType.CHECK_HASH, pieceIdx, piecesInfo.getPieceLen()));
-                }
-            }
-            if (to.isHasAllPieces()) {
-                return;
-            }
-
-            Message request = to.createRequest(from);
-            if (request == null) {
-                return;
-            }
-            addMsgToQueue(from, request);
-        }
-    }
-
-
+    @Override
     public boolean readHS(Peer peer) {
         int HSSize = 68;
         int infoHashIdx = 28;
@@ -193,6 +145,7 @@ public class MessagesReceiver implements IMessagesReceiver {
         return true;
     }
 
+    @Override
     public void readFrom(Peer peer) {
         boolean able = readFromChannel(peer.getChannel());
         if (!able) {
@@ -204,7 +157,60 @@ public class MessagesReceiver implements IMessagesReceiver {
         }
     }
 
+    @Override
+    public Message getReadyMsg() {
+        return readyMessages.poll();
+    }
+
+    private void handleRequest(Peer from, Message msg) {
+        byte[] payload = msg.getPayload();
+        if (payload != null) {
+            if (payload.length != 12) {
+                return;
+            }
+            int idx = Util.convertToInt(Arrays.copyOfRange(payload, 0, 4));
+            int begin = Util.convertToInt(Arrays.copyOfRange(payload, 4, 8));
+            int len = Util.convertToInt(Arrays.copyOfRange(payload, 8, payload.length));
+            System.out.println("REQUESTED idx: " + idx + ", begin: " + begin + ", len: " + len);
+
+            DU.addTask(Task.createExtractTask(idx, begin, len, from));
+        }
+    }
+
+    private void handlePiece(Peer from, Peer to, Message msg) {
+        byte[] payload = msg.getPayload();
+        if (payload != null) {
+            if (payload.length < 8) {
+                return;
+            }
+            int pieceIdx = Util.convertToInt(Arrays.copyOfRange(payload, 0, 4));
+            int begin = Util.convertToInt(Arrays.copyOfRange(payload, 4, 8));
+            byte[] blockData = Arrays.copyOfRange(payload, 8, payload.length);
+
+            System.out.println("PIECE idx: " + pieceIdx + ", begin: " + begin + ", blockData len: " + blockData.length);
+
+            DU.addTask(Task.createSaveTask(pieceIdx, begin, blockData));
+            int blockIdx = begin / piecesInfo.getBlockLen();
+            to.setBlock(pieceIdx, blockIdx);
+            if (to.isPieceFull(pieceIdx)) {
+                to.setPiece(pieceIdx, true);
+                int pieceLen = to.isLastPiece(pieceIdx) ? piecesInfo.getLastPieceLen() : piecesInfo.getPieceLen();
+                DU.addTask(Task.createCheckTask(pieceIdx, pieceLen));
+            }
+            if (to.isHasAllPieces()) {
+                return;
+            }
+
+            Message request = to.createRequest(from);
+            if (request == null) {
+                return;
+            }
+            addMsgToQueue(from, request);
+        }
+    }
+
     //как-то хэндлить дисконект пиров
+
     private boolean readFromChannel(SocketChannel channel) {
         int bytesToAllocate = piecesInfo.getBlockLen();
         ByteBuffer buffer = ByteBuffer.allocate(bytesToAllocate);
@@ -261,10 +267,6 @@ public class MessagesReceiver implements IMessagesReceiver {
             return;
         }
         messagesQueue.add(new ProtocolMessage(idInt));
-    }
-
-    public Message getReadyMsg() {
-        return readyMessages.poll();
     }
 
 

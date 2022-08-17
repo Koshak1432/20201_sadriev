@@ -1,19 +1,9 @@
 package kosh.torrent;
 
-abstract public class Message {
-    public Message(int type) {
-        this.type = type;
-    }
-    abstract public byte[] getMessage();
+public interface Message {
+    byte[] getMessage();
 
-    public int getType() {
-        return type;
-    }
+    int getType();
 
-    public byte[] getPayload() {
-        return payload;
-    }
-
-    private final int type;
-    private byte[] payload = null;
+    byte[] getPayload();
 }
