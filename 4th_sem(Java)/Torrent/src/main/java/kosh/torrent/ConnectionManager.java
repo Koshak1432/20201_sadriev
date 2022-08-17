@@ -106,7 +106,6 @@ public class ConnectionManager implements Runnable {
             while ((idxHave = DU.getSuccessfulCheck()) != null) {
                 notifyPeers(idxHave);
 
-                System.out.println("isHasAll pieces: " + iam.isHasAllPieces());
                 if (iam.isHasAllPieces()) {
                     DU.addTask(new Task(TaskType.STOP));
                     System.out.println("Have all the messages, download completed!");

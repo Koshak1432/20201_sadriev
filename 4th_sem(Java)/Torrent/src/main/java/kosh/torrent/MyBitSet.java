@@ -18,8 +18,9 @@ public class MyBitSet {
     private void initHasMap() {
         int blocksInPiece = info.getBlocksInPiece();
         for (int i = 0; i < info.getPiecesNum(); ++i) {
-            if (i == info.getPiecesNum() - 1) {
+            if (isLastPiece(i)) {
                 blocksInPiece = info.getBlocksInLastPiece();
+
             }
             boolean pieceAvailable = piecesHas.get(i);
             BitSet blocks = new BitSet(blocksInPiece);
@@ -33,17 +34,15 @@ public class MyBitSet {
     }
 
     public boolean isHasAllPieces() {
-        System.out.println("piecesHas cardinality: " + piecesHas.cardinality() + " info get pieces num: " + info.getPiecesNum());
         return piecesHas.cardinality() == info.getPiecesNum();
     }
 
-    //todo тут трабл, скорее всего
     public boolean isPieceFull(int pieceIdx) {
         int cardinality = hasMap.get(pieceIdx).cardinality();
         if (isLastPiece(pieceIdx)) {
             return cardinality == info.getBlocksInLastPiece();
         }
-        return hasMap.get(pieceIdx).cardinality() == info.getBlocksInPiece();
+        return cardinality == info.getBlocksInPiece();
     }
 
     public boolean isLastBlock(int pieceIdx, int blockIdx) {

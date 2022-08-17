@@ -42,7 +42,6 @@ public class MessagesReceiver implements IMessagesReceiver {
                     return;
                 }
                 receiver.getHandshaked().add(sender);
-                //mb move it receiver connection, add hs and interested
                 if (!seeder) {
                     addMsgToQueue(sender, new ProtocolMessage(MessagesTypes.INTERESTED));
                     sender.setInterested(true);
@@ -70,7 +69,9 @@ public class MessagesReceiver implements IMessagesReceiver {
             }
             case MessagesTypes.HAVE -> {
                 System.out.println("HAVE");
-                sender.setPiece(Util.convertToInt(msg.getPayload()), true);
+                if (!seeder) {
+                    sender.setPiece(Util.convertToInt(msg.getPayload()), true);
+                }
             }
             case MessagesTypes.BITFIELD -> {
                 System.out.println("BITFIELD");
@@ -144,13 +145,14 @@ public class MessagesReceiver implements IMessagesReceiver {
             int blockIdx = begin / piecesInfo.getBlockLen();
             to.setBlock(pieceIdx, blockIdx);
             if (to.isPieceFull(pieceIdx)) {
-                System.out.println("piece is full");
                 to.setPiece(pieceIdx, true);
                 if (to.isLastPiece(pieceIdx)) {
                     DU.addTask(new Task(TaskType.CHECK_HASH, pieceIdx, piecesInfo.getLastPieceLen()));
                 } else {
                     DU.addTask(new Task(TaskType.CHECK_HASH, pieceIdx, piecesInfo.getPieceLen()));
                 }
+            }
+            if (to.isHasAllPieces()) {
                 return;
             }
 
@@ -202,6 +204,7 @@ public class MessagesReceiver implements IMessagesReceiver {
         }
     }
 
+    //как-то хэндлить дисконект пиров
     private boolean readFromChannel(SocketChannel channel) {
         int bytesToAllocate = piecesInfo.getBlockLen();
         ByteBuffer buffer = ByteBuffer.allocate(bytesToAllocate);
