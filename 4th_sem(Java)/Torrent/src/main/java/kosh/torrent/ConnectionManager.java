@@ -17,7 +17,7 @@ public class ConnectionManager implements Runnable {
         this.iam = new Peer(null, piecesInfo, seeder);
 
         try {
-            ServerSocketChannel server = ServerSocketChannel.open();
+            server = ServerSocketChannel.open();
             selector = Selector.open();
             server.bind(peers.get(0));
             server.configureBlocking(false);
@@ -125,6 +125,12 @@ public class ConnectionManager implements Runnable {
         for (Peer peer : connections) {
             peer.closeConnection();
         }
+
+        try {
+            server.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void notifyPeers(int idxHave) {
@@ -136,7 +142,7 @@ public class ConnectionManager implements Runnable {
     private void handleFailPiece(int idxToClear) {
         iam.clearPiece(idxToClear);
         for (Peer peer : connections) {
-            Message request = iam.createRequest(peer);
+            IMessage request = iam.createRequest(peer);
             if (request == null) {
                 continue;
             }
@@ -153,11 +159,10 @@ public class ConnectionManager implements Runnable {
         return null; //never
     }
 
-    //todo possible error place in try with resources
     private void accept(SelectionKey key) {
         try {
-            ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
-            SocketChannel channel = serverSocketChannel.accept();
+            server = (ServerSocketChannel) key.channel();
+            SocketChannel channel = server.accept();
             channel.configureBlocking(false);
             Peer peer = new Peer(channel, piecesInfo);
             connections.add(peer);
@@ -181,7 +186,7 @@ public class ConnectionManager implements Runnable {
         }
 
         messagesReceiver.readFrom(peer);
-        Message msg;
+        IMessage msg;
         while ((msg = messagesReceiver.getReadyMsg()) != null) {
             messagesReceiver.handleMsg(peer, iam, msg);
         }
@@ -191,12 +196,12 @@ public class ConnectionManager implements Runnable {
         SocketChannel channel = (SocketChannel) key.channel();
         Peer peer = findPeer(channel);
         assert peer != null;
-        Message msgFromDU;
+        IMessage msgFromDU;
         while ((msgFromDU = DU.getOutgoingMsg(peer)) != null) {
             messagesReceiver.addMsgToQueue(peer, msgFromDU);
         }
 
-        Message msgToSend;
+        IMessage msgToSend;
         while ((msgToSend = messagesReceiver.getMsgTo(peer)) != null) {
             messagesSender.sendMsg(peer, msgToSend);
             System.out.println("Wrote to " + peer + ", type of msg: " + msgToSend.getType());
@@ -212,6 +217,8 @@ public class ConnectionManager implements Runnable {
     private final Peer iam;
     private final byte[] infoHash;
     private final IDownloadUploadManager DU;
+
+    private ServerSocketChannel server;
 
     public final int BLOCK_LEN = 16 * 1024;
 }

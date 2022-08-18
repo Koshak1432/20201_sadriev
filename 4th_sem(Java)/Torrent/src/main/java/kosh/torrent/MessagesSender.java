@@ -8,7 +8,7 @@ public class MessagesSender implements IMessagesSender {
     public MessagesSender() {}
 
     @Override
-    public void sendMsg(Peer peer, Message msg) {
+    public void sendMsg(Peer peer, IMessage msg) {
         ByteBuffer buffer = ByteBuffer.wrap(msg.getMessage());
         try {
             peer.getChannel().write(buffer);

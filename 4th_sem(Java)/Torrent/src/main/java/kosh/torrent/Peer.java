@@ -64,7 +64,7 @@ public class Peer {
         return bitset.chooseClearBlock(receiver.getBlocksInPiece(pieceIdx), pieceIdx);
     }
 
-    public Message createRequest(Peer to) {
+    public IMessage createRequest(Peer to) {
         int pieceIdx = choosePieceToRequest(to);
         if (pieceIdx == -1) {
             return null;

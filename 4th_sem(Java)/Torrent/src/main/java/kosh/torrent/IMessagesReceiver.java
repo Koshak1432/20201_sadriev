@@ -5,11 +5,11 @@ public interface IMessagesReceiver {
 
     boolean readHS(Peer peer);
 
-    void addMsgToQueue(Peer peer, Message msg);
+    void addMsgToQueue(Peer peer, IMessage msg);
 
-    void handleMsg(Peer from, Peer to, Message msg);
+    void handleMsg(Peer from, Peer to, IMessage msg);
 
-    Message getMsgTo(Peer peer);
+    IMessage getMsgTo(Peer peer);
 
-    Message getReadyMsg();
+    IMessage getReadyMsg();
 }

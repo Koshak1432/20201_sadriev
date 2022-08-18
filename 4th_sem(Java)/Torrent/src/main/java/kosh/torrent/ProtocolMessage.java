@@ -1,25 +1,25 @@
 package kosh.torrent;
 
 //<length prefix><message ID><payload>
-public class ProtocolMessage implements Message {
+public class ProtocolMessage implements IMessage {
     public ProtocolMessage(int type) {
         this.type = type;
+        id[0] = (byte) type;
         setInfo(type);
     }
 
     public ProtocolMessage(int type, byte[] payload) {
         this.type = type;
+        id[0] = (byte) type;
         setInfo(type, payload);
     }
 
     private void setInfo(int type) {
         len = (type == MessagesTypes.KEEP_ALIVE) ? Util.convertToByteArr(0) : Util.convertToByteArr(1);
-        id[0] = (byte) type;
     }
 
     private void setInfo(int type, byte[] payload) {
         this.payload = payload;
-        id[0] = (byte) type;
         switch (type) {
             case MessagesTypes.HAVE -> len = Util.convertToByteArr(5);
             case MessagesTypes.BITFIELD, MessagesTypes.PIECE -> len = Util.convertToByteArr(1 + payload.length);
@@ -27,6 +27,7 @@ public class ProtocolMessage implements Message {
         }
     }
 
+    //switch
     @Override
     public byte[] getMessage() {
         if (type > MessagesTypes.NOT_INTERESTED && payload != null) {

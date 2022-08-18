@@ -15,23 +15,23 @@ public class MessagesReceiver implements IMessagesReceiver {
     }
 
     @Override
-    public Message getMsgTo(Peer peer) {
+    public IMessage getMsgTo(Peer peer) {
         return messagesToPeer.get(peer).poll();
     }
 
     @Override
-    public void addMsgToQueue(Peer peer, Message msg) {
+    public void addMsgToQueue(Peer peer, IMessage msg) {
         if (messagesToPeer.containsKey(peer)) {
             messagesToPeer.get(peer).add(msg);
             return;
         }
-        Queue<Message> messages = new LinkedList<>();
+        Queue<IMessage> messages = new LinkedList<>();
         messages.add(msg);
         messagesToPeer.put(peer, messages);
     }
 
     @Override
-    public void handleMsg(Peer sender, Peer receiver, Message msg) {
+    public void handleMsg(Peer sender, Peer receiver, IMessage msg) {
         System.out.println("Got message sender " + sender);
         switch (msg.getType()) {
             case MessagesTypes.KEEP_ALIVE -> System.out.println("KEEP ALIVE");
@@ -82,7 +82,7 @@ public class MessagesReceiver implements IMessagesReceiver {
                 }
                 //receiver -- кому пришло данное сообщение, sender -- от кого
                 if (!receiver.isHasAllPieces()) {
-                    Message request = receiver.createRequest(sender);
+                    IMessage request = receiver.createRequest(sender);
                     if (request == null) {
                         System.out.println("request is null");
                         return;
@@ -139,7 +139,6 @@ public class MessagesReceiver implements IMessagesReceiver {
         }
         byteBuffer.get(infoHashIdx, infoHash, 0, infoHash.length);
         byteBuffer.get(peerIdIdx, peerId, 0, peerId.length);
-        //вот тут что-то с id придумать надо бы
         peer.setId(peerId);
         readyMessages.add(new Handshake(infoHash, peerId));
         return true;
@@ -158,11 +157,11 @@ public class MessagesReceiver implements IMessagesReceiver {
     }
 
     @Override
-    public Message getReadyMsg() {
+    public IMessage getReadyMsg() {
         return readyMessages.poll();
     }
 
-    private void handleRequest(Peer from, Message msg) {
+    private void handleRequest(Peer from, IMessage msg) {
         byte[] payload = msg.getPayload();
         if (payload != null) {
             if (payload.length != 12) {
@@ -177,7 +176,7 @@ public class MessagesReceiver implements IMessagesReceiver {
         }
     }
 
-    private void handlePiece(Peer from, Peer to, Message msg) {
+    private void handlePiece(Peer from, Peer to, IMessage msg) {
         byte[] payload = msg.getPayload();
         if (payload != null) {
             if (payload.length < 8) {
@@ -201,7 +200,7 @@ public class MessagesReceiver implements IMessagesReceiver {
                 return;
             }
 
-            Message request = to.createRequest(from);
+            IMessage request = to.createRequest(from);
             if (request == null) {
                 return;
             }
@@ -243,7 +242,7 @@ public class MessagesReceiver implements IMessagesReceiver {
         return bytesList.size() - prefixLen >= messageLen;
     }
 
-    private void addFullMessages(List<Byte> bytesList, Queue<Message> messagesQueue) {
+    private void addFullMessages(List<Byte> bytesList, Queue<IMessage> messagesQueue) {
         int prefixLen = 4;
         byte[] length = new byte[prefixLen];
         byte[] id = new byte[1];
@@ -253,7 +252,6 @@ public class MessagesReceiver implements IMessagesReceiver {
         bytesList.subList(0, prefixLen).clear();
         id[0] = bytesList.get(0);
         bytesList.remove(0);
-        System.out.println("id: " + id[0]);
         int messageLen = Util.convertToInt(length);
         int idInt = id[0];
         int payloadLen = messageLen - 1;
@@ -270,9 +268,9 @@ public class MessagesReceiver implements IMessagesReceiver {
     }
 
 
-    private final Map<Peer, Queue<Message>> messagesToPeer = new HashMap<>();
+    private final Map<Peer, Queue<IMessage>> messagesToPeer = new HashMap<>();
     private final List<Byte> readBytes = new ArrayList<>();
-    private final Queue<Message> readyMessages = new ArrayDeque<>();
+    private final Queue<IMessage> readyMessages = new ArrayDeque<>();
     private final PiecesAndBlocksInfo piecesInfo;
     private final byte[] infoHash;
     private final boolean seeder;

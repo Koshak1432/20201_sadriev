@@ -11,7 +11,10 @@ import java.util.*;
 public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
     public DownloadUploadManager(MetainfoFile meta, boolean seeder) {
         this.meta = meta;
-        String outputFileName = seeder ? meta.getName() : meta.getName() + "test";
+        Random random = new Random();
+
+        byte id = meta.getPieces()[random.nextInt(meta.getPieces().length)];
+        String outputFileName = seeder ? meta.getName() : meta.getName() + id;
         System.out.println(outputFileName);
         try {
             output = new RandomAccessFile(outputFileName, "rw");
@@ -48,7 +51,7 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
     }
 
     @Override
-    public Message getOutgoingMsg(Peer peer) {
+    public IMessage getOutgoingMsg(Peer peer) {
         if (outgoingMsg.containsKey(peer)) {
             synchronized (outgoingMsg.get(peer)) {
                 return outgoingMsg.get(peer).poll();
@@ -75,13 +78,13 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
         }
     }
 
-    private void addToOutgoingMessages(Peer peer, Message msg) {
+    private void addToOutgoingMessages(Peer peer, IMessage msg) {
         synchronized (outgoingMsg) {
             if (outgoingMsg.containsKey(peer)) {
                 outgoingMsg.get(peer).add(msg);
                 return;
             }
-            Queue<Message> queue = new LinkedList<>();
+            Queue<IMessage> queue = new LinkedList<>();
             queue.add(msg);
             outgoingMsg.put(peer, queue);
         }
@@ -95,7 +98,7 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
         try {
             output.seek(meta.getPieceLen() * idx + begin);
             int read = output.read(dataToSend);
-            if (task.getBlock().len() != read) {
+            if (dataToSend.length != read) {
                 System.err.println("Count of read bytes and requested len are different");
                 return;
             }
@@ -106,8 +109,8 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
         }
         byte[] idxA = Util.convertToByteArr(idx);
         byte[] beginA = Util.convertToByteArr(begin);
-        Message msgToSend = new ProtocolMessage(MessagesTypes.PIECE,
-                                                Util.concatByteArrays(Util.concatByteArrays(idxA, beginA), dataToSend));
+        IMessage msgToSend = new ProtocolMessage(MessagesTypes.PIECE,
+                                                 Util.concatByteArrays(Util.concatByteArrays(idxA, beginA), dataToSend));
         addToOutgoingMessages(task.getWho(), msgToSend);
     }
 
@@ -159,7 +162,7 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
 
     private final MetainfoFile meta;
     private final Queue<Task> tasks = new LinkedList<>();
-    private final Map<Peer, Queue<Message>> outgoingMsg = new HashMap<>();
+    private final Map<Peer, Queue<IMessage>> outgoingMsg = new HashMap<>();
     private final Queue<Integer> successfulCheck = new LinkedList<>();
     private final Queue<Integer> unsuccessfulCheck = new LinkedList<>();
     private RandomAccessFile output;

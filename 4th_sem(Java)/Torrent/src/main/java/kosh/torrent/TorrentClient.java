@@ -6,28 +6,21 @@ import java.util.*;
 public class TorrentClient {
     //[0] -- leecher or seeder
     //[1] -- собственный адресс
-    //брать адресса из аргументов и биндить сокетченнелы
-    //как скачивать файл, если он у меня уже есть? куда?
     public TorrentClient(MetainfoFile metainfoFile, String[] args) {
         boolean seeder = args[0].equals("seeder");
-        if (seeder) {
-            System.out.println("Seeder");
-        } else {
-            System.out.println("Leecher");
-        }
+        System.out.println(args[0]);
         List<InetSocketAddress> peers = parseArgs(Arrays.copyOfRange(args, 1, args.length)); //[0] -- iam
-        DownloadUploadManager downloadUploadManager = new DownloadUploadManager(metainfoFile, seeder);
-        Thread downloadThread = new Thread(downloadUploadManager);
+        DownloadUploadManager DU = new DownloadUploadManager(metainfoFile, seeder);
+        Thread downloadThread = new Thread(DU);
         downloadThread.start();
-        ConnectionManager cm = new ConnectionManager(metainfoFile , downloadUploadManager, peers, seeder);
+        ConnectionManager cm = new ConnectionManager(metainfoFile , DU, peers, seeder);
         Thread connectionThread = new Thread(cm);
         connectionThread.start();
         try {
             downloadThread.join();
             connectionThread.join();
         } catch (InterruptedException e) {
-            System.err.println("couldn't join threads");
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
     }
 

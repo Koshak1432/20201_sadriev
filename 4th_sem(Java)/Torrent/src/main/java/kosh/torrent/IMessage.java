@@ -1,6 +1,6 @@
 package kosh.torrent;
 
-public interface Message {
+public interface IMessage {
     byte[] getMessage();
 
     int getType();
