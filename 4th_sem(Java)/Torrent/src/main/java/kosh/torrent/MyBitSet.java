@@ -88,8 +88,8 @@ public class MyBitSet {
                 break;
             }
             if (!isPieceFull(pieceIdx)) {
-                System.out.println("piece in requested true?: " + requestedPieces.get(pieceIdx));
-                System.out.println("piece isn't full, return " + pieceIdx);
+//                System.out.println("piece in requested true?: " + requestedPieces.get(pieceIdx));
+//                System.out.println("piece isn't full, return " + pieceIdx);
                 return pieceIdx;
             }
         }
@@ -98,12 +98,12 @@ public class MyBitSet {
         piecesToRequest.flip(0, info.getPiecesNum()); //I don't have
         piecesToRequest.and(receiverHas); //I don't have and receiver has
         if (piecesToRequest.cardinality() == 0) {
-            System.out.println("cardinality is zero");
+//            System.out.println("cardinality is zero");
             return -1;
         }
         pieceIdx = getRandomClear(piecesToRequest, info.getPiecesNum());
         requestedPieces.set(pieceIdx);
-        System.out.println("CHOOSE PIECE FOR REQUEST: " + pieceIdx);
+//        System.out.println("CHOOSE PIECE FOR REQUEST: " + pieceIdx);
         return pieceIdx;
     }
 
@@ -118,16 +118,16 @@ public class MyBitSet {
 
     public int chooseClearBlock(BitSet receiverBlocks, int pieceIdx) {
         BitSet blocksToRequest = (BitSet) hasMap.get(pieceIdx).clone(); //I have
-        System.out.println("i have: " + blocksToRequest + " blocks in piece " + pieceIdx);
-        System.out.println("Receiver has: " + receiverBlocks);
+//        System.out.println("i have: " + blocksToRequest + " blocks in piece " + pieceIdx);
+//        System.out.println("Receiver has: " + receiverBlocks);
         int blocksInThisPiece = isLastPiece(pieceIdx) ? info.getBlocksInLastPiece() : info.getBlocksInPiece();
         int fromIdx = info.getBlocksInPiece() * pieceIdx;
         blocksToRequest.or(requestedBlocks.get(fromIdx, fromIdx + blocksInThisPiece)); // I have and requested
-        System.out.println("i have and requested: " + blocksToRequest + " blocks in piece " + pieceIdx);
+//        System.out.println("i have and requested: " + blocksToRequest + " blocks in piece " + pieceIdx);
         blocksToRequest.flip(0, blocksInThisPiece); //I don't have and not requested
-        System.out.println("i don't have and not requested: " + blocksToRequest + " blocks in piece " + pieceIdx);
+//        System.out.println("i don't have and not requested: " + blocksToRequest + " blocks in piece " + pieceIdx);
         blocksToRequest.and(receiverBlocks); // I don't have, not requested and receiver has
-        System.out.println("i don't have, not requested and receiver has: " + blocksToRequest + " blocks in piece " + pieceIdx);
+//        System.out.println("i don't have, not requested and receiver has: " + blocksToRequest + " blocks in piece " + pieceIdx);
         if (blocksToRequest.cardinality() == 0) {
             return -1;
         }

@@ -32,8 +32,10 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
             synchronized (tasks) {
                 if (!tasks.isEmpty()) {
                     doTask(tasks.poll());
-                } else {
+                }
+                else {
                     try {
+//                        System.out.println("WAITING");
                         tasks.wait();
                     }
                     catch (InterruptedException e) {
@@ -65,9 +67,12 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
 
     @Override
     public IMessage getOutgoingMsg(Peer peer) {
-        if (outgoingMsg.containsKey(peer)) {
-            synchronized (outgoingMsg.get(peer)) {
-                return outgoingMsg.get(peer).poll();
+        synchronized (outgoingMsg) {
+            if (outgoingMsg.containsKey(peer)) {
+                synchronized (outgoingMsg.get(peer)) {
+                    IMessage msg = outgoingMsg.get(peer).poll();
+                    return msg;
+                }
             }
         }
         return null;
@@ -76,7 +81,6 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
     @Override
     public void addTask(Task task) {
         synchronized (tasks) {
-            System.out.println("added task to tasks: " + task);
             tasks.add(task);
             tasks.notifyAll();
         }
@@ -170,12 +174,16 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
 
     @Override
     public Integer getSuccessfulCheck() {
-        return successfulCheck.poll();
+        synchronized (successfulCheck) {
+            return successfulCheck.poll();
+        }
     }
 
     @Override
     public Integer getUnsuccessfulCheck() {
-        return unsuccessfulCheck.poll();
+        synchronized (unsuccessfulCheck) {
+            return unsuccessfulCheck.poll();
+        }
     }
 
     private final MetainfoFile meta;

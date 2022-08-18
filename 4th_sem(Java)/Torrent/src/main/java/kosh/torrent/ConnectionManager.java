@@ -143,13 +143,6 @@ public class ConnectionManager implements Runnable {
 
     private void handleFailPiece(int idxToClear) {
         iam.clearPiece(idxToClear);
-//        for (Peer peer : connections) {
-//            IMessage request = iam.createRequest(peer);
-//            if (request == null) {
-//                continue;
-//            }
-//            messagesReceiver.addMsgToQueue(peer, request);
-//        }
     }
 
     private Peer findPeer(SocketChannel remoteChannel) {
@@ -182,6 +175,7 @@ public class ConnectionManager implements Runnable {
         SocketChannel channel = (SocketChannel) key.channel();
         Peer peer = findPeer(channel);
         assert peer != null;
+//        System.out.println("ENTER READ FROM PEER: " + peer);
         if (!iam.getHandshaked().contains(peer)) {
             if (!messagesReceiver.readHS(peer)) {
                 peer.closeConnection();
@@ -200,7 +194,7 @@ public class ConnectionManager implements Runnable {
         }
         IMessage msg;
         while ((msg = messagesReceiver.getMsgFrom(peer)) != null) {
-            System.out.println("GOING TO HANDLE MSG FROM " + peer);
+//            System.out.println("GOING TO HANDLE MSG FROM " + peer);
             messagesReceiver.handleMsg(peer, iam, msg);
         }
         return true;
@@ -210,15 +204,15 @@ public class ConnectionManager implements Runnable {
         SocketChannel channel = (SocketChannel) key.channel();
         Peer peer = findPeer(channel);
         assert peer != null;
-        IMessage msgFromDU;
-        while ((msgFromDU = DU.getOutgoingMsg(peer)) != null) {
-            messagesReceiver.addMsgToQueue(peer, msgFromDU);
+        IMessage msg; //добавить сообщения пиру от DU, если такие есть
+        while ((msg = DU.getOutgoingMsg(peer)) != null) {
+//            System.out.println("GOT MSG FROM DU, type: " + msg.getType());
+            messagesReceiver.addMsgToQueue(peer, msg);
         }
-
-        IMessage msgToSend;
-        while ((msgToSend = messagesReceiver.getMsgTo(peer)) != null) {
-            messagesSender.sendMsg(peer, msgToSend);
-            System.out.println("Wrote to " + peer + ", type of msg: " + msgToSend.getType());
+        //отправить сообщения пиру, если такие есть
+        while ((msg = messagesReceiver.getMsgTo(peer)) != null) {
+            messagesSender.sendMsg(peer, msg);
+            System.out.println("Wrote to " + peer + ", type of msg: " + msg.getType());
         }
     }
 

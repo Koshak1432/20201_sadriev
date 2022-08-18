@@ -66,7 +66,6 @@ public class Peer {
 
     //мб завести для каждого пира мапу с запрошенными кусками, и загружать буду кусок только у того пира, у которого начал
     public IMessage createRequest(Peer to) {
-        System.out.println("CREATING REQUEST TO " + to);
         int pieceIdx = choosePieceToRequest(to);
         if (pieceIdx == -1) {
             return null;
@@ -103,7 +102,7 @@ public class Peer {
     @Override
     public String toString() {
         try {
-            return channel.getLocalAddress().toString();
+            return channel.getRemoteAddress().toString();
         }
         catch (IOException e) {
             throw new RuntimeException(e);
