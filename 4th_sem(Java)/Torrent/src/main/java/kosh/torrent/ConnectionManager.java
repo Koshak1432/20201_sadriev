@@ -32,7 +32,8 @@ public class ConnectionManager implements Runnable {
 
         if (!seeder) {
             List<SocketChannel> channels = connectToPeers(peers.subList(1, peers.size()));
-            if (channels == null) {
+            if (channels.isEmpty()) {
+                System.out.println("Peers with this addresses aren't working");
                 Thread.currentThread().interrupt();
                 return;
             }
@@ -42,17 +43,14 @@ public class ConnectionManager implements Runnable {
 
     private List<SocketChannel> connectToPeers(List<InetSocketAddress> peers) {
         List<SocketChannel> channels = new ArrayList<>();
-        try {
-            for (InetSocketAddress address : peers) {
+        for (InetSocketAddress address : peers) {
+            try {
                 SocketChannel channel = SocketChannel.open(address);
                 channel.configureBlocking(false);
                 channel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
                 channels.add(channel);
                 System.out.println("Connected to " + address);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+            } catch (IOException ignored) {}
         }
         return channels;
     }
@@ -68,17 +66,16 @@ public class ConnectionManager implements Runnable {
     @Override
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
-            int ready;
             try {
-                ready = selector.selectNow();
+                int ready = selector.selectNow();
+                if (ready == 0) {
+                    continue;
+                }
             }
             catch (IOException e) {
                 System.err.println("Can't select");
                 e.printStackTrace();
                 return;
-            }
-            if (ready == 0) {
-                continue;
             }
             Set<SelectionKey> keys = selector.selectedKeys();
             for (SelectionKey key : keys) {
@@ -104,11 +101,9 @@ public class ConnectionManager implements Runnable {
                 notifyPeers(idxHave);
 
                 if (iam.isHasAllPieces()) {
-                    DU.addTask(Task.createStopTask());
                     System.out.println("Have all the messages, download completed!");
                     //todo можно апдейтнуть везде флаг сидера на тру, чтобы этот тоже остался и можно было с него грузить
-                    closeConnections();
-                    return;
+//                    Thread.currentThread().interrupt();
                 }
             }
 
@@ -122,6 +117,9 @@ public class ConnectionManager implements Runnable {
                 return;
             }
         }
+
+        DU.addTask(Task.createStopTask());
+        closeConnections();
     }
 
     private void closeConnections() {
@@ -145,13 +143,13 @@ public class ConnectionManager implements Runnable {
 
     private void handleFailPiece(int idxToClear) {
         iam.clearPiece(idxToClear);
-        for (Peer peer : connections) {
-            IMessage request = iam.createRequest(peer);
-            if (request == null) {
-                continue;
-            }
-            messagesReceiver.addMsgToQueue(peer, request);
-        }
+//        for (Peer peer : connections) {
+//            IMessage request = iam.createRequest(peer);
+//            if (request == null) {
+//                continue;
+//            }
+//            messagesReceiver.addMsgToQueue(peer, request);
+//        }
     }
 
     private Peer findPeer(SocketChannel remoteChannel) {
@@ -167,6 +165,7 @@ public class ConnectionManager implements Runnable {
         try {
             server = (ServerSocketChannel) key.channel();
             SocketChannel channel = server.accept();
+            System.out.println("Connect from " + channel.getLocalAddress());
             channel.configureBlocking(false);
             Peer peer = new Peer(channel, piecesInfo);
             connections.add(peer);
@@ -200,7 +199,8 @@ public class ConnectionManager implements Runnable {
             return false;
         }
         IMessage msg;
-        while ((msg = messagesReceiver.getReadyMsg()) != null) {
+        while ((msg = messagesReceiver.getMsgFrom(peer)) != null) {
+            System.out.println("GOING TO HANDLE MSG FROM " + peer);
             messagesReceiver.handleMsg(peer, iam, msg);
         }
         return true;

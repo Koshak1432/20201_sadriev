@@ -38,6 +38,11 @@ public class Task {
         return new Task(TaskType.CHECK_HASH, idx, pieceLen);
     }
 
+    @Override
+    public String toString() {
+        return type.toString();
+    }
+
     public static Task createStopTask() {
         return new Task(TaskType.STOP);
     }

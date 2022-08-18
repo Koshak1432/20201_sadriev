@@ -19,15 +19,27 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
         try {
             output = new RandomAccessFile(outputFileName, "rw");
         } catch (FileNotFoundException e) {
+            System.err.println("Couldn't open: " + outputFileName);
             e.printStackTrace();
+            Thread.currentThread().interrupt();
         }
     }
 
+    //use wait(sleep) and notify
     @Override
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
-            if (!tasks.isEmpty()) {
-                doTask(tasks.poll());
+            synchronized (tasks) {
+                if (!tasks.isEmpty()) {
+                    doTask(tasks.poll());
+                } else {
+                    try {
+                        tasks.wait();
+                    }
+                    catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
             }
         }
 
@@ -35,13 +47,14 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
             output.close();
         }
         catch (IOException e) {
-            System.err.println("Couldn't close" + output);
+            System.err.println("Couldn't close: " + output);
             e.printStackTrace();
         }
         System.out.println("DU finished");
     }
 
     private void doTask(Task task) {
+        System.out.println("doing task " + task);
         switch (task.getType()) {
             case SAVE -> saveBlock(task);
             case EXTRACT_BLOCK -> sendBlock(task);
@@ -62,7 +75,11 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
 
     @Override
     public void addTask(Task task) {
-        tasks.add(task);
+        synchronized (tasks) {
+            System.out.println("added task to tasks: " + task);
+            tasks.add(task);
+            tasks.notifyAll();
+        }
     }
 
     private void saveBlock(Task task) {
@@ -129,6 +146,7 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
         int pieceLen = task.getPieceLen();
         byte[] metaHash = getMetaHash(idx);
         byte[] pieceData = new byte[pieceLen];
+        System.out.println("checking hash task, idx: " + idx + ", piece len: " + pieceLen + " , piece data len: " + pieceData.length);
         try {
             output.seek(meta.getPieceLen() * idx);
             if (pieceLen != output.read(pieceData)) {

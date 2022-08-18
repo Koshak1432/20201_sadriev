@@ -20,7 +20,12 @@ public class TorrentClient {
             downloadThread.join();
             connectionThread.join();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            if (!downloadThread.isInterrupted()) {
+                downloadThread.interrupt();
+            }
+            if (!connectionThread.isInterrupted()) {
+                connectionThread.interrupt();
+            }
         }
     }
 

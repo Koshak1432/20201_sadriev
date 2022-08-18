@@ -64,7 +64,9 @@ public class Peer {
         return bitset.chooseClearBlock(receiver.getBlocksInPiece(pieceIdx), pieceIdx);
     }
 
+    //мб завести для каждого пира мапу с запрошенными кусками, и загружать буду кусок только у того пира, у которого начал
     public IMessage createRequest(Peer to) {
+        System.out.println("CREATING REQUEST TO " + to);
         int pieceIdx = choosePieceToRequest(to);
         if (pieceIdx == -1) {
             return null;
@@ -79,6 +81,7 @@ public class Peer {
         int len = bitset.isLastBlock(pieceIdx, blockIdx) ? info.getLastBlockLen() : info.getBlockLen();
         byte[] begin = Util.convertToByteArr(info.getBlockLen() * blockIdx);
         byte[] lenA = Util.convertToByteArr(len);
+        System.out.println("created request to " + to + ", pieceIdx: " + pieceIdx + " , block idx: " + blockIdx);
         return new ProtocolMessage(MessagesTypes.REQUEST,
                                   Util.concatByteArrays(Util.concatByteArrays(Util.convertToByteArr(pieceIdx), begin), lenA));
     }
@@ -99,7 +102,12 @@ public class Peer {
 
     @Override
     public String toString() {
-        return channel.socket().getRemoteSocketAddress().toString();
+        try {
+            return channel.getLocalAddress().toString();
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public byte[] getId() {

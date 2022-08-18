@@ -21,18 +21,22 @@ public class MessagesReceiver implements IMessagesReceiver {
 
     @Override
     public void addMsgToQueue(Peer peer, IMessage msg) {
-        if (messagesToPeer.containsKey(peer)) {
-            messagesToPeer.get(peer).add(msg);
+        addToMessages(messagesToPeer, peer, msg);
+    }
+
+    private void addToMessages(Map<Peer, Queue<IMessage>> map, Peer peer, IMessage msg) {
+        if (map.containsKey(peer)) {
+            map.get(peer).add(msg);
             return;
         }
         Queue<IMessage> messages = new LinkedList<>();
         messages.add(msg);
-        messagesToPeer.put(peer, messages);
+        map.put(peer, messages);
     }
 
     @Override
     public void handleMsg(Peer sender, Peer receiver, IMessage msg) {
-        System.out.println("Got message from " + sender);
+        System.out.println("Got message from " + sender + " , type: " + msg.getType());
         switch (msg.getType()) {
             case MessagesTypes.KEEP_ALIVE -> System.out.println("KEEP ALIVE");
             case MessagesTypes.HANDSHAKE -> {
@@ -71,8 +75,16 @@ public class MessagesReceiver implements IMessagesReceiver {
             }
             case MessagesTypes.HAVE -> {
                 System.out.println("HAVE");
-                if (!seeder) {
+                if (!receiver.isHasAllPieces()) {
+                    System.out.println("have: " + Util.convertToInt(msg.getPayload()));
                     sender.setPiece(Util.convertToInt(msg.getPayload()), true);
+//                    IMessage request = receiver.createRequest(sender);
+//                    if (request == null) {
+//                        System.out.println("request is null");
+//                        return;
+//                    }
+//                    System.out.println("added request from have handling");
+//                    addMsgToQueue(sender, request);
                 }
             }
             case MessagesTypes.BITFIELD -> {
@@ -90,7 +102,7 @@ public class MessagesReceiver implements IMessagesReceiver {
                 }
             }
             case MessagesTypes.REQUEST -> {
-                System.out.println("REQUEST");
+//                System.out.println("REQUEST");
                 //A block is uploaded by a client when the client is not choking a peer,
                 //and that peer is interested in the client
                 if (sender.isChoked() || !sender.isInteresting()) {
@@ -100,7 +112,7 @@ public class MessagesReceiver implements IMessagesReceiver {
                 handleRequest(sender, msg);
             }
             case MessagesTypes.PIECE -> {
-                System.out.println("PIECE");
+//                System.out.println("PIECE");
                 //A block is downloaded by the client when the client is interested in a peer,
                 //and that peer is not choking the client
                 if (!sender.isInterested() || sender.isChoking()) {
@@ -113,6 +125,10 @@ public class MessagesReceiver implements IMessagesReceiver {
                 //todo как отменять? где очередь сообщений должна быть?
             }
         }
+    }
+
+    private void addMsgFrom(Peer peer, IMessage msg) {
+        addToMessages(messagesFromPeer, peer, msg);
     }
 
     @Override
@@ -139,7 +155,7 @@ public class MessagesReceiver implements IMessagesReceiver {
         byteBuffer.get(infoHashIdx, infoHash, 0, infoHash.length);
         byteBuffer.get(peerIdIdx, peerId, 0, peerId.length);
         peer.setId(peerId);
-        readyMessages.add(new Handshake(infoHash, peerId));
+        addMsgFrom(peer, new Handshake(infoHash, peerId));
         return true;
     }
 
@@ -151,14 +167,17 @@ public class MessagesReceiver implements IMessagesReceiver {
             return false;
         }
         while (hasFullMessage(readBytes)) {
-            addFullMessages(readBytes, readyMessages);
+            addFullMessages(readBytes, peer);
         }
         return true;
     }
 
     @Override
-    public IMessage getReadyMsg() {
-        return readyMessages.poll();
+    public IMessage getMsgFrom(Peer peer) {
+        if (messagesFromPeer.containsKey(peer)) {
+            return messagesFromPeer.get(peer).poll();
+        }
+        return null;
     }
 
     private void handleRequest(Peer from, IMessage msg) {
@@ -177,9 +196,11 @@ public class MessagesReceiver implements IMessagesReceiver {
     }
 
     private void handlePiece(Peer from, Peer to, IMessage msg) {
+        System.out.println("handle piece from " + from);
         byte[] payload = msg.getPayload();
         if (payload != null) {
             if (payload.length < 8) {
+                System.out.println("piece payload < 8");
                 return;
             }
             int pieceIdx = Util.convertToInt(Arrays.copyOfRange(payload, 0, 4));
@@ -189,19 +210,24 @@ public class MessagesReceiver implements IMessagesReceiver {
             System.out.println("PIECE idx: " + pieceIdx + ", begin: " + begin + ", blockData len: " + blockData.length);
 
             DU.addTask(Task.createSaveTask(pieceIdx, begin, blockData));
+//            System.out.println("added save task");
             int blockIdx = begin / piecesInfo.getBlockLen();
             to.setBlock(pieceIdx, blockIdx);
             if (to.isPieceFull(pieceIdx)) {
+                System.out.println("piece " + pieceIdx + " is full(handling), " + " set piece to true");
                 to.setPiece(pieceIdx, true);
                 int pieceLen = to.isLastPiece(pieceIdx) ? piecesInfo.getLastPieceLen() : piecesInfo.getPieceLen();
+//                System.out.println("create check task for piece " + pieceIdx);
                 DU.addTask(Task.createCheckTask(pieceIdx, pieceLen));
             }
             if (to.isHasAllPieces()) {
+                System.out.println("have all the pieces(handling)");
                 return;
             }
 
             IMessage request = to.createRequest(from);
             if (request == null) {
+                System.out.println("request is null, sender: " + from);
                 return;
             }
             addMsgToQueue(from, request);
@@ -241,7 +267,7 @@ public class MessagesReceiver implements IMessagesReceiver {
         return bytesList.size() - prefixLen >= messageLen;
     }
 
-    private void addFullMessages(List<Byte> bytesList, Queue<IMessage> messagesQueue) {
+    private void addFullMessages(List<Byte> bytesList, Peer peer) {
         int prefixLen = 4;
         byte[] length = new byte[prefixLen];
         byte[] id = new byte[1];
@@ -252,22 +278,25 @@ public class MessagesReceiver implements IMessagesReceiver {
         id[0] = bytesList.get(0);
         bytesList.remove(0);
         int messageLen = Util.convertToInt(length);
-        int idInt = id[0];
+        int idInt = id[0]; //todo что с id???? почему приходит 7, если отправлено 6, по вайршарку посмотреть
         int payloadLen = messageLen - 1;
+        IMessage msg = new ProtocolMessage(idInt);
+        System.out.println("adding full msg from " + peer + " with id: " + idInt + " , msg len: " + messageLen + " , payload len: " + payloadLen);
         if (payloadLen > 0) {
             byte[] payload = new byte[payloadLen];
             for (int i = 0; i < payloadLen; ++i) {
                 payload[i] = bytesList.get(i);
             }
             bytesList.subList(0, payloadLen).clear();
-            messagesQueue.add(new ProtocolMessage(idInt, payload));
-            return;
+            msg = new ProtocolMessage(idInt, payload);
         }
-        messagesQueue.add(new ProtocolMessage(idInt));
+        addToMessages(messagesFromPeer, peer, msg);
     }
 
 
     private final Map<Peer, Queue<IMessage>> messagesToPeer = new HashMap<>();
+
+    private final Map<Peer, Queue<IMessage>> messagesFromPeer = new HashMap<>();
     private final List<Byte> readBytes = new ArrayList<>();
     private final Queue<IMessage> readyMessages = new ArrayDeque<>();
     private final PiecesAndBlocksInfo piecesInfo;

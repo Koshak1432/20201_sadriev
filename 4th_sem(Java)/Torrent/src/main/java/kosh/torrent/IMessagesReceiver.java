@@ -11,5 +11,5 @@ public interface IMessagesReceiver {
 
     IMessage getMsgTo(Peer peer);
 
-    IMessage getReadyMsg();
+    IMessage getMsgFrom(Peer peer);
 }
