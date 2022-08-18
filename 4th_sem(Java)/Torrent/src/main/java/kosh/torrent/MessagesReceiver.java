@@ -32,7 +32,7 @@ public class MessagesReceiver implements IMessagesReceiver {
 
     @Override
     public void handleMsg(Peer sender, Peer receiver, IMessage msg) {
-        System.out.println("Got message sender " + sender);
+        System.out.println("Got message from " + sender);
         switch (msg.getType()) {
             case MessagesTypes.KEEP_ALIVE -> System.out.println("KEEP ALIVE");
             case MessagesTypes.HANDSHAKE -> {
@@ -80,7 +80,6 @@ public class MessagesReceiver implements IMessagesReceiver {
                 if (msg.getMessage().length > 5) {
                     sender.setPiecesHas(msg.getPayload());
                 }
-                //receiver -- кому пришло данное сообщение, sender -- от кого
                 if (!receiver.isHasAllPieces()) {
                     IMessage request = receiver.createRequest(sender);
                     if (request == null) {
@@ -145,15 +144,16 @@ public class MessagesReceiver implements IMessagesReceiver {
     }
 
     @Override
-    public void readFrom(Peer peer) {
+    public boolean readFrom(Peer peer) {
         boolean able = readFromChannel(peer.getChannel());
         if (!able) {
-            //todo это что-то значит?
-            return;
+            //todo это что-то значит? отрубился пир
+            return false;
         }
         while (hasFullMessage(readBytes)) {
             addFullMessages(readBytes, readyMessages);
         }
+        return true;
     }
 
     @Override
@@ -208,18 +208,17 @@ public class MessagesReceiver implements IMessagesReceiver {
         }
     }
 
-    //как-то хэндлить дисконект пиров
-
     private boolean readFromChannel(SocketChannel channel) {
         int bytesToAllocate = piecesInfo.getBlockLen();
         ByteBuffer buffer = ByteBuffer.allocate(bytesToAllocate);
-        int read = -1;
+        int read;
         try {
             read = channel.read(buffer);
+            if (read == -1) {
+                return false;
+            }
         } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if (read == -1) {
+            System.out.println("Peer disconnected");
             return false;
         }
         for (int i = 0; i < read; ++i) {

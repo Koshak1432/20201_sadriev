@@ -89,18 +89,15 @@ public class ConnectionManager implements Runnable {
                     accept(key);
                 }
                 if (key.isReadable()) {
-                    readFromPeer(key);
+                    if (!readFromPeer(key)) {
+                        continue;
+                    }
                 }
                 if (key.isWritable()) {
                     sendToPeer(key);
                 }
             }
             selector.selectedKeys().clear();
-
-            if (connections.isEmpty()) {
-                System.out.println("Connections list is empty, stopped");
-                return;
-            }
 
             Integer idxHave, idxToClear;
             while ((idxHave = DU.getSuccessfulCheck()) != null) {
@@ -118,6 +115,12 @@ public class ConnectionManager implements Runnable {
             while ((idxToClear = DU.getUnsuccessfulCheck()) != null) {
                 handleFailPiece(idxToClear);
             }
+
+            if (connections.isEmpty()) {
+                System.out.println("Connections list is empty, stopped");
+                DU.addTask(Task.createStopTask());
+                return;
+            }
         }
     }
 
@@ -128,6 +131,7 @@ public class ConnectionManager implements Runnable {
 
         try {
             server.close();
+            selector.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -175,21 +179,31 @@ public class ConnectionManager implements Runnable {
         }
     }
 
-    private void readFromPeer(SelectionKey key) {
+    private boolean readFromPeer(SelectionKey key) {
         SocketChannel channel = (SocketChannel) key.channel();
         Peer peer = findPeer(channel);
         assert peer != null;
         if (!iam.getHandshaked().contains(peer)) {
             if (!messagesReceiver.readHS(peer)) {
                 peer.closeConnection();
+                connections.remove(peer);
+                key.cancel();
+                return false;
             }
         }
 
-        messagesReceiver.readFrom(peer);
+        if (!messagesReceiver.readFrom(peer)) {
+            System.out.println(peer + " disconnected");
+            peer.closeConnection();
+            connections.remove(peer);
+            key.cancel();
+            return false;
+        }
         IMessage msg;
         while ((msg = messagesReceiver.getReadyMsg()) != null) {
             messagesReceiver.handleMsg(peer, iam, msg);
         }
+        return true;
     }
 
     private void sendToPeer(SelectionKey key) {

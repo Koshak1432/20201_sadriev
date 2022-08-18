@@ -1,7 +1,7 @@
 package kosh.torrent;
 
 public interface IMessagesReceiver {
-    void readFrom(Peer peer);
+    boolean readFrom(Peer peer);
 
     boolean readHS(Peer peer);
 

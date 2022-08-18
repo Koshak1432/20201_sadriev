@@ -9,6 +9,7 @@ public class MyBitSet {
     public MyBitSet(PiecesAndBlocksInfo info, boolean seeder) {
         this.info = info;
         piecesHas = new BitSet(info.getPiecesNum());
+        requestedPieces = new BitSet(info.getPiecesNum());
         requestedBlocks = new BitSet((info.getPiecesNum() - 1) * info.getBlocksInPiece() + info.getBlocksInLastPiece());
 
         piecesHas.set(0, info.getPiecesNum(), seeder);
@@ -77,17 +78,37 @@ public class MyBitSet {
         requestedBlocks.set(idx * info.getBlocksInPiece(), idx * info.getBlocksInPiece() + blocksInThisPiece, false);
     }
 
+    //завести битсет запрошенных кусков, крутиться по ним, и если не полный кусок, то грузить с него, если кончились, то выбрать новый
     public int chooseClearPiece(BitSet receiverHas) {
+        int requestedPiece = -1;
+        while (requestedPiece >= -1) {
+            requestedPiece = requestedPieces.nextSetBit(requestedPiece + 1);
+            if (requestedPiece == -1) {
+                break;
+            }
+            if (!isPieceFull(requestedPiece)) {
+                System.out.println("piece isn't full");
+                return requestedPiece;
+            }
+        }
+
         BitSet piecesToRequest = (BitSet) getPiecesHas().clone(); //I have
         piecesToRequest.flip(0, info.getPiecesNum()); //I don't have
         piecesToRequest.and(receiverHas); //I don't have and receiver has
         if (piecesToRequest.cardinality() == 0) {
             return -1;
         }
+        requestedPiece = getRandomClear(piecesToRequest, info.getPiecesNum());
+        requestedPieces.set(requestedPiece);
+        System.out.println("CHOOSE PIECE FOR REQUEST: " + requestedPiece);
+        return requestedPiece;
+    }
+
+    private int getRandomClear(BitSet piecesToRequest, int bound) {
         Random random = new Random();
         int pieceIdx = -1;
         while (pieceIdx == -1) {
-            pieceIdx = piecesToRequest.nextSetBit(random.nextInt(info.getPiecesNum()));
+            pieceIdx = piecesToRequest.nextSetBit(random.nextInt(bound));
         }
         return pieceIdx;
     }
@@ -102,11 +123,8 @@ public class MyBitSet {
         if (blocksToRequest.cardinality() == 0) {
             return -1;
         }
-//        Random random = new Random();
-//        int blockIdx = -1;
-//        while (blockIdx == -1) {
-//            blockIdx = blocksToRequest.nextSetBit(random.nextInt(blocksInThisPiece));
-//        }
+
+        getRandomClear(blocksToRequest, blocksInThisPiece);
         return blocksToRequest.nextSetBit(0);
     }
 
@@ -117,5 +135,7 @@ public class MyBitSet {
     private final PiecesAndBlocksInfo info;
     private BitSet piecesHas;
     private final BitSet requestedBlocks;
+
+    private final BitSet requestedPieces;
     private final Map<Integer, BitSet> hasMap = new HashMap<>();
 }

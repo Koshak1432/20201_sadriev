@@ -76,7 +76,6 @@ public class Peer {
 
         bitset.setRequested(info.getBlocksInPiece() * pieceIdx + blockIdx);
 
-//todo мб вообще сделать метод в битсете, который будет сразу возвращать длину по куску и блоку
         int len = bitset.isLastBlock(pieceIdx, blockIdx) ? info.getLastBlockLen() : info.getBlockLen();
         byte[] begin = Util.convertToByteArr(info.getBlockLen() * blockIdx);
         byte[] lenA = Util.convertToByteArr(len);
@@ -93,7 +92,7 @@ public class Peer {
             channel.socket().close();
             channel.close();
         } catch (IOException e) {
-            System.err.println("Couldn't close connection with " + channel);
+            System.err.println("Couldn't properly close connection with " + channel);
             e.printStackTrace();
         }
     }
