@@ -1,10 +1,17 @@
 package kosh.torrent;
 
-//будто все сообщения по протоколу, а вообще в идеале убрать константы и передавать их в конструктор
+/*
+* A handshake message in form: <pstrlen><pstr><reserved><info_hash><peer_id>
+* pstrlen: string length of <pstr>, as a single raw byte.
+* pstr: string identifier of the protocol.
+* reserved: 8 reserved bytes.
+* info_hash: 20-byte SHA1 hash of the info key in the metainfo file.
+* peer_id: 20-byte string used as a unique ID for the client.
+ */
 public class Handshake implements IMessage {
     public Handshake(byte[] infoHash, byte[] peerId) {
         this.infoHash = infoHash;
-        this.peerId = peerId; //who is sending the message
+        this.peerId = peerId;
     }
 
     public byte[] getMessage() {

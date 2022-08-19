@@ -3,6 +3,9 @@ package kosh.torrent;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+/*
+* Class represents a message sender
+ */
 public class MessagesSender implements IMessagesSender {
 
     public MessagesSender() {}

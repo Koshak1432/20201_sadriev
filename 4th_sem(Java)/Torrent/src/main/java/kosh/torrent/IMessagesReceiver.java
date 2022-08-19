@@ -1,5 +1,9 @@
 package kosh.torrent;
 
+
+/*
+* Interface which describes receiver of BitTorrent protocol messages
+ */
 public interface IMessagesReceiver {
     boolean readFrom(Peer peer);
 

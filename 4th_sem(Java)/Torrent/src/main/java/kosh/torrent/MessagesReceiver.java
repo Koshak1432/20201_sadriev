@@ -2,98 +2,105 @@ package kosh.torrent;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
 import java.util.*;
 
+
+/*
+* Class which contains and receives BitTorrent protocol messages
+ */
 public class MessagesReceiver implements IMessagesReceiver {
 
-    public MessagesReceiver(byte[] infoHash, DownloadUploadManager DU, PiecesAndBlocksInfo piecesInfo, boolean seeder) {
+    /*
+    * @param infoHash the hash of the info in .torrent file
+    * @param DU class working with file system
+    * @param piecesInfo helpful info
+     */
+    public MessagesReceiver(byte[] infoHash, DownloadUploadManager DU, PiecesAndBlocksInfo piecesInfo) {
         this.infoHash = infoHash;
         this.DU = DU;
         this.piecesInfo = piecesInfo;
-        this.seeder = seeder;
     }
 
+    /*
+    * Gets a message to peer
+    * @param peer recipient
+     */
     @Override
     public IMessage getMsgTo(Peer peer) {
         return messagesToPeer.get(peer).poll();
     }
 
+    /*
+    * Adds message to queue
+    * @param peer recipient
+    * @param msg message to add
+     */
     @Override
     public void addMsgToQueue(Peer peer, IMessage msg) {
-        System.out.println("ADDING " + msg.getType() + " MSG TO messagesToPeer");
         addToMessages(messagesToPeer, peer, msg);
     }
 
-    private void addToMessages(Map<Peer, Queue<IMessage>> map, Peer peer, IMessage msg) {
-        if (map.containsKey(peer)) {
-            map.get(peer).add(msg);
-            return;
-        }
-        Queue<IMessage> messages = new LinkedList<>();
-        messages.add(msg);
-        map.put(peer, messages);
-    }
-
+    /*
+    * Handles given message
+    * @param sender from whom the message came
+    * @param receiver the recipient of the message
+    * @param msg the message to handle
+     */
     @Override
     public void handleMsg(Peer sender, Peer receiver, IMessage msg) {
-        System.out.println("Got message from " + sender + " , type: " + msg.getType());
         switch (msg.getType()) {
-            case MessagesTypes.KEEP_ALIVE -> System.out.println("KEEP ALIVE");
+            case MessagesTypes.KEEP_ALIVE -> System.out.println("Got KEEP ALIVE from " + sender);
             case MessagesTypes.HANDSHAKE -> {
-                System.out.println("HANDSHAKE");
-                //спецом id пировский, т.к. трекера нет
+                System.out.println("Got HANDSHAKE from " + sender);
+                //pass sender's id for proper handshakes, cause don't have a tracker
                 if (! Arrays.equals(msg.getMessage(), new Handshake(infoHash, sender.getId()).getMessage())) {
                     System.out.println("HS are different");
                     sender.closeConnection();
                     return;
                 }
                 receiver.getHandshaked().add(sender);
-                addMsgToQueue(sender, new ProtocolMessage(MessagesTypes.BITFIELD, receiver.getPiecesHas().toByteArray()));
+                addMsgToQueue(sender, new ProtocolMessage(MessagesTypes.BITFIELD, receiver.getBitset().getPiecesHas().toByteArray()));
             }
             case MessagesTypes.CHOKE -> {
-                System.out.println("CHOKE");
+                System.out.println("Got CHOKE from " + sender);
                 sender.setChoking(true);
             }
             case MessagesTypes.UNCHOKE -> {
-                System.out.println("UNCHOKE");
+                System.out.println("Got UNCHOKE from " + sender);
                 IMessage request = receiver.createRequest(sender);
                 if (request == null) {
-                    System.out.println("request is null");
                     return;
                 }
-                System.out.println("added request from have handling");
                 addMsgToQueue(sender, request);
                 sender.setChoking(false);
             }
             case MessagesTypes.INTERESTED -> {
-                System.out.println("INTERESTED");
+                System.out.println("Got INTERESTED from " + sender);
                 addMsgToQueue(sender, new ProtocolMessage(MessagesTypes.UNCHOKE));
                 sender.setInteresting(true);
                 sender.setChoked(false);
 
             }
             case MessagesTypes.NOT_INTERESTED -> {
-                System.out.println("NOT INTERESTED");
+                System.out.println("Got NOT INTERESTED from " + sender);
                 sender.setInteresting(false);
             }
             case MessagesTypes.HAVE -> {
-                System.out.println("HAVE");
-                if (!receiver.isHasAllPieces()) {
-                    System.out.println("have: " + Util.convertToInt(msg.getPayload()));
-                    sender.setPiece(Util.convertToInt(msg.getPayload()), true);
+                System.out.println("Got HAVE(idx: " + Util.convertToInt(msg.getPayload()) + ") from " + sender);
+                if (!receiver.getBitset().isHasAllPieces()) {
+                    sender.getBitset().setPiece(Util.convertToInt(msg.getPayload()), true);
                 }
             }
             case MessagesTypes.BITFIELD -> {
-                System.out.println("BITFIELD");
+                System.out.println("Got BITFIELD from " + sender);
                 if (msg.getMessage().length > 5) {
-                    sender.setPiecesHas(msg.getPayload());
+                    sender.getBitset().setPiecesHas(msg.getPayload());
                 }
                 addMsgToQueue(sender, new ProtocolMessage(MessagesTypes.INTERESTED));
                 sender.setInterested(true);
             }
             case MessagesTypes.REQUEST -> {
-//                System.out.println("REQUEST");
+                System.out.println("Got REQUEST from " + sender);
                 //A block is uploaded by a client when the client is not choking a peer,
                 //and that peer is interested in the client
                 if (sender.isChoked() || !sender.isInteresting()) {
@@ -103,7 +110,7 @@ public class MessagesReceiver implements IMessagesReceiver {
                 handleRequest(sender, msg);
             }
             case MessagesTypes.PIECE -> {
-//                System.out.println("PIECE");
+                System.out.println("Got PIECE from " + sender);
                 //A block is downloaded by the client when the client is interested in a peer,
                 //and that peer is not choking the client
                 if (!sender.isInterested() || sender.isChoking()) {
@@ -112,16 +119,14 @@ public class MessagesReceiver implements IMessagesReceiver {
                 }
                 handlePiece(sender, receiver, msg);
             }
-            case MessagesTypes.CANCEL -> {
-                //todo как отменять? где очередь сообщений должна быть?
-            }
         }
     }
 
-    private void addMsgFrom(Peer peer, IMessage msg) {
-        addToMessages(messagesFromPeer, peer, msg);
-    }
-
+    /*
+    * Reads a handshake from peer
+    * @param peer from whom to read
+    * @return false if error occurs, else true
+     */
     @Override
     public boolean readHS(Peer peer) {
         int HSSize = 68;
@@ -150,15 +155,19 @@ public class MessagesReceiver implements IMessagesReceiver {
         return true;
     }
 
+    /*
+    * Reads from peer
+    * @param peer from whom to read
+    * @return false if can't read data, probably, peer disconnected, else true
+     */
     @Override
     public boolean readFrom(Peer peer) {
         boolean able = readFromChannel(peer);
         if (!able) {
-            //todo это что-то значит? отрубился пир
             return false;
         }
         while (hasFullMessage(getBytes(peer))) {
-            addFullMessages(getBytes(peer), peer);
+            addFullMessage(getBytes(peer), peer);
         }
         return true;
     }
@@ -171,6 +180,20 @@ public class MessagesReceiver implements IMessagesReceiver {
         return null;
     }
 
+    private void addToMessages(Map<Peer, Queue<IMessage>> map, Peer peer, IMessage msg) {
+        if (map.containsKey(peer)) {
+            map.get(peer).add(msg);
+            return;
+        }
+        Queue<IMessage> messages = new LinkedList<>();
+        messages.add(msg);
+        map.put(peer, messages);
+    }
+
+    private void addMsgFrom(Peer peer, IMessage msg) {
+        addToMessages(messagesFromPeer, peer, msg);
+    }
+
     private void handleRequest(Peer from, IMessage msg) {
         byte[] payload = msg.getPayload();
         if (payload != null) {
@@ -180,18 +203,16 @@ public class MessagesReceiver implements IMessagesReceiver {
             int idx = Util.convertToInt(Arrays.copyOfRange(payload, 0, 4));
             int begin = Util.convertToInt(Arrays.copyOfRange(payload, 4, 8));
             int len = Util.convertToInt(Arrays.copyOfRange(payload, 8, payload.length));
-            System.out.println("REQUESTED idx: " + idx + ", begin: " + begin + ", len: " + len);
+            System.out.println("REQUEST idx: " + idx + ", begin: " + begin + ", len: " + len);
 
             DU.addTask(Task.createExtractTask(idx, begin, len, from));
         }
     }
 
     private void handlePiece(Peer from, Peer to, IMessage msg) {
-        System.out.println("handle piece from " + from);
         byte[] payload = msg.getPayload();
         if (payload != null) {
             if (payload.length < 8) {
-                System.out.println("piece payload < 8");
                 return;
             }
             int pieceIdx = Util.convertToInt(Arrays.copyOfRange(payload, 0, 4));
@@ -202,27 +223,23 @@ public class MessagesReceiver implements IMessagesReceiver {
 
             DU.addTask(Task.createSaveTask(pieceIdx, begin, blockData));
             int blockIdx = begin / piecesInfo.getBlockLen();
-            to.setBlock(pieceIdx, blockIdx);
-            if (to.isPieceFull(pieceIdx)) {
-                System.out.println("piece " + pieceIdx + " is full(handling), " + " set piece to true");
-                to.setPiece(pieceIdx, true);
-                int pieceLen = to.isLastPiece(pieceIdx) ? piecesInfo.getLastPieceLen() : piecesInfo.getPieceLen();
+            to.getBitset().setBlock(pieceIdx, blockIdx);
+            if (to.getBitset().isPieceFull(pieceIdx)) {
+                to.getBitset().setPiece(pieceIdx, true);
+                int pieceLen = to.getBitset().isLastPiece(pieceIdx) ? piecesInfo.getLastPieceLen() : piecesInfo.getPieceLen();
                 DU.addTask(Task.createCheckTask(pieceIdx, pieceLen));
             }
-            if (to.isHasAllPieces()) {
-                System.out.println("have all the pieces(handling)");
+            if (to.getBitset().isHasAllPieces()) {
                 return;
             }
 
             IMessage request = to.createRequest(from);
             if (request == null) {
-                System.out.println("request is null, sender: " + from);
                 return;
             }
             addMsgToQueue(from, request);
         }
     }
-
 
     private List<Byte> getBytes(Peer peer) {
         if (!readBytes.containsKey(peer)) {
@@ -230,18 +247,22 @@ public class MessagesReceiver implements IMessagesReceiver {
         }
         return readBytes.get(peer);
     }
+
+    /*
+    * Reads portion of data from peer
+    * @param peer from whom to read
+    * @return false if can't read, probably, when peer disconnected, else true
+     */
     private boolean readFromChannel(Peer peer) {
         int bytesToAllocate = piecesInfo.getBlockLen();
         ByteBuffer buffer = ByteBuffer.allocate(bytesToAllocate);
         int read;
         try {
             read = peer.getChannel().read(buffer);
-//            System.out.println("READ " + read + " bytes");
             if (read == -1) {
                 return false;
             }
         } catch (IOException e) {
-            System.out.println("Peer disconnected");
             return false;
         }
 
@@ -253,6 +274,11 @@ public class MessagesReceiver implements IMessagesReceiver {
         return true;
     }
 
+    /*
+    * Tests whether there is a full message to construct
+    * @param bytesList list with read bytes
+    * @return true if there is a full message, else false
+     */
     private boolean hasFullMessage(List<Byte> bytesList) {
         if (bytesList.isEmpty()) {
             return false;
@@ -266,24 +292,25 @@ public class MessagesReceiver implements IMessagesReceiver {
         return bytesList.size() - prefixLen >= messageLen;
     }
 
-    private void addFullMessages(List<Byte> bytesList, Peer peer) {
+    /*
+    * Reads full message from bytes list
+    * @param bytesList list with read bytes
+    * @param peer from whom message came
+     */
+    private void addFullMessage(List<Byte> bytesList, Peer peer) {
         int prefixLen = 4;
         byte[] length = new byte[prefixLen];
         byte[] id = new byte[1];
         for (int i = 0; i < prefixLen; ++i) {
             length[i] = bytesList.get(i);
         }
-//        System.out.println("POSSIBLE ID: " + bytesList.get(4));
-//        System.out.println("LENGTH IN ADD FULL MSG: " + Arrays.toString(length));
         bytesList.subList(0, prefixLen).clear();
-//        System.out.println("id[0] is " + bytesList.get(0));
         id[0] = bytesList.get(0);
         bytesList.remove(0);
         int messageLen = Util.convertToInt(length);
         int idInt = id[0];
         int payloadLen = messageLen - 1;
         IMessage msg = new ProtocolMessage(idInt);
-//        System.out.println("adding full msg from " + peer + " with id: " + idInt + " , payload len: " + payloadLen);
         if (payloadLen > 0) {
             byte[] payload = new byte[payloadLen];
             for (int i = 0; i < payloadLen; ++i) {
@@ -298,11 +325,8 @@ public class MessagesReceiver implements IMessagesReceiver {
 
     private final Map<Peer, Queue<IMessage>> messagesToPeer = new HashMap<>(); //incoming (to send)
     private final Map<Peer, Queue<IMessage>> messagesFromPeer = new HashMap<>(); //outgoing (to handle)
-
     private final Map<Peer, List<Byte>> readBytes = new HashMap<>();
-//    private final List<Byte> readBytes = new ArrayList<>();
     private final PiecesAndBlocksInfo piecesInfo;
     private final byte[] infoHash;
-    private final boolean seeder;
     private final DownloadUploadManager DU;
 }

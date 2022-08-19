@@ -1,5 +1,9 @@
 package kosh.torrent;
 
+
+/*
+ * Class represents helpful information about pieces and blocks
+ */
 public class PiecesAndBlocksInfo {
     public PiecesAndBlocksInfo(int fileLen, int pieceLen, int blockLen) {
         this.pieceLen = pieceLen;

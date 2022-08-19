@@ -8,12 +8,22 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.*;
 
+/*
+* Class which works with network part
+ */
 public class ConnectionManager implements Runnable {
+
+    /*
+    * @param meta the .torrent file
+    * @param DU a class working with file system
+    * @param peers a list of addresses of peers to connect, the first one is the address of this client
+    * @param seeder whether this client is seeder or not
+     */
     public ConnectionManager(MetainfoFile meta, DownloadUploadManager DU, List<InetSocketAddress> peers, boolean seeder) {
         this.infoHash = meta.getInfoHash();
         this.DU = DU;
         this.piecesInfo = new PiecesAndBlocksInfo((int) meta.getFileLen(), (int) meta.getPieceLen(), BLOCK_LEN);
-        this.messagesReceiver = new MessagesReceiver(meta.getInfoHash(), DU, piecesInfo, seeder);
+        this.messagesReceiver = new MessagesReceiver(meta.getInfoHash(), DU, piecesInfo);
         this.iam = new Peer(null, piecesInfo, seeder);
 
         try {
@@ -26,6 +36,7 @@ public class ConnectionManager implements Runnable {
         catch (IOException e) {
             System.err.println("Couldn't init connection manager");
             e.printStackTrace();
+            releaseResources();
             Thread.currentThread().interrupt();
             return;
         }
@@ -41,27 +52,6 @@ public class ConnectionManager implements Runnable {
         }
     }
 
-    private List<SocketChannel> connectToPeers(List<InetSocketAddress> peers) {
-        List<SocketChannel> channels = new ArrayList<>();
-        for (InetSocketAddress address : peers) {
-            try {
-                SocketChannel channel = SocketChannel.open(address);
-                channel.configureBlocking(false);
-                channel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-                channels.add(channel);
-                System.out.println("Connected to " + address);
-            } catch (IOException ignored) {}
-        }
-        return channels;
-    }
-
-    private void addHSToPeers(List<SocketChannel> channels, byte[] infoHash) {
-        for (SocketChannel channel : channels) {
-            Peer peer = new Peer(channel, piecesInfo);
-            connections.add(peer);
-            messagesReceiver.addMsgToQueue(peer, new Handshake(infoHash, peer.getId()));
-        }
-    }
 
     @Override
     public void run() {
@@ -96,33 +86,58 @@ public class ConnectionManager implements Runnable {
             }
             selector.selectedKeys().clear();
 
-            Integer idxHave, idxToClear;
-            while ((idxHave = DU.getSuccessfulCheck()) != null) {
-                notifyPeers(idxHave);
+            Integer idx;
+            while ((idx = DU.getSuccessfulCheck()) != null) {
+                notifyPeers(idx);
 
-                if (iam.isHasAllPieces()) {
+                if (iam.getBitset().isHasAllPieces()) {
+                    System.out.println("---------------------------------------------");
                     System.out.println("Have all the messages, download completed!");
+                    System.out.println("---------------------------------------------");
                     //todo можно апдейтнуть везде флаг сидера на тру, чтобы этот тоже остался и можно было с него грузить
 //                    Thread.currentThread().interrupt();
                 }
             }
 
-            while ((idxToClear = DU.getUnsuccessfulCheck()) != null) {
-                handleFailPiece(idxToClear);
+            while ((idx = DU.getUnsuccessfulCheck()) != null) {
+                handleNotVerifiedPiece(idx);
             }
 
             if (connections.isEmpty()) {
                 System.out.println("Connections list is empty, stopped");
-                DU.addTask(Task.createStopTask());
-                return;
+                break;
             }
         }
 
         DU.addTask(Task.createStopTask());
-        closeConnections();
+        releaseResources();
     }
 
-    private void closeConnections() {
+    private List<SocketChannel> connectToPeers(List<InetSocketAddress> peers) {
+        List<SocketChannel> channels = new ArrayList<>();
+        for (InetSocketAddress address : peers) {
+            try {
+                SocketChannel channel = SocketChannel.open(address);
+                channel.configureBlocking(false);
+                channel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+                channels.add(channel);
+                System.out.println("Connected to " + address);
+            } catch (IOException e) {
+                System.out.println("Peer with address: " + address + " isn't working");
+            }
+        }
+        return channels;
+    }
+
+    private void addHSToPeers(List<SocketChannel> channels, byte[] infoHash) {
+        for (SocketChannel channel : channels) {
+            Peer peer = new Peer(channel, piecesInfo);
+            connections.add(peer);
+            messagesReceiver.addMsgToQueue(peer, new Handshake(infoHash, peer.getId()));
+        }
+    }
+
+    private void releaseResources() {
         for (Peer peer : connections) {
             peer.closeConnection();
         }
@@ -141,8 +156,8 @@ public class ConnectionManager implements Runnable {
         }
     }
 
-    private void handleFailPiece(int idxToClear) {
-        iam.clearPiece(idxToClear);
+    private void handleNotVerifiedPiece(int idxToClear) {
+        iam.getBitset().clearPiece(idxToClear);
     }
 
     private Peer findPeer(SocketChannel remoteChannel) {
@@ -151,9 +166,12 @@ public class ConnectionManager implements Runnable {
                 return peer;
             }
         }
-        return null; //never
+        return null;
     }
 
+    /*
+    * Accepts a connection and adds own handshake to queue to the connected peer
+     */
     private void accept(SelectionKey key) {
         try {
             server = (ServerSocketChannel) key.channel();
@@ -171,11 +189,15 @@ public class ConnectionManager implements Runnable {
         }
     }
 
+
+    /*
+    * Reads data from peer and handle messages
+    * @return false if peer is disconnected while reading or if I/O errors occur
+     */
     private boolean readFromPeer(SelectionKey key) {
         SocketChannel channel = (SocketChannel) key.channel();
         Peer peer = findPeer(channel);
         assert peer != null;
-//        System.out.println("ENTER READ FROM PEER: " + peer);
         if (!iam.getHandshaked().contains(peer)) {
             if (!messagesReceiver.readHS(peer)) {
                 peer.closeConnection();
@@ -194,22 +216,24 @@ public class ConnectionManager implements Runnable {
         }
         IMessage msg;
         while ((msg = messagesReceiver.getMsgFrom(peer)) != null) {
-//            System.out.println("GOING TO HANDLE MSG FROM " + peer);
             messagesReceiver.handleMsg(peer, iam, msg);
         }
         return true;
     }
 
+    /*
+    * Sends messages to a peer
+     */
     private void sendToPeer(SelectionKey key) {
         SocketChannel channel = (SocketChannel) key.channel();
         Peer peer = findPeer(channel);
         assert peer != null;
-        IMessage msg; //добавить сообщения пиру от DU, если такие есть
+        //add messages to peer from DU
+        IMessage msg;
         while ((msg = DU.getOutgoingMsg(peer)) != null) {
-//            System.out.println("GOT MSG FROM DU, type: " + msg.getType());
             messagesReceiver.addMsgToQueue(peer, msg);
         }
-        //отправить сообщения пиру, если такие есть
+        //send messages to peer
         while ((msg = messagesReceiver.getMsgTo(peer)) != null) {
             messagesSender.sendMsg(peer, msg);
             System.out.println("Wrote to " + peer + ", type of msg: " + msg.getType());
@@ -225,8 +249,6 @@ public class ConnectionManager implements Runnable {
     private final Peer iam;
     private final byte[] infoHash;
     private final IDownloadUploadManager DU;
-
     private ServerSocketChannel server;
-
     public final int BLOCK_LEN = 16 * 1024;
 }

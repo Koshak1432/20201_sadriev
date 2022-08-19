@@ -28,5 +28,5 @@ public class Main {
 
 //    private static String originalFilePath = "D:\\20201_sadriev\\4th_sem(Java)\\Torrent\\src\\main\\resources\\";
     private static String metaInfoFilePath = "D:\\20201_sadriev\\4th_sem(Java)\\Torrent\\";
-    private static String metaInfoName = "test.torrent";
+    private static String metaInfoName = "test2.torrent";
 }

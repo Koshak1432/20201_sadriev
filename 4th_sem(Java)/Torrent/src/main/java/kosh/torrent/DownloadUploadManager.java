@@ -5,10 +5,16 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.*;
 
-
-//если сделать DU паблишером, а км и прочие, кому нужен он, будут подписываться, тогда не понятно, как добавлять таски в него
-//подпишутся друг на друга?
+/*
+* Class which works with file system by doing tasks:
+* Saves blocks to output file, extracts blocks to send PIECE message and checks SHA-1 full pieces hashes
+ */
 public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
+
+    /*
+    * @param meta the .torrent file
+    * @param seeder indicates whether this client is seeder or not
+     */
     public DownloadUploadManager(MetainfoFile meta, boolean seeder) {
         this.meta = meta;
         Random random = new Random();
@@ -25,7 +31,9 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
         }
     }
 
-    //use wait(sleep) and notify
+    /*
+    * Main method in which tasks are executed
+     */
     @Override
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
@@ -35,7 +43,6 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
                 }
                 else {
                     try {
-//                        System.out.println("WAITING");
                         tasks.wait();
                     }
                     catch (InterruptedException e) {
@@ -49,35 +56,16 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
             output.close();
         }
         catch (IOException e) {
-            System.err.println("Couldn't close: " + output);
+            System.err.println("Couldn't properly close: " + output);
             e.printStackTrace();
         }
         System.out.println("DU finished");
     }
 
-    private void doTask(Task task) {
-        System.out.println("doing task " + task);
-        switch (task.getType()) {
-            case SAVE -> saveBlock(task);
-            case EXTRACT_BLOCK -> sendBlock(task);
-            case CHECK_HASH -> checkHash(task);
-            case STOP -> stop();
-        }
-    }
-
-    @Override
-    public IMessage getOutgoingMsg(Peer peer) {
-        synchronized (outgoingMsg) {
-            if (outgoingMsg.containsKey(peer)) {
-                synchronized (outgoingMsg.get(peer)) {
-                    IMessage msg = outgoingMsg.get(peer).poll();
-                    return msg;
-                }
-            }
-        }
-        return null;
-    }
-
+    /*
+     * Adds a task to queue
+     * @param task task to add
+     */
     @Override
     public void addTask(Task task) {
         synchronized (tasks) {
@@ -86,6 +74,10 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
         }
     }
 
+    /*
+     * Writes block of data to output file
+     * @param task all the needed info
+     */
     private void saveBlock(Task task) {
         int idx = task.getBlock().idx();
         int begin = task.getBlock().begin();
@@ -99,19 +91,11 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
         }
     }
 
-    private void addToOutgoingMessages(Peer peer, IMessage msg) {
-        synchronized (outgoingMsg) {
-            if (outgoingMsg.containsKey(peer)) {
-                outgoingMsg.get(peer).add(msg);
-                return;
-            }
-            Queue<IMessage> queue = new LinkedList<>();
-            queue.add(msg);
-            outgoingMsg.put(peer, queue);
-        }
-    }
-
-    private void sendBlock(Task task) {
+    /*
+     * Extracts block of data from file and adds to outgoing messages
+     * @param task all the needed info
+     */
+    private void extractBlock(Task task) {
         int idx = task.getBlock().idx();
         int begin = task.getBlock().begin();
         byte[] dataToSend = new byte[task.getBlock().len()];
@@ -135,22 +119,15 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
         addToOutgoingMessages(task.getWho(), msgToSend);
     }
 
-    private void stop() {
-        System.out.println("Stopped DU");
-        Thread.currentThread().interrupt();
-    }
-
-    private byte[] getMetaHash(int pieceIdx) {
-        int SHA1Len = 20;
-        return Arrays.copyOfRange(meta.getPieces(), pieceIdx * SHA1Len, (pieceIdx + 1) * SHA1Len);
-    }
-
+    /*
+     * Checks whether SHA-1 hash of downloaded piece is equals with hash in .torrent
+     * @param task all the needed info
+     */
     private void checkHash(Task task) {
         int idx = task.getIdx();
         int pieceLen = task.getPieceLen();
         byte[] metaHash = getMetaHash(idx);
         byte[] pieceData = new byte[pieceLen];
-        System.out.println("checking hash task, idx: " + idx + ", piece len: " + pieceLen + " , piece data len: " + pieceData.length);
         try {
             output.seek(meta.getPieceLen() * idx);
             if (pieceLen != output.read(pieceData)) {
@@ -164,14 +141,31 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
         }
 
         if (Arrays.equals(metaHash, Util.generateHash(pieceData))) {
-            System.out.println("successful check");
             successfulCheck.add(idx);
         } else {
             unsuccessfulCheck.add(idx);
-            System.out.println("unsuccessful check");
         }
     }
 
+    /*
+     * Gets a produced message (PIECE) to the peer
+     * @param peer recipient
+     * @return IMessage if there is a message or null if not
+     */
+    @Override
+    public IMessage getOutgoingMsg(Peer peer) {
+        if (outgoingMsg.containsKey(peer)) {
+            synchronized (outgoingMsg.get(peer)) {
+                return outgoingMsg.get(peer).poll();
+            }
+        }
+        return null;
+    }
+
+    /*
+     * Gets idx of a successfully downloaded and verified via the hash piece
+     * @return piece idx
+     */
     @Override
     public Integer getSuccessfulCheck() {
         synchronized (successfulCheck) {
@@ -179,11 +173,48 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
         }
     }
 
+    /*
+     * Gets idx of a not verified via the hash piece
+     * @return piece idx
+     */
     @Override
     public Integer getUnsuccessfulCheck() {
         synchronized (unsuccessfulCheck) {
             return unsuccessfulCheck.poll();
         }
+    }
+
+    private void doTask(Task task) {
+        switch (task.getType()) {
+            case SAVE -> saveBlock(task);
+            case EXTRACT_BLOCK -> extractBlock(task);
+            case CHECK_HASH -> checkHash(task);
+            case STOP -> stop();
+        }
+    }
+
+    private void addToOutgoingMessages(Peer peer, IMessage msg) {
+        if (outgoingMsg.containsKey(peer)) {
+            synchronized (outgoingMsg.get(peer)) {
+                outgoingMsg.get(peer).add(msg);
+                return;
+            }
+        }
+        Queue<IMessage> queue = new LinkedList<>();
+        queue.add(msg);
+        synchronized (outgoingMsg) {
+            outgoingMsg.put(peer, queue);
+        }
+    }
+
+    private void stop() {
+        System.out.println("Stopped DU");
+        Thread.currentThread().interrupt();
+    }
+
+    private byte[] getMetaHash(int pieceIdx) {
+        int SHA1Len = 20;
+        return Arrays.copyOfRange(meta.getPieces(), pieceIdx * SHA1Len, (pieceIdx + 1) * SHA1Len);
     }
 
     private final MetainfoFile meta;

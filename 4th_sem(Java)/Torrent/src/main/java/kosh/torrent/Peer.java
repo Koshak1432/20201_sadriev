@@ -3,10 +3,12 @@ package kosh.torrent;
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.List;
 import java.util.Random;
 
+/*
+* Class represents a peer
+ */
 public class Peer {
     public Peer(SocketChannel channel, PiecesAndBlocksInfo info) {
         this.id = generateId();
@@ -33,38 +35,23 @@ public class Peer {
         return handshaked;
     }
 
-    public boolean isHasAllPieces() {
-        return bitset.isHasAllPieces();
-    }
-
-    public boolean isPieceFull(int pieceIdx) {
-        return bitset.isPieceFull(pieceIdx);
-    }
-
-    public boolean isLastPiece(int pieceIdx) {
-        return bitset.isLastPiece(pieceIdx);
-    }
-    public void clearPiece(int idx) {
-        bitset.clearPiece(idx);
-    }
-
-    public void setBlock(int pieceIdx, int blockIdx) {
-        bitset.setBlock(pieceIdx, blockIdx);
-    }
-
-    public BitSet getPiecesHas() {
-        return bitset.getPiecesHas();
+    public MyBitSet getBitset() {
+        return bitset;
     }
 
     private int choosePieceToRequest(Peer receiver) {
-        return bitset.chooseClearPiece(receiver.getPiecesHas());
+        return bitset.chooseClearPiece(receiver.getBitset().getPiecesHas());
     }
 
     private int chooseBlockToRequest(Peer receiver, int pieceIdx) {
-        return bitset.chooseClearBlock(receiver.getBlocksInPiece(pieceIdx), pieceIdx);
+        return bitset.chooseClearBlock(receiver.getBitset().getBlocksInPiece(pieceIdx), pieceIdx);
     }
 
-    //мб завести для каждого пира мапу с запрошенными кусками, и загружать буду кусок только у того пира, у которого начал
+    /*
+    * Creates REQUEST message
+    * @param to to whom
+    * @return IMessage request or null if couldn't choose piece or block to request
+     */
     public IMessage createRequest(Peer to) {
         int pieceIdx = choosePieceToRequest(to);
         if (pieceIdx == -1) {
@@ -74,19 +61,13 @@ public class Peer {
         if (blockIdx == -1) {
             return null;
         }
-
         bitset.setRequested(info.getBlocksInPiece() * pieceIdx + blockIdx);
 
         int len = bitset.isLastBlock(pieceIdx, blockIdx) ? info.getLastBlockLen() : info.getBlockLen();
         byte[] begin = Util.convertToByteArr(info.getBlockLen() * blockIdx);
         byte[] lenA = Util.convertToByteArr(len);
-        System.out.println("created request to " + to + ", pieceIdx: " + pieceIdx + " , block idx: " + blockIdx);
         return new ProtocolMessage(MessagesTypes.REQUEST,
                                   Util.concatByteArrays(Util.concatByteArrays(Util.convertToByteArr(pieceIdx), begin), lenA));
-    }
-
-    private BitSet getBlocksInPiece(int pieceIdx) {
-        return bitset.getBlocksInPiece(pieceIdx);
     }
 
     public void closeConnection() {
@@ -115,14 +96,6 @@ public class Peer {
 
     public void setId(byte[] id) {
         this.id = id;
-    }
-
-    public void setPiecesHas(byte[] bitfield) {
-        bitset.setPiecesHas(bitfield);
-    }
-
-    public void setPiece(int pieceIdx, boolean has) {
-        bitset.setPiece(pieceIdx, has);
     }
 
     public SocketChannel getChannel() {
@@ -161,14 +134,13 @@ public class Peer {
         this.interesting = interesting;
     }
 
-    private byte[] id;
+    private final MyBitSet bitset;
+    private final List<Peer> handshaked = new ArrayList<>();
+    private final PiecesAndBlocksInfo info;
     private final SocketChannel channel;
+    private byte[] id;
     private boolean choked = true; //this client is choking the peer
     private boolean choking = true; //peer is choking this client, выставлять, когда отправляю пиру choke
     private boolean interested = false; //this client is interested in the peer
     private boolean interesting = false; //peer is interested in this client, выставлять, когда отправляю interested
-
-    private final MyBitSet bitset;
-    private final List<Peer> handshaked = new ArrayList<>();
-    private final PiecesAndBlocksInfo info;
 }

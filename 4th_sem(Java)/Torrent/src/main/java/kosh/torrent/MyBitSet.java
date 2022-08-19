@@ -5,6 +5,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+
+/*
+* Class represents convenient bit set for BitTorrent protocol
+ */
 public class MyBitSet {
     public MyBitSet(PiecesAndBlocksInfo info, boolean seeder) {
         this.info = info;
@@ -80,33 +84,6 @@ public class MyBitSet {
         requestedBlocks.set(idx * info.getBlocksInPiece(), idx * info.getBlocksInPiece() + blocksInThisPiece, false);
     }
 
-    //завести битсет запрошенных кусков, крутиться по ним, и если не полный кусок, то грузить с него, если кончились, то выбрать новый
-    public int chooseClearPiece(BitSet receiverHas) {
-        int pieceIdx;
-        for (pieceIdx = requestedPieces.nextSetBit(0); pieceIdx >= 0; pieceIdx = requestedPieces.nextSetBit(pieceIdx + 1)) {
-            if (pieceIdx == Integer.MAX_VALUE) {
-                break;
-            }
-            if (!isPieceFull(pieceIdx)) {
-//                System.out.println("piece in requested true?: " + requestedPieces.get(pieceIdx));
-//                System.out.println("piece isn't full, return " + pieceIdx);
-                return pieceIdx;
-            }
-        }
-
-        BitSet piecesToRequest = (BitSet) getPiecesHas().clone(); //I have
-        piecesToRequest.flip(0, info.getPiecesNum()); //I don't have
-        piecesToRequest.and(receiverHas); //I don't have and receiver has
-        if (piecesToRequest.cardinality() == 0) {
-//            System.out.println("cardinality is zero");
-            return -1;
-        }
-        pieceIdx = getRandomClear(piecesToRequest, info.getPiecesNum());
-        requestedPieces.set(pieceIdx);
-//        System.out.println("CHOOSE PIECE FOR REQUEST: " + pieceIdx);
-        return pieceIdx;
-    }
-
     private int getRandomClear(BitSet piecesToRequest, int bound) {
         Random random = new Random();
         int pieceIdx = -1;
@@ -116,24 +93,51 @@ public class MyBitSet {
         return pieceIdx;
     }
 
+    /*
+    * Chooses piece to download
+    * @param receiverHas pieces that receiver has
+    * @return pieceIdx idx of a piece I don't have and receiver has
+     */
+    public int chooseClearPiece(BitSet receiverHas) {
+        int pieceIdx;
+        for (pieceIdx = requestedPieces.nextSetBit(0); pieceIdx >= 0; pieceIdx = requestedPieces.nextSetBit(pieceIdx + 1)) {
+            if (pieceIdx == Integer.MAX_VALUE) {
+                break;
+            }
+            if (!isPieceFull(pieceIdx)) {
+                return pieceIdx;
+            }
+        }
+
+        BitSet piecesToRequest = (BitSet) getPiecesHas().clone(); //I have
+        piecesToRequest.flip(0, info.getPiecesNum()); //I don't have
+        piecesToRequest.and(receiverHas); //I don't have and receiver has
+        if (piecesToRequest.cardinality() == 0) {
+            return -1;
+        }
+        pieceIdx = getRandomClear(piecesToRequest, info.getPiecesNum());
+        requestedPieces.set(pieceIdx);
+        return pieceIdx;
+    }
+
+    /*
+    * Chooses block in piece to download
+    * @param receiverBlocks blocks in piece receiver has
+    * @param pieceIdx
+    * @return blockIdx of a block I don't have, not requested and receiver has
+     */
     public int chooseClearBlock(BitSet receiverBlocks, int pieceIdx) {
         BitSet blocksToRequest = (BitSet) hasMap.get(pieceIdx).clone(); //I have
-//        System.out.println("i have: " + blocksToRequest + " blocks in piece " + pieceIdx);
-//        System.out.println("Receiver has: " + receiverBlocks);
         int blocksInThisPiece = isLastPiece(pieceIdx) ? info.getBlocksInLastPiece() : info.getBlocksInPiece();
         int fromIdx = info.getBlocksInPiece() * pieceIdx;
         blocksToRequest.or(requestedBlocks.get(fromIdx, fromIdx + blocksInThisPiece)); // I have and requested
-//        System.out.println("i have and requested: " + blocksToRequest + " blocks in piece " + pieceIdx);
         blocksToRequest.flip(0, blocksInThisPiece); //I don't have and not requested
-//        System.out.println("i don't have and not requested: " + blocksToRequest + " blocks in piece " + pieceIdx);
         blocksToRequest.and(receiverBlocks); // I don't have, not requested and receiver has
-//        System.out.println("i don't have, not requested and receiver has: " + blocksToRequest + " blocks in piece " + pieceIdx);
         if (blocksToRequest.cardinality() == 0) {
             return -1;
         }
 
-        getRandomClear(blocksToRequest, blocksInThisPiece);
-        return blocksToRequest.nextSetBit(0);
+        return getRandomClear(blocksToRequest, blocksInThisPiece);
     }
 
     public BitSet getBlocksInPiece(int pieceIdx) {
@@ -142,8 +146,7 @@ public class MyBitSet {
 
     private final PiecesAndBlocksInfo info;
     private BitSet piecesHas;
-    private final BitSet requestedBlocks;
-
     private final BitSet requestedPieces;
+    private final BitSet requestedBlocks;
     private final Map<Integer, BitSet> hasMap = new HashMap<>();
 }

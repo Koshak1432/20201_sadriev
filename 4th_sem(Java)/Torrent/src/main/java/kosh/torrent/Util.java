@@ -3,7 +3,6 @@ package kosh.torrent;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Random;
 
 public class Util {
     public static byte[] generateHash(byte[] inputToHash) {

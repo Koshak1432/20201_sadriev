@@ -3,9 +3,14 @@ package kosh.torrent;
 import java.net.InetSocketAddress;
 import java.util.*;
 
+/*
+ * Class represents torrent client
+ */
 public class TorrentClient {
-    //[0] -- leecher or seeder
-    //[1] -- собственный адресс
+    /*
+     * @param metaInfoFile the .torrent file
+     * @param args args from command line, [0] -- leecher/seeder, [1] -- own address
+     */
     public TorrentClient(MetainfoFile metainfoFile, String[] args) {
         boolean seeder = args[0].equals("seeder");
         System.out.println(args[0]);

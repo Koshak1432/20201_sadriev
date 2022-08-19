@@ -6,6 +6,10 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.*;
 
+
+/*
+ * Class which creates .torrent file from given original file
+ */
 public class TFileCreator {
     public TFileCreator(File file) {
         this.file = file;

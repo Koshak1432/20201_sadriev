@@ -11,6 +11,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+
+/*
+ * Class represents a .torrent file
+ */
 public class MetainfoFile {
     @SuppressWarnings("unchecked")
     public MetainfoFile(String metaInfoFileName) {
