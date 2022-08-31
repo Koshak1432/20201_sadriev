@@ -2,9 +2,7 @@ package kosh.torrent;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 /*
 * Class represents a peer
@@ -39,12 +37,12 @@ public class Peer {
         return bitset;
     }
 
-    private int choosePieceToRequest(Peer receiver) {
-        return bitset.chooseClearPiece(receiver.getBitset().getPiecesHas());
+    private int choosePieceToRequest(Peer to, boolean chooseNewIdx) {
+        return bitset.chooseClearPiece(to.getBitset().getPiecesHas(), chooseNewIdx);
     }
 
-    private int chooseBlockToRequest(Peer receiver, int pieceIdx) {
-        return bitset.chooseClearBlock(receiver.getBitset().getBlocksInPiece(pieceIdx), pieceIdx);
+    private int chooseBlockToRequest(Peer to, int pieceIdx) {
+        return bitset.chooseClearBlock(to.getBitset().getBlocksInPiece(pieceIdx), pieceIdx);
     }
 
     /*
@@ -53,16 +51,26 @@ public class Peer {
     * @return IMessage request or null if couldn't choose piece or block to request
      */
     public IMessage createRequest(Peer to) {
-        int pieceIdx = choosePieceToRequest(to);
-        if (pieceIdx == -1) {
-            return null;
+        int pieceIdx = 0;
+        int blockIdx = 0;
+        boolean chooseNewIdx = false;
+        for (int i = 0; i < 2; ++i) {
+            pieceIdx = choosePieceToRequest(to, chooseNewIdx);
+            if (pieceIdx == -1) {
+                return null;
+            }
+            blockIdx = chooseBlockToRequest(to, pieceIdx);
+            if (blockIdx == -1) {
+                chooseNewIdx = true;
+            } else {
+                break;
+            }
         }
-        int blockIdx = chooseBlockToRequest(to, pieceIdx);
         if (blockIdx == -1) {
             return null;
         }
-        bitset.setRequested(info.getBlocksInPiece() * pieceIdx + blockIdx);
 
+        bitset.setRequested(info.getBlocksInPiece() * pieceIdx + blockIdx);
         int len = bitset.isLastBlock(pieceIdx, blockIdx) ? info.getLastBlockLen() : info.getBlockLen();
         byte[] begin = Util.convertToByteArr(info.getBlockLen() * blockIdx);
         byte[] lenA = Util.convertToByteArr(len);
@@ -86,7 +94,7 @@ public class Peer {
             return channel.getRemoteAddress().toString();
         }
         catch (IOException e) {
-            throw new RuntimeException(e);
+            return null;
         }
     }
 

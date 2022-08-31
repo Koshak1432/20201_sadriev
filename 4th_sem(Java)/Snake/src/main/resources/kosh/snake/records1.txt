@@ -1,4 +1,3 @@
-Baton:18
-:12
-second3:3
-ae:3
+blank blank:22
+yo:22
+Марина:19

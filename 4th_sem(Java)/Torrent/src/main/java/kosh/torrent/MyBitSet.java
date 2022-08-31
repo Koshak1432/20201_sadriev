@@ -62,7 +62,7 @@ public class MyBitSet {
     public void setPiece(int idx, boolean has) {
         piecesHas.set(idx, has);
         int numPieces = (isLastPiece(idx)) ? info.getBlocksInLastPiece() : info.getBlocksInPiece();
-        hasMap.get(idx).set(0, numPieces, true);
+        hasMap.get(idx).set(0, numPieces, has);
     }
 
     public void setBlock(int pieceIdx, int blockIdx) {
@@ -98,23 +98,27 @@ public class MyBitSet {
     * @param receiverHas pieces that receiver has
     * @return pieceIdx idx of a piece I don't have and receiver has
      */
-    public int chooseClearPiece(BitSet receiverHas) {
+    public int chooseClearPiece(BitSet receiverHas, boolean chooseNewPieceIdx) {
         int pieceIdx;
-        for (pieceIdx = requestedPieces.nextSetBit(0); pieceIdx >= 0; pieceIdx = requestedPieces.nextSetBit(pieceIdx + 1)) {
-            if (pieceIdx == Integer.MAX_VALUE) {
-                break;
-            }
-            if (!isPieceFull(pieceIdx)) {
-                return pieceIdx;
+        if (!chooseNewPieceIdx) {
+            for (pieceIdx = requestedPieces.nextSetBit(0); pieceIdx >= 0; pieceIdx = requestedPieces.nextSetBit(pieceIdx + 1)) {
+                if (pieceIdx == Integer.MAX_VALUE) {
+                    break;
+                }
+                if (!isPieceFull(pieceIdx) && receiverHas.get(pieceIdx)) {
+                    return pieceIdx;
+                }
             }
         }
 
         BitSet piecesToRequest = (BitSet) getPiecesHas().clone(); //I have
-        piecesToRequest.flip(0, info.getPiecesNum()); //I don't have
+        piecesToRequest.or(requestedPieces); // I have and requested
+        piecesToRequest.flip(0, info.getPiecesNum()); //I don't have and not requested
         piecesToRequest.and(receiverHas); //I don't have and receiver has
         if (piecesToRequest.cardinality() == 0) {
             return -1;
         }
+
         pieceIdx = getRandomClear(piecesToRequest, info.getPiecesNum());
         requestedPieces.set(pieceIdx);
         return pieceIdx;
@@ -122,21 +126,30 @@ public class MyBitSet {
 
     /*
     * Chooses block in piece to download
-    * @param receiverBlocks blocks in piece receiver has
+    * @param toBlocks blocks in piece receiver has
     * @param pieceIdx
     * @return blockIdx of a block I don't have, not requested and receiver has
      */
-    public int chooseClearBlock(BitSet receiverBlocks, int pieceIdx) {
+    public int chooseClearBlock(BitSet toBlocks, int pieceIdx) {
         BitSet blocksToRequest = (BitSet) hasMap.get(pieceIdx).clone(); //I have
         int blocksInThisPiece = isLastPiece(pieceIdx) ? info.getBlocksInLastPiece() : info.getBlocksInPiece();
         int fromIdx = info.getBlocksInPiece() * pieceIdx;
-        blocksToRequest.or(requestedBlocks.get(fromIdx, fromIdx + blocksInThisPiece)); // I have and requested
+        BitSet requested = requestedBlocks.get(fromIdx, fromIdx + blocksInThisPiece);
+        blocksToRequest.or(requested); // I have and requested
         blocksToRequest.flip(0, blocksInThisPiece); //I don't have and not requested
-        blocksToRequest.and(receiverBlocks); // I don't have, not requested and receiver has
+        blocksToRequest.and(toBlocks); // I don't have, not requested and receiver has
         if (blocksToRequest.cardinality() == 0) {
-            return -1;
+            if (requested.cardinality() == blocksInThisPiece) {
+                blocksToRequest = (BitSet) hasMap.get(pieceIdx).clone();
+                blocksToRequest.flip(0, blocksInThisPiece); //I don't have
+                blocksToRequest.and(toBlocks); // I don't have and receiver has, maybe requested, but it's the last block to download
+                if (blocksToRequest.cardinality() == 0) {
+                    return -1;
+                }
+            } else {
+                return -1;
+            }
         }
-
         return getRandomClear(blocksToRequest, blocksInThisPiece);
     }
 

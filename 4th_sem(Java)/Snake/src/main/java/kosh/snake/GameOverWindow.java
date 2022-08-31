@@ -107,10 +107,8 @@ public class GameOverWindow {
         Optional<String> name = inputDialog.showAndWait();
         if (name.isPresent()) {
             if (name.get().isEmpty()) {
-                System.out.println("IS EMPTY");
                 recordLine = "Unknown" + Constants.RECORDS_DELIMITER + score;
             } else {
-                System.out.println("NOT EMPTY:" + name.get());
                 recordLine = name.get() + Constants.RECORDS_DELIMITER + score;
             }
         } else {

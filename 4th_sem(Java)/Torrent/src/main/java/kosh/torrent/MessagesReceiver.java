@@ -53,13 +53,14 @@ public class MessagesReceiver implements IMessagesReceiver {
             case MessagesTypes.HANDSHAKE -> {
                 System.out.println("Got HANDSHAKE from " + sender);
                 //pass sender's id for proper handshakes, cause don't have a tracker
-                if (! Arrays.equals(msg.getMessage(), new Handshake(infoHash, sender.getId()).getMessage())) {
+                if (!Arrays.equals(msg.getMessage(), new Handshake(infoHash, sender.getId()).getMessage())) {
                     System.out.println("HS are different");
                     sender.closeConnection();
                     return;
                 }
                 receiver.getHandshaked().add(sender);
                 addMsgToQueue(sender, new ProtocolMessage(MessagesTypes.BITFIELD, receiver.getBitset().getPiecesHas().toByteArray()));
+                isDownloadingFrom.put(sender, false);
             }
             case MessagesTypes.CHOKE -> {
                 System.out.println("Got CHOKE from " + sender);
@@ -67,19 +68,15 @@ public class MessagesReceiver implements IMessagesReceiver {
             }
             case MessagesTypes.UNCHOKE -> {
                 System.out.println("Got UNCHOKE from " + sender);
-                IMessage request = receiver.createRequest(sender);
-                if (request == null) {
-                    return;
-                }
-                addMsgToQueue(sender, request);
                 sender.setChoking(false);
+                boolean state = createRequest(sender, receiver);
+                isDownloadingFrom.put(sender, state);
             }
             case MessagesTypes.INTERESTED -> {
                 System.out.println("Got INTERESTED from " + sender);
                 addMsgToQueue(sender, new ProtocolMessage(MessagesTypes.UNCHOKE));
                 sender.setInteresting(true);
                 sender.setChoked(false);
-
             }
             case MessagesTypes.NOT_INTERESTED -> {
                 System.out.println("Got NOT INTERESTED from " + sender);
@@ -89,6 +86,10 @@ public class MessagesReceiver implements IMessagesReceiver {
                 System.out.println("Got HAVE(idx: " + Util.convertToInt(msg.getPayload()) + ") from " + sender);
                 if (!receiver.getBitset().isHasAllPieces()) {
                     sender.getBitset().setPiece(Util.convertToInt(msg.getPayload()), true);
+                }
+                if (!isDownloadingFrom.get(sender)) {
+                    boolean state = createRequest(sender, receiver);
+                    isDownloadingFrom.put(sender, state);
                 }
             }
             case MessagesTypes.BITFIELD -> {
@@ -120,6 +121,15 @@ public class MessagesReceiver implements IMessagesReceiver {
                 handlePiece(sender, receiver, msg);
             }
         }
+    }
+
+    private boolean createRequest(Peer to, Peer from) {
+        IMessage request = from.createRequest(to);
+        if (request == null) {
+            return false;
+        }
+        addMsgToQueue(to, request);
+        return true;
     }
 
     /*
@@ -232,12 +242,8 @@ public class MessagesReceiver implements IMessagesReceiver {
             if (to.getBitset().isHasAllPieces()) {
                 return;
             }
-
-            IMessage request = to.createRequest(from);
-            if (request == null) {
-                return;
-            }
-            addMsgToQueue(from, request);
+            boolean state = createRequest(from, to);
+            isDownloadingFrom.put(from, state);
         }
     }
 
@@ -329,4 +335,5 @@ public class MessagesReceiver implements IMessagesReceiver {
     private final PiecesAndBlocksInfo piecesInfo;
     private final byte[] infoHash;
     private final DownloadUploadManager DU;
+    private final Map<Peer, Boolean> isDownloadingFrom = new HashMap<>();
 }

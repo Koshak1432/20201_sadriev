@@ -16,10 +16,10 @@ public class ConnectionManager implements Runnable {
     /*
     * @param meta the .torrent file
     * @param DU a class working with file system
-    * @param peers a list of addresses of peers to connect, the first one is the address of this client
+    * @param peersAddresses a list of addresses of peers to connect, the first one is the address of this client
     * @param seeder whether this client is seeder or not
      */
-    public ConnectionManager(MetainfoFile meta, DownloadUploadManager DU, List<InetSocketAddress> peers, boolean seeder) {
+    public ConnectionManager(MetainfoFile meta, DownloadUploadManager DU, List<InetSocketAddress> peersAddresses, boolean seeder) {
         this.infoHash = meta.getInfoHash();
         this.DU = DU;
         this.piecesInfo = new PiecesAndBlocksInfo((int) meta.getFileLen(), (int) meta.getPieceLen(), BLOCK_LEN);
@@ -29,7 +29,7 @@ public class ConnectionManager implements Runnable {
         try {
             server = ServerSocketChannel.open();
             selector = Selector.open();
-            server.bind(peers.get(0));
+            server.bind(peersAddresses.get(0));
             server.configureBlocking(false);
             server.register(selector, SelectionKey.OP_ACCEPT);
         }
@@ -42,13 +42,16 @@ public class ConnectionManager implements Runnable {
         }
 
         if (!seeder) {
-            List<SocketChannel> channels = connectToPeers(peers.subList(1, peers.size()));
-            if (channels.isEmpty()) {
+            connectToPeers(peersAddresses.subList(1, peersAddresses.size()));
+            if (connections.isEmpty()) {
                 System.out.println("Peers with this addresses aren't working");
                 Thread.currentThread().interrupt();
                 return;
             }
-            addHSToPeers(channels, meta.getInfoHash());
+
+            for (Peer peer : connections) {
+                messagesReceiver.addMsgToQueue(peer, new Handshake(infoHash, peer.getId()));
+            }
         }
     }
 
@@ -69,7 +72,7 @@ public class ConnectionManager implements Runnable {
             }
             Set<SelectionKey> keys = selector.selectedKeys();
             for (SelectionKey key : keys) {
-                if (! key.isValid()) {
+                if (!key.isValid()) {
                     continue;
                 }
                 if (key.isAcceptable()) {
@@ -92,10 +95,9 @@ public class ConnectionManager implements Runnable {
 
                 if (iam.getBitset().isHasAllPieces()) {
                     System.out.println("---------------------------------------------");
-                    System.out.println("Have all the messages, download completed!");
+                    System.out.println("Have all the messages, downloading completed!");
                     System.out.println("---------------------------------------------");
-                    //todo можно апдейтнуть везде флаг сидера на тру, чтобы этот тоже остался и можно было с него грузить
-//                    Thread.currentThread().interrupt();
+                    Thread.currentThread().interrupt();
                 }
             }
 
@@ -113,27 +115,18 @@ public class ConnectionManager implements Runnable {
         releaseResources();
     }
 
-    private List<SocketChannel> connectToPeers(List<InetSocketAddress> peers) {
-        List<SocketChannel> channels = new ArrayList<>();
-        for (InetSocketAddress address : peers) {
+    private void connectToPeers(List<InetSocketAddress> peersAddresses) {
+        for (InetSocketAddress address : peersAddresses) {
             try {
                 SocketChannel channel = SocketChannel.open(address);
                 channel.configureBlocking(false);
                 channel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-                channels.add(channel);
-                System.out.println("Connected to " + address);
+                Peer peer = new Peer(channel, piecesInfo);
+                connections.add(peer);
+                System.out.println("Connected to " + peer);
             } catch (IOException e) {
                 System.out.println("Peer with address: " + address + " isn't working");
             }
-        }
-        return channels;
-    }
-
-    private void addHSToPeers(List<SocketChannel> channels, byte[] infoHash) {
-        for (SocketChannel channel : channels) {
-            Peer peer = new Peer(channel, piecesInfo);
-            connections.add(peer);
-            messagesReceiver.addMsgToQueue(peer, new Handshake(infoHash, peer.getId()));
         }
     }
 
@@ -200,25 +193,26 @@ public class ConnectionManager implements Runnable {
         assert peer != null;
         if (!iam.getHandshaked().contains(peer)) {
             if (!messagesReceiver.readHS(peer)) {
-                peer.closeConnection();
-                connections.remove(peer);
-                key.cancel();
-                return false;
+                return closeConnection(key, peer);
             }
         }
 
         if (!messagesReceiver.readFrom(peer)) {
             System.out.println(peer + " disconnected");
-            peer.closeConnection();
-            connections.remove(peer);
-            key.cancel();
-            return false;
+            return closeConnection(key, peer);
         }
         IMessage msg;
         while ((msg = messagesReceiver.getMsgFrom(peer)) != null) {
             messagesReceiver.handleMsg(peer, iam, msg);
         }
         return true;
+    }
+
+    private boolean closeConnection(SelectionKey key, Peer peer) {
+        peer.closeConnection();
+        connections.remove(peer);
+        key.cancel();
+        return false;
     }
 
     /*
@@ -235,7 +229,11 @@ public class ConnectionManager implements Runnable {
         }
         //send messages to peer
         while ((msg = messagesReceiver.getMsgTo(peer)) != null) {
-            messagesSender.sendMsg(peer, msg);
+            if (!messagesSender.sendMsg(peer, msg)) {
+                System.out.println(peer + " disconnected");
+                closeConnection(key, peer);
+                return;
+            }
             System.out.println("Wrote to " + peer + ", type of msg: " + msg.getType());
         }
     }
