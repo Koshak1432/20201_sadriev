@@ -10,13 +10,13 @@ import java.util.Random;
 * Class represents convenient bit set for BitTorrent protocol
  */
 public class MyBitSet {
-    public MyBitSet(PiecesAndBlocksInfo info, boolean seeder) {
+    public MyBitSet(PiecesAndBlocksInfo info, boolean seeder, int fromIdx, int toIdx) {
         this.info = info;
         piecesHas = new BitSet(info.getPiecesNum());
         requestedPieces = new BitSet(info.getPiecesNum());
         requestedBlocks = new BitSet((info.getPiecesNum() - 1) * info.getBlocksInPiece() + info.getBlocksInLastPiece());
 
-        piecesHas.set(0, info.getPiecesNum(), seeder);
+        piecesHas.set(fromIdx, toIdx, seeder);
         initHasMap();
     }
 
@@ -25,7 +25,6 @@ public class MyBitSet {
         for (int i = 0; i < info.getPiecesNum(); ++i) {
             if (isLastPiece(i)) {
                 blocksInPiece = info.getBlocksInLastPiece();
-
             }
             boolean pieceAvailable = piecesHas.get(i);
             BitSet blocks = new BitSet(blocksInPiece);

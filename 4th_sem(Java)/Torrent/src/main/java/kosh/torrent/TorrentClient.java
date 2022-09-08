@@ -9,16 +9,20 @@ import java.util.*;
 public class TorrentClient {
     /*
      * @param metaInfoFile the .torrent file
-     * @param args args from command line, [0] -- leecher/seeder, [1] -- own address
+     * @param args args from command line, [0] -- leecher/seeder, [1] -- id, [2] -- own address
      */
     public TorrentClient(MetainfoFile metainfoFile, String[] args) {
         boolean seeder = args[0].equals("seeder");
         System.out.println(args[0]);
-        List<InetSocketAddress> peers = parseArgs(Arrays.copyOfRange(args, 1, args.length)); //[0] -- iam
-        DownloadUploadManager DU = new DownloadUploadManager(metainfoFile, seeder);
+        List<InetSocketAddress> peers = parseArgs(Arrays.copyOfRange(args, 2, args.length)); //[0] -- iam
+        for (InetSocketAddress add : peers) {
+            System.out.println(add);
+        }
+        System.out.println(args[1]);
+        DownloadUploadManager DU = new DownloadUploadManager(metainfoFile, seeder, Integer.parseInt(args[1]));
         Thread downloadThread = new Thread(DU);
         downloadThread.start();
-        ConnectionManager cm = new ConnectionManager(metainfoFile , DU, peers, seeder);
+        ConnectionManager cm = new ConnectionManager(metainfoFile , DU, peers, seeder, Integer.parseInt(args[1]));
         Thread connectionThread = new Thread(cm);
         connectionThread.start();
         try {
@@ -43,6 +47,4 @@ public class TorrentClient {
         }
         return addresses;
     }
-
-
 }

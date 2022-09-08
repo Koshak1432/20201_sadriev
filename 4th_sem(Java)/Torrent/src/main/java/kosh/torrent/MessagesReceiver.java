@@ -126,6 +126,7 @@ public class MessagesReceiver implements IMessagesReceiver {
     private boolean createRequest(Peer to, Peer from) {
         IMessage request = from.createRequest(to);
         if (request == null) {
+            System.out.println("REQUEST IS NULL(message receiver 129)");
             return false;
         }
         addMsgToQueue(to, request);

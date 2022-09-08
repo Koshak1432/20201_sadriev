@@ -19,12 +19,27 @@ public class ConnectionManager implements Runnable {
     * @param peersAddresses a list of addresses of peers to connect, the first one is the address of this client
     * @param seeder whether this client is seeder or not
      */
-    public ConnectionManager(MetainfoFile meta, DownloadUploadManager DU, List<InetSocketAddress> peersAddresses, boolean seeder) {
+    public ConnectionManager(MetainfoFile meta, DownloadUploadManager DU, List<InetSocketAddress> peersAddresses, boolean seeder, int id) {
         this.infoHash = meta.getInfoHash();
         this.DU = DU;
         this.piecesInfo = new PiecesAndBlocksInfo((int) meta.getFileLen(), (int) meta.getPieceLen(), BLOCK_LEN);
         this.messagesReceiver = new MessagesReceiver(meta.getInfoHash(), DU, piecesInfo);
-        this.iam = new Peer(null, piecesInfo, seeder);
+        int fromIdx, toIdx;
+//        int middle = Math.ceilDiv(piecesInfo.getPiecesNum(), 2);
+        int middle = piecesInfo.getPiecesNum() / 2;
+        if (id == 0) {
+            fromIdx = 0;
+            toIdx = middle;
+        } else if (id == 1) {
+            fromIdx = middle;
+            toIdx = piecesInfo.getPiecesNum();
+        } else {
+            fromIdx = 0;
+            toIdx = piecesInfo.getPiecesNum();
+        }
+        System.out.println("FROM: " + fromIdx);
+        System.out.println("TO: " + toIdx);
+        this.iam = new Peer(null, piecesInfo, seeder, fromIdx, toIdx);
 
         try {
             server = ServerSocketChannel.open();
@@ -92,6 +107,7 @@ public class ConnectionManager implements Runnable {
             Integer idx;
             while ((idx = DU.getSuccessfulCheck()) != null) {
                 notifyPeers(idx);
+                System.out.println(iam.getBitset().getPiecesHas());
 
                 if (iam.getBitset().isHasAllPieces()) {
                     System.out.println("---------------------------------------------");

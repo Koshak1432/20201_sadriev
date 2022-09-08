@@ -12,14 +12,14 @@ public class Peer {
         this.id = generateId();
         this.channel = channel;
         this.info = info;
-        this.bitset = new MyBitSet(info, false);
+        this.bitset = new MyBitSet(info, false, 0, info.getPiecesNum());
     }
 
-    public Peer(SocketChannel channel, PiecesAndBlocksInfo info, boolean seeder) {
+    public Peer(SocketChannel channel, PiecesAndBlocksInfo info, boolean seeder, int fromIdx, int toIdx) {
         this.id = generateId();
         this.channel = channel;
         this.info = info;
-        this.bitset = new MyBitSet(info, seeder);
+        this.bitset = new MyBitSet(info, seeder, fromIdx, toIdx);
     }
 
     private byte[] generateId() {

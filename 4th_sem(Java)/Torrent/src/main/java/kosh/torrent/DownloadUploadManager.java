@@ -15,12 +15,11 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
     * @param meta the .torrent file
     * @param seeder indicates whether this client is seeder or not
      */
-    public DownloadUploadManager(MetainfoFile meta, boolean seeder) {
+    public DownloadUploadManager(MetainfoFile meta, boolean seeder, int fileId) {
         this.meta = meta;
         Random random = new Random();
-
         byte id = meta.getPieces()[random.nextInt(meta.getPieces().length)];
-        String outputFileName = seeder ? meta.getName() : meta.getName() + id;
+        String outputFileName = seeder ? meta.getName() + fileId : meta.getName() + id;
         System.out.println(outputFileName);
         try {
             output = new RandomAccessFile(outputFileName, "rw");

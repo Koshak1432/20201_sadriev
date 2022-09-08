@@ -24,6 +24,7 @@ public class Main {
         //получать в args[0]
         MetainfoFile torrent = new MetainfoFile(metaInfoFilePath + metaInfoName);
         TorrentClient client = new TorrentClient(torrent, args);
+//        Splitter splitter = new Splitter("C:\\Users\\sadri\\20201_sadriev\\4th_sem(Java)\\Torrent\\Deep_Learning.pdf");
     }
 
 //    private static String originalFilePath = "D:\\20201_sadriev\\4th_sem(Java)\\Torrent\\src\\main\\resources\\";
