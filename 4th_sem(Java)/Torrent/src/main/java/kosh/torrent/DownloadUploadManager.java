@@ -19,7 +19,7 @@ public class DownloadUploadManager implements Runnable, IDownloadUploadManager {
         this.meta = meta;
         Random random = new Random();
         byte id = meta.getPieces()[random.nextInt(meta.getPieces().length)];
-        String outputFileName = seeder ? meta.getName() + fileId : meta.getName() + id;
+        String outputFileName = seeder ? meta.getName() + ((fileId < 2 && fileId >= 0) ? fileId : "") : meta.getName() + id;
         System.out.println(outputFileName);
         try {
             output = new RandomAccessFile(outputFileName, "rw");

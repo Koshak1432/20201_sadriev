@@ -14,11 +14,8 @@ public class TorrentClient {
     public TorrentClient(MetainfoFile metainfoFile, String[] args) {
         boolean seeder = args[0].equals("seeder");
         System.out.println(args[0]);
-        List<InetSocketAddress> peers = parseArgs(Arrays.copyOfRange(args, 2, args.length)); //[0] -- iam
-        for (InetSocketAddress add : peers) {
-            System.out.println(add);
-        }
         System.out.println(args[1]);
+        List<InetSocketAddress> peers = parseArgs(Arrays.copyOfRange(args, 2, args.length)); //[0] -- iam
         DownloadUploadManager DU = new DownloadUploadManager(metainfoFile, seeder, Integer.parseInt(args[1]));
         Thread downloadThread = new Thread(DU);
         downloadThread.start();

@@ -25,7 +25,6 @@ public class ConnectionManager implements Runnable {
         this.piecesInfo = new PiecesAndBlocksInfo((int) meta.getFileLen(), (int) meta.getPieceLen(), BLOCK_LEN);
         this.messagesReceiver = new MessagesReceiver(meta.getInfoHash(), DU, piecesInfo);
         int fromIdx, toIdx;
-//        int middle = Math.ceilDiv(piecesInfo.getPiecesNum(), 2);
         int middle = piecesInfo.getPiecesNum() / 2;
         if (id == 0) {
             fromIdx = 0;
